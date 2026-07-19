@@ -21,6 +21,7 @@ security:
             custom_authenticators:
                 - App\User\Infrastructure\Security\FormLoginAuthenticator
             jwt: ~
+            entry_point: App\User\Infrastructure\Security\LoginEntryPoint
             login_throttling:
                 max_attempts: 5
 
