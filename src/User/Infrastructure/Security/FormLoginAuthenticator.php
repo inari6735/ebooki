@@ -20,12 +20,6 @@ use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 
 final class FormLoginAuthenticator extends AbstractAuthenticator
 {
-    // A real bcrypt hash of 'dummy-password', generated once via:
-    // php -r "echo password_hash('dummy-password', PASSWORD_DEFAULT);"
-    // Verified against it on the user-not-found path so unknown-email failures
-    // burn the same hashing cost as wrong-password failures (no timing side channel).
-    private const string DUMMY_HASH = '$2y$12$KC5O.bKDN60CkAFA23cE3urlMKdSRlZVwi.e1T9aILd.THs7K/cpq';
-
     public function __construct(
         private readonly JwtCookieSuccessHandler $successHandler,
         private readonly UrlGeneratorInterface $urlGenerator,
@@ -49,10 +43,9 @@ final class FormLoginAuthenticator extends AbstractAuthenticator
             new UserBadge($email, function (string $identifier): User {
                 $user = $this->users->byEmail($identifier);
                 if (null === $user) {
-                    // Burn the same hashing cost as a real password check to keep
-                    // unknown-email and wrong-password failures timing-equivalent.
-                    $this->hasherFactory->getPasswordHasher(User::class)
-                        ->verify(self::DUMMY_HASH, 'dummy-password');
+                    // Burn one KDF run at the currently-configured cost so unknown-email
+                    // and wrong-password failures stay timing-equivalent.
+                    $this->hasherFactory->getPasswordHasher(User::class)->hash('dummy-password');
 
                     throw new UserNotFoundException();
                 }
