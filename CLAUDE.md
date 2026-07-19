@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-This is a Symfony 8.1 skeleton application (PHP >=8.4) — currently unbuilt: `src/Controller`, `src/Entity`, and `src/Repository` only contain `.gitignore` placeholders, and `tests/` has no test cases yet. There is no `README.md`. Treat architectural decisions (entity design, controller structure, API shape) as open; there is no existing pattern in `src/` to follow yet, so check with the user or infer from the relevant Symfony skill (see below) before introducing one.
+Symfony 8.1 app (PHP >=8.4). Implemented so far: `Shared` CQRS kernel (command/query buses on Messenger) and the `User` context (JWT-cookie auth). The `Course` context is planned but not started.
+
+- **Authentication** (`src/User/`): whole-app stateless auth — JWT (RS256, lexik) in HttpOnly cookie `AUTH_TOKEN` (15 min) + single-use rotating refresh token (gesdinet, DB table `refresh_tokens`) in cookie `REFRESH_TOKEN` (7 days). `SilentRefreshListener` (kernel.request, priority 16) rotates tokens before the firewall; reuse of a rotated refresh token revokes all the user's tokens. Registration goes through the command bus (`RegisterUser`); `User` is a classic ORM entity (deliberate exception from event sourcing). Login throttling: 5 attempts. Functional tests MUST use `https://localhost/...` URLs — auth cookies are `Secure`.
 
 ## Commands
 
@@ -40,6 +42,7 @@ php bin/phpunit tests/Path/To/SomeTest.php
 ```
 - `APP_ENV=test` is forced by `phpunit.dist.xml`. Test config lives in `.env.test`.
 - `failOnDeprecation`, `failOnNotice`, and `failOnWarning` are all enabled — deprecations/notices fail the suite, not just warn.
+- Login throttling counters live in the `cache.rate_limiter` pool (not `cache.app`), which DAMA's per-test DB rollback does NOT reset. `LoginThrottlingTest` deliberately burns 5 failed attempts per run against a fixed 1-minute window; rerunning the suite (or just that test) within the same window carries the IP-based global counter (25/min, i.e. `5 * max_attempts`) over into the next run, spuriously throttling unrelated logins in `LoginTest`/`LogoutTest`/`SilentRefreshTest`. It self-heals once the window rolls over, but if you see logins unexpectedly redirecting to `/login` with no cookies set on a quick rerun, run `php bin/console cache:pool:clear cache.rate_limiter --env=test` before `php bin/phpunit`.
 
 Frontend assets (AssetMapper — no Node/npm build step, no `package.json`):
 ```

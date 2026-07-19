@@ -54,4 +54,17 @@ final class LogoutTest extends WebTestCase
         $this->client->followRedirect();
         self::assertSelectorTextContains('nav', 'Log in');
     }
+
+    public function testLogoutWithoutCsrfTokenIsRejected(): void
+    {
+        $this->client->request('POST', 'https://localhost/logout');
+
+        self::assertResponseStatusCodeSame(403);
+
+        $count = self::getContainer()->get(EntityManagerInterface::class)
+            ->createQuery(sprintf('SELECT COUNT(rt) FROM %s rt WHERE rt.username = :u', RefreshToken::class))
+            ->setParameter('u', 'bye@example.com')
+            ->getSingleScalarResult();
+        self::assertGreaterThan(0, (int) $count, 'refresh tokens must survive a rejected logout');
+    }
 }
