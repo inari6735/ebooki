@@ -29,3 +29,7 @@ services:
     App\Shared\Infrastructure\MessengerQueryBus:
         arguments:
             $queryBus: '@messenger.bus.query'
+
+    App\User\Domain\UserRepository:
+        alias: App\User\Infrastructure\DoctrineUserRepository
+        public: true
