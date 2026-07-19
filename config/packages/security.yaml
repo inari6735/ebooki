@@ -5,7 +5,10 @@ security:
 
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
-        users_in_memory: { memory: null }
+        app_user_provider:
+            entity:
+                class: App\User\Domain\User
+                property: email
 
     firewalls:
         dev:
@@ -13,19 +16,21 @@ security:
             pattern: ^/(_profiler|_wdt|assets|build)/
             security: false
         main:
-            lazy: true
-            provider: users_in_memory
-
-            # Activate different ways to authenticate:
-            # https://symfony.com/doc/current/security.html#the-firewall
-
-            # https://symfony.com/doc/current/security/impersonating_user.html
-            # switch_user: true
+            stateless: true
+            provider: app_user_provider
+            custom_authenticators:
+                - App\User\Infrastructure\Security\FormLoginAuthenticator
+            jwt: ~
+            login_throttling:
+                max_attempts: 5
 
     # Note: Only the *first* matching rule is applied
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/register, roles: PUBLIC_ACCESS }
+        - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/courses/new, roles: ROLE_USER }
+        - { path: ^/courses/\S+/(rename|publish), roles: ROLE_USER }
+        - { path: ^/courses, roles: PUBLIC_ACCESS }
 
 when@test:
     security:

@@ -9,7 +9,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class SecurityController extends AbstractController
 {
-    #[Route('/login', name: 'app_login', methods: ['GET'])]
+    #[Route('/login', name: 'app_login', methods: ['GET', 'POST'])]
     public function login(Request $request): Response
     {
         return $this->render('user/login.html.twig', [

@@ -1,0 +1,73 @@
+<?php declare(strict_types=1);
+
+namespace App\Tests\User\Presentation;
+
+use App\Shared\Application\Bus\CommandBus;
+use App\User\Application\Command\RegisterUser;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\Uid\Uuid;
+
+final class LoginTest extends WebTestCase
+{
+    private KernelBrowser $client;
+
+    protected function setUp(): void
+    {
+        $this->client = self::createClient();
+        self::getContainer()->get(CommandBus::class)->dispatch(
+            new RegisterUser(Uuid::v7()->toRfc4122(), 'login@example.com', 'password123'),
+        );
+    }
+
+    private function submitLogin(string $email, string $password): void
+    {
+        $this->client->request('GET', 'https://localhost/login');
+        $this->client->submitForm('Log in', [
+            'email' => $email,
+            'password' => $password,
+        ]);
+    }
+
+    public function testSuccessfulLoginSetsBothCookiesAndRedirects(): void
+    {
+        $this->submitLogin('login@example.com', 'password123');
+
+        self::assertResponseRedirects('/');
+
+        $cookies = $this->client->getResponse()->headers->getCookies();
+        $names = array_map(fn ($c) => $c->getName(), $cookies);
+        self::assertContains('AUTH_TOKEN', $names);
+        self::assertContains('REFRESH_TOKEN', $names);
+
+        foreach ($cookies as $cookie) {
+            self::assertTrue($cookie->isHttpOnly());
+            self::assertTrue($cookie->isSecure());
+            self::assertSame('lax', strtolower((string) $cookie->getSameSite()));
+        }
+    }
+
+    public function testFailedLoginShowsGenericError(): void
+    {
+        $this->submitLogin('login@example.com', 'wrong-password');
+
+        self::assertResponseRedirects('/login');
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.flash-error', 'Invalid email or password.');
+
+        $names = array_map(
+            fn ($c) => $c->getName(),
+            $this->client->getResponse()->headers->getCookies(),
+        );
+        self::assertNotContains('AUTH_TOKEN', $names);
+    }
+
+    public function testUnknownEmailShowsSameGenericError(): void
+    {
+        $this->submitLogin('ghost@example.com', 'password123');
+
+        self::assertResponseRedirects('/login');
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.flash-error', 'Invalid email or password.');
+    }
+}
