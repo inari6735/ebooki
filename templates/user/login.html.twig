@@ -13,7 +13,7 @@
     {% endfor %}
 
     <form method="post" action="{{ path('app_login') }}">
-        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+        <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('authenticate') }}">
         <input type="hidden" name="_target_path" value="{{ target_path }}">
 
         <label for="email">Email</label>

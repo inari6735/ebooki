@@ -23,7 +23,7 @@
             {% if app.user %}
                 <span>{{ app.user.userIdentifier }}</span>
                 <form method="post" action="{{ path('app_logout') }}" style="display:inline">
-                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
+                    <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('logout') }}">
                     <button type="submit">Log out</button>
                 </form>
             {% else %}

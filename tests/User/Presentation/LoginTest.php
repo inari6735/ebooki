@@ -29,6 +29,17 @@ final class LoginTest extends WebTestCase
         ]);
     }
 
+    public function testLoginCsrfFieldLoadsTheCsrfProtectionController(): void
+    {
+        // Without data-controller="csrf-protection", the lazy Stimulus controller
+        // performing the stateless double-submit never loads on full page loads of
+        // /login, making CSRF validation depend on which pages were visited earlier
+        // in the same Turbo session (anti-downgrade 403s after a full reload).
+        $this->client->request('GET', 'https://localhost/login');
+
+        self::assertSelectorExists('form input[name="_csrf_token"][data-controller="csrf-protection"]');
+    }
+
     public function testSuccessfulLoginSetsBothCookiesAndRedirects(): void
     {
         $this->submitLogin('login@example.com', 'password123');

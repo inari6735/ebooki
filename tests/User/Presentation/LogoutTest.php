@@ -33,6 +33,15 @@ final class LogoutTest extends WebTestCase
         self::assertSelectorTextContains('nav', 'bye@example.com');
     }
 
+    public function testLogoutCsrfFieldLoadsTheCsrfProtectionController(): void
+    {
+        // Without data-controller="csrf-protection", the lazy Stimulus controller
+        // that performs the stateless double-submit never loads on full page loads,
+        // and SameOriginCsrfTokenManager's anti-downgrade check 403s the logout
+        // once a previous request in the session validated via double-submit.
+        self::assertSelectorExists('nav form input[name="_csrf_token"][data-controller="csrf-protection"]');
+    }
+
     public function testLogoutClearsCookiesAndRevokesRefreshTokens(): void
     {
         $this->client->submitForm('Log out');
