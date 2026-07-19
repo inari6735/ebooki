@@ -20,6 +20,16 @@ final class LoginThrottlingTest extends WebTestCase
         );
     }
 
+    protected function tearDown(): void
+    {
+        // The global login limiter keys on client IP only, so the 5 attempts
+        // burned here would count against every other functional test in the
+        // same one-minute window (25/min budget). Give them back.
+        self::getContainer()->get('cache.rate_limiter')->clear();
+
+        parent::tearDown();
+    }
+
     public function testSixthAttemptIsThrottledEvenWithCorrectPassword(): void
     {
         for ($i = 0; $i < 5; ++$i) {
