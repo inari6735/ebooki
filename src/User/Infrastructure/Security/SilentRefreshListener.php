@@ -100,6 +100,10 @@ final class SilentRefreshListener
     #[AsEventListener(event: KernelEvents::RESPONSE)]
     public function onResponse(ResponseEvent $event): void
     {
+        if (!$event->isMainRequest()) {
+            return;
+        }
+
         /** @var list<Cookie> $pending */
         $pending = $event->getRequest()->attributes->get(self::PENDING_COOKIES, []);
         foreach ($pending as $cookie) {
