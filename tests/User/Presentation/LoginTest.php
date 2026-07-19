@@ -70,4 +70,28 @@ final class LoginTest extends WebTestCase
         $this->client->followRedirect();
         self::assertSelectorTextContains('.flash-error', 'Invalid email or password.');
     }
+
+    public function testMaliciousTargetPathFallsBackToHome(): void
+    {
+        $this->client->request('GET', 'https://localhost/login');
+        $this->client->submitForm('Log in', [
+            'email' => 'login@example.com',
+            'password' => 'password123',
+            '_target_path' => '/\\evil.com',
+        ]);
+
+        self::assertResponseRedirects('/');
+    }
+
+    public function testRelativeTargetPathIsHonoured(): void
+    {
+        $this->client->request('GET', 'https://localhost/login');
+        $this->client->submitForm('Log in', [
+            'email' => 'login@example.com',
+            'password' => 'password123',
+            '_target_path' => '/register',
+        ]);
+
+        self::assertResponseRedirects('/register');
+    }
 }

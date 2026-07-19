@@ -31,8 +31,13 @@ final readonly class JwtCookieSuccessHandler implements AuthenticationSuccessHan
         $refreshToken = $this->refreshTokens->issueFor($user);
 
         $targetPath = (string) $request->request->get('_target_path', '');
-        // Only relative paths: never redirect off-site.
-        if ('' === $targetPath || !str_starts_with($targetPath, '/') || str_starts_with($targetPath, '//')) {
+        // Only relative paths: never redirect off-site. Backslashes are rejected
+        // because browsers normalise them to `/` when resolving a Location header
+        // for http(s), so `/\evil.com` would otherwise bypass the `//` guard (CWE-601).
+        if ('' === $targetPath
+            || !str_starts_with($targetPath, '/')
+            || str_starts_with($targetPath, '//')
+            || str_contains($targetPath, '\\')) {
             $targetPath = '/';
         }
 
