@@ -6,7 +6,6 @@ use App\User\Domain\UserRepository;
 use Gesdinet\JWTRefreshTokenBundle\Model\RefreshTokenManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Encoder\JWTEncoderInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Exception\JWTDecodeFailureException;
-use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,7 +24,7 @@ final class SilentRefreshListener
 
     public function __construct(
         private readonly JWTEncoderInterface $jwtEncoder,
-        private readonly JWTTokenManagerInterface $jwtManager,
+        private readonly AccessTokenMinter $accessTokens,
         private readonly RefreshTokenManagerInterface $refreshTokenManager,
         private readonly RefreshTokenRotator $rotator,
         private readonly TokenCookieFactory $cookies,
@@ -48,6 +47,16 @@ final class SilentRefreshListener
         $rawRefresh = (string) $request->cookies->get(TokenCookieFactory::REFRESH_COOKIE, '');
         if ('' === $rawRefresh) {
             return; // anonymous — the entry point handles protected routes
+        }
+
+        // gesdinet's RefreshTokenGenerator (v2.0.0) always produces bin2hex(random_bytes(64)),
+        // i.e. exactly 128 lowercase hex characters. Reject anything else before it reaches
+        // the database: this runs pre-firewall, so an unauthenticated caller could otherwise
+        // force a DB SELECT on every request just by sending a garbage REFRESH_TOKEN cookie.
+        if (1 !== preg_match('/^[a-f0-9]{128}$/', $rawRefresh)) {
+            $this->schedule($request, [$this->cookies->expiredAuthCookie(), $this->cookies->expiredRefreshCookie()]);
+
+            return;
         }
 
         $stored = $this->refreshTokenManager->get($rawRefresh);
@@ -84,10 +93,7 @@ final class SilentRefreshListener
             return;
         }
 
-        $jwt = $this->jwtManager->createFromPayload($user, [
-            'sub' => $user->getId()->toRfc4122(),
-            'email' => $user->getEmail(),
-        ]);
+        $jwt = $this->accessTokens->mintFor($user);
 
         // Let the firewall (which runs next) authenticate this very request.
         $request->cookies->set(TokenCookieFactory::AUTH_COOKIE, $jwt);

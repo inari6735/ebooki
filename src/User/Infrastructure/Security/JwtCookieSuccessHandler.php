@@ -3,7 +3,6 @@
 namespace App\User\Infrastructure\Security;
 
 use App\User\Domain\User;
-use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -13,7 +12,7 @@ use Symfony\Component\Security\Http\Authentication\AuthenticationSuccessHandlerI
 final readonly class JwtCookieSuccessHandler implements AuthenticationSuccessHandlerInterface
 {
     public function __construct(
-        private JWTTokenManagerInterface $jwtManager,
+        private AccessTokenMinter $accessTokens,
         private RefreshTokenRotator $refreshTokens,
         private TokenCookieFactory $cookies,
     ) {
@@ -24,10 +23,7 @@ final readonly class JwtCookieSuccessHandler implements AuthenticationSuccessHan
         /** @var User $user */
         $user = $token->getUser();
 
-        $jwt = $this->jwtManager->createFromPayload($user, [
-            'sub' => $user->getId()->toRfc4122(),
-            'email' => $user->getEmail(),
-        ]);
+        $jwt = $this->accessTokens->mintFor($user);
         $refreshToken = $this->refreshTokens->issueFor($user);
 
         $targetPath = (string) $request->request->get('_target_path', '');

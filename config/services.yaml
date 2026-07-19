@@ -18,6 +18,7 @@ services:
         exclude:
             - '../src/Kernel.php'
             - '../src/User/Domain/User.php'
+            - '../src/User/Infrastructure/Security/RefreshToken.php'
 
     App\Shared\Application\Bus\CommandBus: '@App\Shared\Infrastructure\MessengerCommandBus'
     App\Shared\Application\Bus\QueryBus: '@App\Shared\Infrastructure\MessengerQueryBus'
