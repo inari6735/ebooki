@@ -16,8 +16,16 @@ services:
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
-    App\:
-        resource: '../src/'
+    App\Shared\Application\Bus\CommandBus: '@App\Shared\Infrastructure\MessengerCommandBus'
+    App\Shared\Application\Bus\QueryBus: '@App\Shared\Infrastructure\MessengerQueryBus'
+
+    App\Shared\Infrastructure\MessengerCommandBus:
+        arguments:
+            $commandBus: '@messenger.bus.command'
+
+    App\Shared\Infrastructure\MessengerQueryBus:
+        arguments:
+            $queryBus: '@messenger.bus.query'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
