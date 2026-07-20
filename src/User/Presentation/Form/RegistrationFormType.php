@@ -17,6 +17,7 @@ final class RegistrationFormType extends AbstractType
         $builder
             ->add('email', EmailType::class, [
                 'label' => 'Email',
+                'attr' => ['autofocus' => true, 'autocomplete' => 'email'],
                 'constraints' => [
                     new Assert\NotBlank(),
                     new Assert\Email(),
@@ -26,8 +27,8 @@ final class RegistrationFormType extends AbstractType
             ->add('plainPassword', RepeatedType::class, [
                 'type' => PasswordType::class,
                 'invalid_message' => 'The password fields must match.',
-                'first_options' => ['label' => 'Password'],
-                'second_options' => ['label' => 'Repeat password'],
+                'first_options' => ['label' => 'Password', 'attr' => ['autocomplete' => 'new-password']],
+                'second_options' => ['label' => 'Repeat password', 'attr' => ['autocomplete' => 'new-password']],
                 'constraints' => [
                     new Assert\NotBlank(),
                     new Assert\Length(min: 8, max: 4096),

@@ -7,7 +7,7 @@
         type="{{ type }}"
         id="{{ fieldId }}"
         name="{{ name }}"
-        value="{{ value }}"
+        {% if value is not empty %}value="{{ value }}"{% endif %}
         class="field-input"
         {{ required ? 'required' }}
         {{ autofocus ? 'autofocus' }}
