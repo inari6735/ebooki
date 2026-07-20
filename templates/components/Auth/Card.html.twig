@@ -1,0 +1,18 @@
+{% props title, footerText = null, footerLinkLabel = null, footerLinkHref = null %}
+
+<div class="mx-auto max-w-sm">
+    {# Panel is inlined (not <twig:Card>) so this component's own `content` slot
+       is not nested inside Card's `content` block — Twig forbids two blocks of
+       the same name in one template. Card styling is mirrored here deliberately. #}
+    <div class="rounded-ui border border-zinc-200 bg-white p-6 shadow-sm">
+        <h1 class="mb-6 text-xl font-semibold text-zinc-900">{{ title }}</h1>
+        {% block content %}{% endblock %}
+    </div>
+
+    {% if footerText %}
+        <p class="mt-4 text-center text-sm text-zinc-600">
+            {{ footerText }}
+            <a href="{{ footerLinkHref }}" class="font-medium text-accent-600 hover:text-accent-700">{{ footerLinkLabel }}</a>
+        </p>
+    {% endif %}
+</div>

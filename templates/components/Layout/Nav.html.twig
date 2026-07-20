@@ -1,0 +1,17 @@
+<nav class="border-b border-zinc-200 bg-white">
+    <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+        <a href="{{ path('app_home') }}" class="text-sm font-semibold text-zinc-900">Ebooki</a>
+        <div class="flex items-center gap-3 text-sm">
+            {% if app.user %}
+                <span class="text-zinc-600">{{ app.user.userIdentifier }}</span>
+                <form method="post" action="{{ path('app_logout') }}">
+                    <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('logout') }}">
+                    <twig:Button type="submit" variant="ghost">Log out</twig:Button>
+                </form>
+            {% else %}
+                <twig:Button href="{{ path('app_login') }}" variant="ghost">Log in</twig:Button>
+                <twig:Button href="{{ path('app_register') }}" variant="primary">Register</twig:Button>
+            {% endif %}
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,16 @@
+{% props label, name, type = 'text', value = '', required = false, autofocus = false, autocomplete = null, id = null %}
+{% set fieldId = id ?? name %}
+
+<div class="mb-4">
+    <label for="{{ fieldId }}" class="field-label">{{ label }}</label>
+    <input
+        type="{{ type }}"
+        id="{{ fieldId }}"
+        name="{{ name }}"
+        value="{{ value }}"
+        class="field-input"
+        {{ required ? 'required' }}
+        {{ autofocus ? 'autofocus' }}
+        {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
+    >
+</div>

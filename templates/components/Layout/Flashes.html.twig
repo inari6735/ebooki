@@ -1,0 +1,6 @@
+{% set typeMap = { success: 'success', error: 'error', warning: 'warning' } %}
+{% for label, messages in app.flashes %}
+    {% for message in messages %}
+        <twig:Alert type="{{ typeMap[label] ?? 'info' }}" class="mb-3">{{ message }}</twig:Alert>
+    {% endfor %}
+{% endfor %}
