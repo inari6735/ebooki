@@ -1,0 +1,47 @@
+{% props label, name, type = 'text', placeholder = '', icon = null, autocomplete = null, required = false, autofocus = false, revealable = false, id = null %}
+{% set fieldId = id ?? name %}
+
+<div>
+    <label for="{{ fieldId }}" class="mb-2 block text-sm font-semibold text-zinc-800">{{ label }}</label>
+
+    <div class="relative"{% if revealable %} data-controller="password-toggle"{% endif %}>
+        {% if icon %}
+            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-zinc-400">
+                {% if icon == 'mail' %}
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/>
+                    </svg>
+                {% elseif icon == 'lock' %}
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+                    </svg>
+                {% endif %}
+            </span>
+        {% endif %}
+
+        <input
+            type="{{ type }}"
+            id="{{ fieldId }}"
+            name="{{ name }}"
+            placeholder="{{ placeholder }}"
+            class="block w-full rounded-ui border border-zinc-200 bg-white py-3 text-zinc-900 shadow-sm outline-none placeholder:text-zinc-400 focus:border-accent-600 focus:ring-2 focus:ring-accent-600/20 {{ icon ? 'pl-11' : 'pl-4' }} {{ revealable ? 'pr-11' : 'pr-4' }}"
+            {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
+            {{ required ? 'required' }}
+            {{ autofocus ? 'autofocus' }}
+            {% if revealable %}data-password-toggle-target="input"{% endif %}
+        >
+
+        {% if revealable %}
+            <button type="button" data-action="password-toggle#toggle"
+                    class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-zinc-400 transition-colors hover:text-zinc-600 focus:outline-none"
+                    aria-label="Pokaż lub ukryj hasło">
+                <svg data-password-toggle-target="showIcon" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg data-password-toggle-target="hideIcon" class="hidden h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M9.9 4.24A9.1 9.1 0 0 1 12 4c6.5 0 10 7 10 7a13.2 13.2 0 0 1-2.16 2.94M6.06 6.06A13.2 13.2 0 0 0 2 12s3.5 7 10 7a9.1 9.1 0 0 0 3.94-.9"/><path d="m1 1 22 22"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/>
+                </svg>
+            </button>
+        {% endif %}
+    </div>
+</div>

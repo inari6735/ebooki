@@ -1,0 +1,40 @@
+{% props badge, heading, subtitle %}
+
+<div class="max-w-lg">
+    <span class="inline-flex items-center gap-2 rounded-full border border-accent-100 bg-white/70 px-4 py-2 text-sm font-semibold text-accent-700 shadow-sm backdrop-blur">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        {{ badge }}
+    </span>
+
+    <h1 class="mt-8 text-5xl font-extrabold leading-tight tracking-tight text-zinc-900">{{ heading }}</h1>
+    <p class="mt-5 max-w-md text-lg leading-relaxed text-zinc-600">{{ subtitle }}</p>
+
+    <ul class="mt-9 space-y-5">
+        <li class="flex items-center gap-4">
+            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-accent-600 shadow-sm ring-1 ring-zinc-100">
+                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+            </span>
+            <span class="text-base font-semibold text-zinc-800">Kupuj i czytaj natychmiast</span>
+        </li>
+        <li class="flex items-center gap-4">
+            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-accent-600 shadow-sm ring-1 ring-zinc-100">
+                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M16 16l-4-4-4 4M12 12v9"/><path d="M20.4 14.5A5 5 0 0 0 18 5h-1.3A8 8 0 1 0 4 13.3"/>
+                </svg>
+            </span>
+            <span class="text-base font-semibold text-zinc-800">Sprzedawaj własne eBooki</span>
+        </li>
+        <li class="flex items-center gap-4">
+            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-accent-600 shadow-sm ring-1 ring-zinc-100">
+                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6" rx="1"/><rect x="12.5" y="8" width="3" height="10" rx="1"/><rect x="18" y="5" width="3" height="13" rx="1"/>
+                </svg>
+            </span>
+            <span class="text-base font-semibold text-zinc-800">Śledź sprzedaż i statystyki</span>
+        </li>
+    </ul>
+</div>

@@ -1,22 +1,23 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Log in{% endblock %}
+{% block title %}Zaloguj się · Bookly{% endblock %}
 
-{% block body %}
-    <twig:Auth:Card
-        title="Log in"
-        footerText="No account yet?"
-        footerLinkLabel="Register"
-        footerLinkHref="{{ path('app_register') }}"
-    >
-        <form method="post" action="{{ path('app_login') }}">
-            <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('authenticate') }}">
-            <input type="hidden" name="_target_path" value="{{ target_path }}">
+{% block shell %}
+    <twig:Auth:Shell backHref="{{ path('app_home') }}">
+        <twig:block name="brand">
+            <twig:Auth:BrandPanel
+                badge="Marketplace dla czytelników i autorów"
+                heading="Witaj ponownie w Bookly"
+                subtitle="Zaloguj się, aby kupować eBooki, zarządzać swoją biblioteką i sprzedawać własne publikacje."
+            />
+        </twig:block>
 
-            <twig:Field label="Email" name="email" type="email" autocomplete="email" required autofocus />
-            <twig:Field label="Password" name="password" type="password" autocomplete="current-password" required />
-
-            <twig:Button type="submit" variant="primary" wide>Log in</twig:Button>
-        </form>
-    </twig:Auth:Card>
+        <twig:block name="form">
+            <twig:Auth:LoginCard
+                loginPath="{{ path('app_login') }}"
+                registerPath="{{ path('app_register') }}"
+                targetPath="{{ target_path }}"
+            />
+        </twig:block>
+    </twig:Auth:Shell>
 {% endblock %}

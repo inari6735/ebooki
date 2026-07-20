@@ -1,0 +1,11 @@
+{% props label = null %}
+
+{% if label %}
+    <div class="flex items-center gap-4">
+        <span class="h-px flex-1 bg-zinc-200"></span>
+        <span class="whitespace-nowrap text-sm text-zinc-400">{{ label }}</span>
+        <span class="h-px flex-1 bg-zinc-200"></span>
+    </div>
+{% else %}
+    <span class="block h-px w-full bg-zinc-200"></span>
+{% endif %}

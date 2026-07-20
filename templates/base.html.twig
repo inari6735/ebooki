@@ -19,10 +19,12 @@
         {% endif %}
     </head>
     <body class="min-h-screen bg-zinc-50 text-zinc-900 antialiased">
-        <twig:Layout:Nav />
-        <main class="mx-auto max-w-5xl px-4 py-8">
-            <twig:Layout:Flashes />
-            {% block body %}{% endblock %}
-        </main>
+        {% block shell %}
+            <twig:Layout:Nav />
+            <main class="mx-auto max-w-5xl px-4 py-8">
+                <twig:Layout:Flashes />
+                {% block body %}{% endblock %}
+            </main>
+        {% endblock %}
     </body>
 </html>

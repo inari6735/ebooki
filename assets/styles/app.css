@@ -1,12 +1,16 @@
 @import "tailwindcss";
 
 @theme {
-    /* Accent — indigo */
-    --color-accent-50: #eef2ff;
-    --color-accent-100: #e0e7ff;
-    --color-accent-500: #6366f1;
-    --color-accent-600: #4f46e5;
-    --color-accent-700: #4338ca;
+    /* Accent — Bookly blue */
+    --color-accent-50: #eff6ff;
+    --color-accent-100: #dbeafe;
+    --color-accent-200: #bfdbfe;
+    --color-accent-500: #3b82f6;
+    --color-accent-600: #2563eb;
+    --color-accent-700: #1d4ed8;
+
+    /* Page canvas — the light blue backdrop behind the auth split-screen */
+    --color-canvas: #eef3fb;
 
     /* Flash / status semantics */
     --color-success-50: #ecfdf5;
@@ -23,8 +27,8 @@
     --color-draft-600: #d97706;
     --color-published-600: #059669;
 
-    /* Shared radius for cards / buttons / inputs */
-    --radius-ui: 0.625rem;
+    /* Shared radius for buttons / inputs */
+    --radius-ui: 0.75rem;
 }
 
 /* Single source of truth for form-control appearance (rule 8):
