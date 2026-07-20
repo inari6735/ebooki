@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
+        <title>{% block title %}Ebooki{% endblock %}</title>
         <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
         {% block stylesheets %}
         {% endblock %}
@@ -18,19 +18,11 @@
         <script src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm" type="module"></script>
         {% endif %}
     </head>
-    <body>
-        <nav>
-            {% if app.user %}
-                <span>{{ app.user.userIdentifier }}</span>
-                <form method="post" action="{{ path('app_logout') }}" style="display:inline">
-                    <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('logout') }}">
-                    <button type="submit">Log out</button>
-                </form>
-            {% else %}
-                <a href="{{ path('app_login') }}">Log in</a>
-                <a href="{{ path('app_register') }}">Register</a>
-            {% endif %}
-        </nav>
-        {% block body %}{% endblock %}
+    <body class="min-h-screen bg-zinc-50 text-zinc-900 antialiased">
+        <twig:Layout:Nav />
+        <main class="mx-auto max-w-5xl px-4 py-8">
+            <twig:Layout:Flashes />
+            {% block body %}{% endblock %}
+        </main>
     </body>
 </html>

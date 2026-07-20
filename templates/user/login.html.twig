@@ -3,27 +3,20 @@
 {% block title %}Log in{% endblock %}
 
 {% block body %}
-    <h1>Log in</h1>
+    <twig:Auth:Card
+        title="Log in"
+        footerText="No account yet?"
+        footerLinkLabel="Register"
+        footerLinkHref="{{ path('app_register') }}"
+    >
+        <form method="post" action="{{ path('app_login') }}">
+            <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('authenticate') }}">
+            <input type="hidden" name="_target_path" value="{{ target_path }}">
 
-    {% for message in app.flashes('success') %}
-        <p class="flash-success">{{ message }}</p>
-    {% endfor %}
-    {% for message in app.flashes('error') %}
-        <p class="flash-error">{{ message }}</p>
-    {% endfor %}
+            <twig:Field label="Email" name="email" type="email" autocomplete="email" required autofocus />
+            <twig:Field label="Password" name="password" type="password" autocomplete="current-password" required />
 
-    <form method="post" action="{{ path('app_login') }}">
-        <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('authenticate') }}">
-        <input type="hidden" name="_target_path" value="{{ target_path }}">
-
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" required autofocus>
-
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" required>
-
-        <button type="submit">Log in</button>
-    </form>
-
-    <p><a href="{{ path('app_register') }}">No account yet? Register</a></p>
+            <twig:Button type="submit" variant="primary" wide>Log in</twig:Button>
+        </form>
+    </twig:Auth:Card>
 {% endblock %}

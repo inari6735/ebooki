@@ -64,7 +64,7 @@ final class LoginTest extends WebTestCase
 
         self::assertResponseRedirects('/login');
         $this->client->followRedirect();
-        self::assertSelectorTextContains('.flash-error', 'Invalid email or password.');
+        self::assertSelectorTextContains('[role="alert"]', 'Invalid email or password.');
 
         $names = array_map(
             fn ($c) => $c->getName(),
@@ -79,7 +79,7 @@ final class LoginTest extends WebTestCase
 
         self::assertResponseRedirects('/login');
         $this->client->followRedirect();
-        self::assertSelectorTextContains('.flash-error', 'Invalid email or password.');
+        self::assertSelectorTextContains('[role="alert"]', 'Invalid email or password.');
     }
 
     public function testMaliciousTargetPathFallsBackToHome(): void

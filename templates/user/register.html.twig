@@ -3,14 +3,17 @@
 {% block title %}Register{% endblock %}
 
 {% block body %}
-    <h1>Register</h1>
-
-    {{ form_start(form) }}
-        {{ form_row(form.email) }}
-        {{ form_row(form.plainPassword.first) }}
-        {{ form_row(form.plainPassword.second) }}
-        <button type="submit">Register</button>
-    {{ form_end(form) }}
-
-    <p><a href="{{ path('app_login') }}">Already have an account? Log in</a></p>
+    <twig:Auth:Card
+        title="Register"
+        footerText="Already have an account?"
+        footerLinkLabel="Log in"
+        footerLinkHref="{{ path('app_login') }}"
+    >
+        {{ form_start(form) }}
+            {{ form_row(form.email) }}
+            {{ form_row(form.plainPassword.first) }}
+            {{ form_row(form.plainPassword.second) }}
+            <twig:Button type="submit" variant="primary" wide>Register</twig:Button>
+        {{ form_end(form) }}
+    </twig:Auth:Card>
 {% endblock %}
