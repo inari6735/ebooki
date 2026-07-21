@@ -15,14 +15,38 @@
         </span>
     </div>
 
-    <p class="mt-3 text-4xl font-extrabold text-accent-600">
-        {{ ebook.price|number_format(2, ',', ' ') }} <span class="text-2xl">zł</span>
-    </p>
-    <p class="mt-1 text-sm text-zinc-400">Cena zawiera VAT</p>
+    {% set isFree = ebook.isFree ?? false %}
+    {% set pwyw = ebook.payWhatYouWant ?? false %}
+    {% set base = ebook.price ?: 0 %}
+    {% set promo = ebook.promoPrice ?? null %}
+    {% set discounted = not isFree and not pwyw and promo and promo > 0 and promo < base %}
+    {% set effective = discounted ? promo : base %}
+    {% set discountPct = discounted ? ((base - promo) / base * 100)|round : 0 %}
+
+    {% if isFree %}
+        <p class="mt-3 text-4xl font-extrabold text-success-600">Za darmo</p>
+        <p class="mt-1 text-sm text-zinc-400">Pobierz bez opłat</p>
+    {% elseif pwyw %}
+        <p class="mt-3 text-3xl font-extrabold text-accent-600">Zapłać ile chcesz</p>
+        <p class="mt-1 text-sm text-zinc-400">Dobrowolna wpłata — Ty decydujesz</p>
+    {% else %}
+        <div class="mt-3 flex flex-wrap items-baseline gap-2.5">
+            <p class="text-4xl font-extrabold text-accent-600">{{ effective|number_format(2, ',', ' ') }} <span class="text-2xl">zł</span></p>
+            {% if discounted %}
+                <span class="text-lg text-zinc-400 line-through">{{ base|number_format(2, ',', ' ') }} zł</span>
+                <span class="rounded-full bg-error-50 px-2 py-0.5 text-xs font-bold text-error-600">-{{ discountPct }}%</span>
+            {% endif %}
+        </div>
+        <p class="mt-1 text-sm text-zinc-400">Cena zawiera VAT</p>
+    {% endif %}
 
     {# Cart / favourites — visual only until the checkout backend exists. #}
     <twig:Button variant="primary" size="lg" wide class="mt-6">
-        <twig:Icon name="cart" class="h-5 w-5" /> Kup teraz
+        {% if isFree %}
+            <twig:Icon name="cloud-upload" class="h-5 w-5 rotate-180" /> Pobierz za darmo
+        {% else %}
+            <twig:Icon name="cart" class="h-5 w-5" /> Kup teraz
+        {% endif %}
     </twig:Button>
     <twig:Button variant="outline" size="lg" wide class="mt-3">
         <twig:Icon name="heart" class="h-5 w-5" /> Dodaj do ulubionych

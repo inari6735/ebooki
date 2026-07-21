@@ -34,22 +34,24 @@
                 <twig:Ebook:Detail:PurchaseCard :ebook="ebook" />
 
                 {# Detailed info (key : value) #}
-                <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-zinc-100 sm:p-7">
-                    <p class="inline-flex items-center gap-2 text-base font-bold text-zinc-900">
-                        <twig:Icon name="sliders" class="h-5 w-5 text-accent-600" />
-                        Szczegółowe informacje
-                    </p>
-                    <table class="mt-4 w-full text-sm">
-                        <tbody>
-                            {% for d in ebook.details %}
-                                <tr class="border-b border-zinc-100 last:border-0">
-                                    <th scope="row" class="py-2.5 pr-4 text-left align-top font-medium text-zinc-500">{{ d.key }}</th>
-                                    <td class="break-words py-2.5 text-right align-top font-semibold text-zinc-900">{{ d.value }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                {% if ebook.details is not empty %}
+                    <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-zinc-100 sm:p-7">
+                        <p class="inline-flex items-center gap-2 text-base font-bold text-zinc-900">
+                            <twig:Icon name="sliders" class="h-5 w-5 text-accent-600" />
+                            Szczegółowe informacje
+                        </p>
+                        <table class="mt-4 w-full text-sm">
+                            <tbody>
+                                {% for d in ebook.details %}
+                                    <tr class="border-b border-zinc-100 last:border-0">
+                                        <th scope="row" class="py-2.5 pr-4 text-left align-top font-medium text-zinc-500">{{ d.key }}</th>
+                                        <td class="break-words py-2.5 text-right align-top font-semibold text-zinc-900">{{ d.value }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>

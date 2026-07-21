@@ -7,8 +7,8 @@
             <twig:Ebook:Cover :src="ebook.cover" title="{{ ebook.title }}" width="w-full" />
         </div>
 
-        <div class="min-w-0 flex-1">
-            <twig:Badge variant="brand">eBook</twig:Badge>
+        <div class="flex min-w-0 flex-1 flex-col">
+            <twig:Badge variant="brand" class="self-start">eBook</twig:Badge>
 
             <h1 class="mt-4 break-words text-3xl font-extrabold leading-tight tracking-tight text-zinc-900 sm:text-4xl">
                 {{ ebook.title }}
@@ -34,16 +34,18 @@
 
             <p class="break-words text-base leading-relaxed text-zinc-600">{{ ebook.shortDescription }}</p>
 
-            <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-                <span class="inline-flex items-center gap-2">
-                    <twig:Icon name="star" class="h-5 w-5 text-accent-600" />
-                    <span class="font-bold text-zinc-900">{{ ebook.rating|number_format(1, ',', ' ') }}</span>
-                </span>
-                <span class="text-zinc-300">|</span>
-                <span class="text-zinc-500">{{ ebook.ratingCount }} ocen</span>
-                <span class="text-zinc-300">|</span>
-                <span class="text-zinc-500">{{ ebook.ratingNote }}</span>
-            </div>
+            {% if ebook.rating is defined and ebook.rating %}
+                <div class="mt-auto flex flex-wrap items-center gap-x-5 gap-y-2 pt-6 text-sm">
+                    <span class="inline-flex items-center gap-2">
+                        <twig:Icon name="star" class="h-5 w-5 text-accent-600" />
+                        <span class="font-bold text-zinc-900">{{ ebook.rating|number_format(1, ',', ' ') }}</span>
+                    </span>
+                    <span class="text-zinc-300">|</span>
+                    <span class="text-zinc-500">{{ ebook.ratingCount }} ocen</span>
+                    <span class="text-zinc-300">|</span>
+                    <span class="text-zinc-500">{{ ebook.ratingNote }}</span>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>

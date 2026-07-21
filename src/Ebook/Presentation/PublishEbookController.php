@@ -19,7 +19,7 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 final class PublishEbookController extends AbstractController
 {
-    private const string SESSION_KEY = 'publish_ebook_wizard';
+    public const string SESSION_KEY = 'publish_ebook_wizard';
     private const int LAST_STEP = 4;
 
     #[Route('/wystaw-ebook/{step}', name: 'app_publish_ebook', requirements: ['step' => '[1-4]'], defaults: ['step' => 1], methods: ['GET', 'POST'])]

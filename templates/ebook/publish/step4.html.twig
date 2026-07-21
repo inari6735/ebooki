@@ -109,7 +109,11 @@
                 {% endfor %}
             </ul>
 
-            <twig:Button type="submit" variant="primary" size="lg" wide form="publish-form" class="mt-8">
+            <twig:Button href="{{ path('app_publish_ebook_preview') }}" target="_blank" rel="noopener"
+                         variant="outline" size="lg" wide class="mt-8">
+                <twig:Icon name="eye" class="h-5 w-5" /> Podgląd strony eBooka
+            </twig:Button>
+            <twig:Button type="submit" variant="primary" size="lg" wide form="publish-form" class="mt-3">
                 <twig:Icon name="cloud-upload" class="h-5 w-5" /> Opublikuj eBook
             </twig:Button>
             <p class="mt-3 text-xs text-zinc-400">Publikując, akceptujesz regulamin Bookly.</p>
@@ -122,6 +126,9 @@
         <twig:Icon name="arrow-left" class="h-5 w-5" /> Wstecz
     </twig:Button>
     <a href="{{ path('app_publish_ebook', { step: 4 }) }}?draft=1" class="inline-flex items-center justify-center rounded-ui border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50">Zapisz szkic</a>
+    <twig:Button href="{{ path('app_publish_ebook_preview') }}" target="_blank" rel="noopener" variant="outline">
+        <twig:Icon name="eye" class="h-5 w-5" /> Podgląd
+    </twig:Button>
     <twig:Button type="submit" variant="primary" size="lg" form="publish-form">
         <twig:Icon name="cloud-upload" class="h-5 w-5" /> Opublikuj eBook
     </twig:Button>

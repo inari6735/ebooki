@@ -31,6 +31,9 @@ final class EbookDetailController extends AbstractController
             'ratingCount' => 326,
             'ratingNote' => 'Zaufany wybór tysięcy czytelników',
             'price' => 29.99,
+            'isFree' => false,
+            'payWhatYouWant' => false,
+            'promoPrice' => null,
             'details' => [
                 ['key' => 'Liczba stron', 'value' => '248'],
                 ['key' => 'Rok wydania', 'value' => '2024'],
