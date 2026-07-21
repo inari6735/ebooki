@@ -56,6 +56,27 @@ backend, move its name into `registration[...]` and add it to `RegistrationFormT
 
 ---
 
+## Global chrome — Header (`templates/components/Layout/Header.html.twig`)
+
+| Element | Current stub | Backend needed |
+|---|---|---|
+| **Nav: Kategorie (dropdown)** | `<a href="#">` + caret, no menu | categories taxonomy + listing pages; the dropdown panel |
+| **Nav: Bestsellery / Najnowsze / Promocje** | `href="#"` | catalog listing pages with the respective sorting/filter |
+| **Nav: Jak to działa? / Dla autorów** | `href="#"` | static/marketing pages |
+| **Search icon** | `<a href="#">` | search page + query backend |
+| **Mobile menu** | works (Stimulus `disclosure`) — visual nav only | same targets as above |
+
+Real: logo → `app_home`, Zaloguj się → `app_login`, Załóż konto → `app_register`, logout form (functional, CSRF-protected).
+
+## Global chrome — Footer (`templates/components/Layout/Footer.html.twig`)
+
+| Element | Current stub | Backend needed |
+|---|---|---|
+| **Newsletter form** | `action="#"`, `name="newsletter_email"`, does nothing | subscription endpoint + mailing integration |
+| **Social icons** (Facebook/Instagram/X/YouTube) | `href="#"` | real profile URLs |
+| **Link columns** (Bookly, Dla autorów, Moje konto, Pomoc) | every link `href="#"` | the target pages (about, blog, terms, privacy, author guides, account, help, FAQ, support) |
+| **Contact block** | static text (`kontakt@bookly.pl`, phone, hours) | replace with real contact details when known |
+
 ## Related backend backlog (not frontend mocks, but adjacent)
 
 These are tracked in memory (`auth-follow-ups`) and are worth pairing with the above when
