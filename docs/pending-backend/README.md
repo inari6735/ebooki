@@ -108,17 +108,26 @@ There is **no catalog backend**, so the controller renders one fixed sample eBoo
 | **"Wystaw swój eBook"** (primary CTA) | `href="#"` | author eBook-upload flow (auth-gated) |
 | **"Przeglądaj ofertę"** (outline CTA) | `href="#"` | public catalog / offer listing |
 
+## Homepage — Publish-flow section (`templates/components/Home/PublishFlow.html.twig`)
+
+Under the hero: "Wystaw eBooka w 3 prostych krokach" — the prepared infographic
+(`assets/images/home-easy-flow.png`, static illustration) + a **real** CTA to the
+wizard (`app_publish_ebook`). Nothing pending; the image is decorative (the actual
+3-step flow it depicts is the live wizard).
+
 ## Global chrome — Header (`templates/components/Layout/Header.html.twig`)
+
+Nav trimmed to **Odkrywaj · Kategorie · Jak to działa?** (removed Strona główna, Bestsellery, Najnowsze, Promocje, Dla autorów).
 
 | Element | Current stub | Backend needed |
 |---|---|---|
-| **Nav: Kategorie (dropdown)** | `<a href="#">` + caret, no menu | categories taxonomy + listing pages; the dropdown panel |
-| **Nav: Bestsellery / Najnowsze / Promocje** | `href="#"` | catalog listing pages with the respective sorting/filter |
-| **Nav: Jak to działa? / Dla autorów** | `href="#"` | static/marketing pages |
+| **Nav: Odkrywaj** | `<a href="#">` | public catalog / discover page |
+| **Nav: Kategorie (dropdown)** | hover/focus dropdown **lists the real DB categories** (`nav_categories()` Twig fn → `CategoryRepository::all()`); each category link is still `href="#"` | per-category catalog listing pages (the target of each link) |
+| **Nav: Jak to działa?** | `href="#"` | static/marketing page |
 | **Search icon** | `<a href="#">` | search page + query backend |
 | **Mobile menu** | works (Stimulus `disclosure`) — visual nav only | same targets as above |
 
-Real: logo → `app_home`, Zaloguj się → `app_login`, Załóż konto → `app_register`, logout form (functional, CSRF-protected).
+Real: logo → `app_home`; Zaloguj się → `app_login`, Załóż konto → `app_register`; when logged in, a **default avatar** (email initial) opens an account dropdown with **Wystaw eBook** (`app_publish_ebook`, works incl. anonymous) + logout — `disclosure` controller closes on outside-click/Escape; logout form functional + CSRF-protected. (No top-bar "Wystaw eBook" CTA — the link lives in the account/mobile menu.)
 
 ## Global chrome — Footer (`templates/components/Layout/Footer.html.twig`)
 

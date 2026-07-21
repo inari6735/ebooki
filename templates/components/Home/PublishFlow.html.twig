@@ -1,0 +1,23 @@
+<section class="bg-white py-16 lg:py-24">
+    <div class="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-2xl text-center">
+            <span class="inline-flex items-center gap-2 rounded-full bg-accent-50 px-4 py-1.5 text-sm font-semibold text-accent-700">
+                <twig:Icon name="lightning" class="h-4 w-4" /> Proste jak nigdy
+            </span>
+            <h2 class="mt-4 text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl">Wystaw eBooka w 3 prostych krokach</h2>
+            <p class="mt-3 text-lg text-zinc-500">Wypełnij formularz, kliknij „Opublikuj" i gotowe — Twój eBook trafia do sklepu w kilka minut.</p>
+        </div>
+
+        <div class="mx-auto mt-12 max-w-5xl overflow-hidden rounded-3xl ring-1 ring-zinc-100 shadow-sm">
+            <img src="{{ asset('images/home-easy-flow.png') }}"
+                 alt="Trzy kroki wystawienia eBooka: wypełnij formularz, opublikuj eBook, gotowe."
+                 class="w-full" width="1672" height="941" loading="lazy">
+        </div>
+
+        <div class="mt-10 text-center">
+            <twig:Button href="{{ path('app_publish_ebook') }}" variant="primary" size="lg">
+                <twig:Icon name="cloud-upload" class="h-5 w-5" /> Wystaw swój eBook
+            </twig:Button>
+        </div>
+    </div>
+</section>
