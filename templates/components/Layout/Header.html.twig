@@ -57,6 +57,9 @@
                             </div>
                         </div>
                         <div class="my-1 h-px bg-zinc-100"></div>
+                        <a href="{{ path('app_dashboard') }}" class="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50">
+                            <twig:Icon name="user" class="h-5 w-5 text-zinc-400" /> Mój panel
+                        </a>
                         <a href="{{ path('app_publish_ebook') }}" class="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50">
                             <twig:Icon name="cloud-upload" class="h-5 w-5 text-zinc-400" /> Wystaw eBook
                         </a>
@@ -103,6 +106,7 @@
                         <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent-500 to-accent-700 text-base font-bold uppercase text-white">{{ app.user.userIdentifier|first }}</span>
                         <p class="truncate text-sm font-medium text-zinc-700">{{ app.user.userIdentifier }}</p>
                     </div>
+                    <a href="{{ path('app_dashboard') }}" class="rounded-ui px-3 py-2.5 text-[15px] font-medium text-zinc-700 hover:bg-zinc-50">Mój panel</a>
                     <form method="post" action="{{ path('app_logout') }}">
                         <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('logout') }}">
                         <twig:Button type="submit" variant="outline" wide>Wyloguj</twig:Button>

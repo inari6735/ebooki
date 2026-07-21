@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+
+{# Shared shell for the account panel: left menu + support, content in `panel_content`.
+   Pages set `active` (via the controller) to highlight the current menu item. #}
+{% set panelMenu = [
+    { key: 'pulpit',     label: 'Pulpit',     icon: 'home',     href: path('app_dashboard') },
+    { key: 'wystawione', label: 'Wystawione', icon: 'book',     href: '#' },
+    { key: 'zakupione',  label: 'Zakupione',  icon: 'cart',     href: '#' },
+    { key: 'ustawienia', label: 'Ustawienia', icon: 'settings', href: '#' },
+] %}
+
+{% block body %}
+    <section class="bg-canvas py-8 lg:py-10">
+        <div class="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col gap-6 lg:flex-row lg:gap-8">
+                {# Sidebar #}
+                <aside class="lg:w-64 lg:shrink-0">
+                    <nav class="flex gap-1 overflow-x-auto rounded-2xl bg-white p-2 shadow-sm ring-1 ring-zinc-100 lg:flex-col lg:p-3">
+                        {% for item in panelMenu %}
+                            <a href="{{ item.href }}"
+                               class="flex shrink-0 items-center gap-3 rounded-xl px-3.5 py-2.5 text-[15px] font-medium transition-colors {{ item.key == active|default('') ? 'bg-accent-50 text-accent-700' : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900' }}">
+                                <twig:Icon name="{{ item.icon }}" class="h-5 w-5 {{ item.key == active|default('') ? 'text-accent-600' : 'text-zinc-400' }}" />
+                                {{ item.label }}
+                            </a>
+                        {% endfor %}
+                    </nav>
+
+                    {# Support #}
+                    <div class="mt-4 rounded-2xl bg-gradient-to-br from-accent-600 to-accent-700 p-5 text-white shadow-sm">
+                        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
+                            <twig:Icon name="help" class="h-5 w-5" />
+                        </span>
+                        <p class="mt-3 font-semibold">Potrzebujesz pomocy?</p>
+                        <p class="mt-1 text-sm text-white/80">Napisz do nas — zespół wsparcia chętnie pomoże.</p>
+                        <a href="mailto:kontakt@bookly.pl" class="mt-4 inline-flex items-center gap-2 rounded-ui bg-white px-4 py-2 text-sm font-semibold text-accent-700 transition-colors hover:bg-accent-50">
+                            <twig:Icon name="mail" class="h-4 w-4" /> Skontaktuj się
+                        </a>
+                    </div>
+                </aside>
+
+                {# Content #}
+                <div class="min-w-0 flex-1">
+                    {% block panel_content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

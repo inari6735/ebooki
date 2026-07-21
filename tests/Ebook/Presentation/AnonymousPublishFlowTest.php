@@ -55,6 +55,13 @@ final class AnonymousPublishFlowTest extends WebTestCase
         // 5. The eBook is now published, no second click needed.
         self::assertResponseRedirects('/');
         self::assertSame(1, $em->getRepository(Ebook::class)->count([]));
+
+        // 6. The Pulpit lists the published eBook (real row: title + status + price).
+        $client->request('GET', 'https://localhost/panel');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('h1', 'Pulpit');
+        self::assertSelectorTextContains('body', 'Skuteczna produktywność');
+        self::assertSelectorTextContains('body', 'Opublikowany');
     }
 
     private function fillSession(): void

@@ -298,4 +298,9 @@ class Ebook
     {
         return $this->description;
     }
+
+    public function getCreatedAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
 }

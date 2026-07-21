@@ -101,6 +101,25 @@ There is **no catalog backend**, so the controller renders one fixed sample eBoo
 | **Breadcrumb category link** | `href="#"` | category listing page |
 | **Delivery section** (`Ebook:Detail:Delivery`) | native (Twig/Tailwind) illustration of buy → pay → email-download; the mini mockups (add-to-cart, payment methods, download email) are static | build the real checkout, payment and post-purchase email/download flow it depicts |
 
+## Account panel (`src/Ebook/Presentation/DashboardController.php`, `templates/dashboard/`)
+
+`/panel` (`app_dashboard`, `ROLE_USER`) — the signed-in user's panel. Own shell
+(`dashboard/layout.html.twig`): left **menu** (Pulpit · Wystawione · Zakupione ·
+Ustawienia) + a **support** card (`mailto:kontakt@bookly.pl`). Linked from the header
+avatar dropdown ("Mój panel") + mobile menu. Pages pass `active` to highlight the item.
+
+**Pulpit (`dashboard/index.html.twig`) — working for real:** general (not detailed)
+stats — Wystawione / Opublikowane / Szkice counts (`EbookRepository::findByOwner`) —
+plus quick-action shortcuts.
+
+| Element | Current stub | Backend needed |
+|---|---|---|
+| **Menu: Wystawione** | `href="#"` | page listing the author's eBooks (the old list UI — cover, status, price, edit) |
+| **Menu: Zakupione** | `href="#"` | buyer's purchased eBooks (needs the commerce context) |
+| **Menu: Ustawienia** | `href="#"` | account settings (profile, password, preferences) |
+| **"Sprzedaż" stat** | "Wkrótce" / "—" | orders/earnings from the commerce context |
+| **Shortcuts** (Wystawione / Zakupione / Odkrywaj / Ustawienia) | `href="#"` | same targets as the menu items above / public catalog |
+
 ## Homepage — Hero (`templates/components/Home/Hero.html.twig`)
 
 | Element | Current stub | Backend needed |

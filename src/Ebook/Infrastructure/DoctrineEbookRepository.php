@@ -26,6 +26,12 @@ final readonly class DoctrineEbookRepository implements EbookRepository
         return $this->entityManager->find(Ebook::class, $id);
     }
 
+    public function findByOwner(Uuid $ownerId): array
+    {
+        return $this->entityManager->getRepository(Ebook::class)
+            ->findBy(['userId' => $ownerId], ['createdAt' => 'DESC']);
+    }
+
     public function slugExists(string $slug): bool
     {
         return null !== $this->entityManager->getRepository(Ebook::class)->findOneBy(['slug' => $slug]);
