@@ -57,5 +57,5 @@ final class PublishEbookData
 
     public bool $freeFragment = true;
 
-    public const int AUTHOR_SHARE = 70; // % the author keeps
+    public const int AUTHOR_SHARE = 90; // % the author keeps
 }

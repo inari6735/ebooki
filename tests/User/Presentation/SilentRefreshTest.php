@@ -20,7 +20,7 @@ final class SilentRefreshTest extends WebTestCase
             new RegisterUser(Uuid::v7()->toRfc4122(), 'silent@example.com', 'password123'),
         );
         $this->client->request('GET', 'https://localhost/login');
-        $this->client->submitForm('Log in', [
+        $this->client->submitForm('Zaloguj się', [
             'email' => 'silent@example.com',
             'password' => 'password123',
         ]);

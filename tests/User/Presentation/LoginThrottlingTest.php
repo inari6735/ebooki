@@ -34,14 +34,14 @@ final class LoginThrottlingTest extends WebTestCase
     {
         for ($i = 0; $i < 5; ++$i) {
             $this->client->request('GET', 'https://localhost/login');
-            $this->client->submitForm('Log in', [
+            $this->client->submitForm('Zaloguj się', [
                 'email' => 'throttle@example.com',
                 'password' => 'wrong-' . $i,
             ]);
         }
 
         $this->client->request('GET', 'https://localhost/login');
-        $this->client->submitForm('Log in', [
+        $this->client->submitForm('Zaloguj się', [
             'email' => 'throttle@example.com',
             'password' => 'password123',
         ]);

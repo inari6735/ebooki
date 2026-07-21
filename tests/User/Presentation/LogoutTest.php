@@ -21,7 +21,7 @@ final class LogoutTest extends WebTestCase
             new RegisterUser(Uuid::v7()->toRfc4122(), 'bye@example.com', 'password123'),
         );
         $this->client->request('GET', 'https://localhost/login');
-        $this->client->submitForm('Log in', [
+        $this->client->submitForm('Zaloguj się', [
             'email' => 'bye@example.com',
             'password' => 'password123',
         ]);
@@ -30,7 +30,8 @@ final class LogoutTest extends WebTestCase
 
     public function testNavShowsUserEmailWhenLoggedIn(): void
     {
-        self::assertSelectorTextContains('nav', 'bye@example.com');
+        // The email lives in the header's action area, not inside a <nav>.
+        self::assertSelectorTextContains('header', 'bye@example.com');
     }
 
     public function testLogoutCsrfFieldLoadsTheCsrfProtectionController(): void
@@ -44,7 +45,7 @@ final class LogoutTest extends WebTestCase
 
     public function testLogoutClearsCookiesAndRevokesRefreshTokens(): void
     {
-        $this->client->submitForm('Log out');
+        $this->client->submitForm('Wyloguj');
 
         self::assertResponseRedirects('/login');
 
@@ -60,8 +61,9 @@ final class LogoutTest extends WebTestCase
             ->getSingleScalarResult();
         self::assertSame(0, (int) $count);
 
-        $this->client->followRedirect();
-        self::assertSelectorTextContains('nav', 'Log in');
+        // Back on a normal page, the header now offers to log in again.
+        $this->client->request('GET', 'https://localhost/');
+        self::assertSelectorTextContains('header', 'Zaloguj się');
     }
 
     public function testLogoutWithoutCsrfTokenIsRejected(): void

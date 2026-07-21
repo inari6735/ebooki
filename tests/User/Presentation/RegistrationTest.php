@@ -26,7 +26,7 @@ final class RegistrationTest extends WebTestCase
     public function testSuccessfulRegistrationRedirectsToLogin(): void
     {
         $this->client->request('GET', 'https://localhost/register');
-        $this->client->submitForm('Register', [
+        $this->client->submitForm('Utwórz konto', [
             'registration[email]' => 'newreader@example.com',
             'registration[plainPassword][first]' => 'password123',
             'registration[plainPassword][second]' => 'password123',
@@ -44,14 +44,14 @@ final class RegistrationTest extends WebTestCase
     public function testDuplicateEmailShowsFormError(): void
     {
         $this->client->request('GET', 'https://localhost/register');
-        $this->client->submitForm('Register', [
+        $this->client->submitForm('Utwórz konto', [
             'registration[email]' => 'dupe@example.com',
             'registration[plainPassword][first]' => 'password123',
             'registration[plainPassword][second]' => 'password123',
         ]);
 
         $this->client->request('GET', 'https://localhost/register');
-        $this->client->submitForm('Register', [
+        $this->client->submitForm('Utwórz konto', [
             'registration[email]' => 'dupe@example.com',
             'registration[plainPassword][first]' => 'password123',
             'registration[plainPassword][second]' => 'password123',
@@ -64,7 +64,7 @@ final class RegistrationTest extends WebTestCase
     public function testShortPasswordIsRejected(): void
     {
         $this->client->request('GET', 'https://localhost/register');
-        $this->client->submitForm('Register', [
+        $this->client->submitForm('Utwórz konto', [
             'registration[email]' => 'short@example.com',
             'registration[plainPassword][first]' => 'short',
             'registration[plainPassword][second]' => 'short',

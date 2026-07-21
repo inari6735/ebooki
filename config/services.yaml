@@ -7,6 +7,9 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    # Default platform commission in basis points (1000 = 10%; author keeps 90%).
+    # This is the fallback rate; richer rules are added as CommissionPolicy classes.
+    app.ebook.commission_bps: 1000
 
 services:
     _defaults:
@@ -37,3 +40,25 @@ services:
 
     App\User\Infrastructure\Security\RefreshTokenRotator:
         public: true
+
+    # Commission: policies are auto-tagged via CommissionPolicy's AutoconfigureTag;
+    # the calculator receives them highest-priority first (flat rate is the fallback).
+    App\Ebook\Domain\Commission\CommissionCalculator:
+        arguments:
+            $policies: !tagged_iterator app.ebook.commission_policy
+
+    App\Ebook\Domain\Commission\FlatRateCommissionPolicy:
+        arguments:
+            $rate: !service
+                class: App\Ebook\Domain\Commission\CommissionRate
+                factory: ['App\Ebook\Domain\Commission\CommissionRate', 'fromBasisPoints']
+                arguments: ['%app.ebook.commission_bps%']
+
+when@test:
+    services:
+        # Public alias for CommissionWiringTest; it has no consumer yet (Phase 2
+        # checkout will inject it), so without a reference the container would prune
+        # this private service. The alias keeps it and exposes it to the test.
+        test.ebook.commission_calculator:
+            alias: App\Ebook\Domain\Commission\CommissionCalculator
+            public: true

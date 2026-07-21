@@ -23,7 +23,7 @@ final class LoginTest extends WebTestCase
     private function submitLogin(string $email, string $password): void
     {
         $this->client->request('GET', 'https://localhost/login');
-        $this->client->submitForm('Log in', [
+        $this->client->submitForm('Zaloguj się', [
             'email' => $email,
             'password' => $password,
         ]);
@@ -85,7 +85,7 @@ final class LoginTest extends WebTestCase
     public function testMaliciousTargetPathFallsBackToHome(): void
     {
         $this->client->request('GET', 'https://localhost/login');
-        $this->client->submitForm('Log in', [
+        $this->client->submitForm('Zaloguj się', [
             'email' => 'login@example.com',
             'password' => 'password123',
             '_target_path' => '/\\evil.com',
@@ -97,7 +97,7 @@ final class LoginTest extends WebTestCase
     public function testRelativeTargetPathIsHonoured(): void
     {
         $this->client->request('GET', 'https://localhost/login');
-        $this->client->submitForm('Log in', [
+        $this->client->submitForm('Zaloguj się', [
             'email' => 'login@example.com',
             'password' => 'password123',
             '_target_path' => '/register',
