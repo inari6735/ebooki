@@ -56,6 +56,13 @@ backend, move its name into `registration[...]` and add it to `RegistrationFormT
 
 ---
 
+## Homepage — Hero (`templates/components/Home/Hero.html.twig`)
+
+| Element | Current stub | Backend needed |
+|---|---|---|
+| **"Wystaw swój eBook"** (primary CTA) | `href="#"` | author eBook-upload flow (auth-gated) |
+| **"Przeglądaj ofertę"** (outline CTA) | `href="#"` | public catalog / offer listing |
+
 ## Global chrome — Header (`templates/components/Layout/Header.html.twig`)
 
 | Element | Current stub | Backend needed |

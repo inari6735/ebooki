@@ -1,0 +1,56 @@
+{% set features = [
+    { icon: 'tag',    title: '0% opłat za dodanie',  text: 'Płacisz tylko od sprzedaży' },
+    { icon: 'shield', title: 'Bezpieczne transakcje', text: 'Pewne płatności i ochrona' },
+    { icon: 'users',  title: 'Tysiące twórców',      text: 'Dołącz do naszej społeczności' },
+] %}
+
+<section class="relative overflow-hidden bg-canvas bg-cover bg-center bg-no-repeat"
+         style="background-image: url('{{ asset('images/hero-bg.png') }}')">
+    <div class="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
+        <div class="grid items-center gap-12 lg:grid-cols-2">
+            {# Left — copy #}
+            <div>
+                <span class="inline-flex items-center gap-2 rounded-full border border-accent-100 bg-white/70 px-4 py-2 text-sm font-semibold text-accent-700 shadow-sm backdrop-blur">
+                    <twig:Icon name="users" class="h-4 w-4" />
+                    Marketplace dla czytelników i autorów
+                </span>
+
+                <h1 class="mt-6 text-4xl font-extrabold leading-tight tracking-tight text-zinc-900 sm:text-5xl">
+                    Kupuj i sprzedawaj eBooki w jednym miejscu
+                </h1>
+
+                <p class="mt-5 max-w-xl text-lg leading-relaxed text-zinc-600">
+                    Jesteś autorem? Prześlij swojego eBooka, ustaw cenę i zacznij sprzedawać bez zbędnych formalności. Jesteś czytelnikiem? Odkrywaj tysiące tytułów od niezależnych twórców i wydawców.
+                </p>
+
+                <div class="mt-8 flex flex-col gap-4 sm:flex-row">
+                    <twig:Button href="#" variant="primary" size="lg">
+                        <twig:Icon name="cloud-upload" class="h-5 w-5" />
+                        Wystaw swój eBook
+                    </twig:Button>
+                    <twig:Button href="#" variant="outline" size="lg">Przeglądaj ofertę</twig:Button>
+                </div>
+
+                <div class="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-3">
+                    {% for f in features %}
+                        <div class="flex items-center gap-3">
+                            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-accent-600 shadow-sm ring-1 ring-zinc-100">
+                                <twig:Icon name="{{ f.icon }}" class="h-5 w-5" />
+                            </span>
+                            <span>
+                                <span class="block text-sm font-semibold text-zinc-800">{{ f.title }}</span>
+                                <span class="block text-sm text-zinc-500">{{ f.text }}</span>
+                            </span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {# Right — illustration #}
+            <div class="relative">
+                <img src="{{ asset('images/hero-asset.png') }}" alt=""
+                     class="w-full max-w-2xl lg:max-w-none lg:-mr-6 xl:-mr-12">
+            </div>
+        </div>
+    </div>
+</section>
