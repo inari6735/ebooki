@@ -3,13 +3,17 @@
 {% block title %}Zaloguj się · Bookly{% endblock %}
 
 {% block shell %}
-    <twig:Auth:Shell backHref="{{ path('app_home') }}">
+    <twig:Auth:Shell backHref="{{ path('app_home') }}" backgroundImage="{{ asset('images/login-bg.png') }}">
         <twig:block name="brand">
             <twig:Auth:BrandPanel
                 badge="Marketplace dla czytelników i autorów"
                 heading="Witaj ponownie w Bookly"
                 subtitle="Zaloguj się, aby kupować eBooki, zarządzać swoją biblioteką i sprzedawać własne publikacje."
             />
+        </twig:block>
+
+        <twig:block name="illustration">
+            <twig:Auth:Illustration src="{{ asset('images/login-brand.png') }}" position="right" />
         </twig:block>
 
         <twig:block name="form">

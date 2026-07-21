@@ -1,0 +1,11 @@
+{% props src, position = 'right' %}
+
+{# Positioned decorative illustration for the brand column (absolute, bottom-anchored).
+   Presets keep each page's tuning in one place. #}
+{% set variants = {
+    right: 'right-0 max-w-[700px] translate-x-[100px]',
+    left:  'left-0 max-w-3xl',
+} %}
+
+<img src="{{ src }}" alt=""
+     class="pointer-events-none absolute bottom-0 w-full object-contain {{ variants[position] }}">

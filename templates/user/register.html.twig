@@ -1,19 +1,27 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Register{% endblock %}
+{% block title %}Załóż konto · Bookly{% endblock %}
 
-{% block body %}
-    <twig:Auth:Card
-        title="Register"
-        footerText="Already have an account?"
-        footerLinkLabel="Log in"
-        footerLinkHref="{{ path('app_login') }}"
-    >
-        {{ form_start(form) }}
-            {{ form_row(form.email) }}
-            {{ form_row(form.plainPassword.first) }}
-            {{ form_row(form.plainPassword.second) }}
-            <twig:Button type="submit" variant="primary" wide>Register</twig:Button>
-        {{ form_end(form) }}
-    </twig:Auth:Card>
+{% block shell %}
+    <twig:Auth:Shell backHref="{{ path('app_home') }}" backgroundImage="{{ asset('images/register-bg.png') }}">
+        <twig:block name="brand">
+            <twig:Auth:RegisterBrand
+                badge="Dołącz do społeczności autorów i czytelników"
+                heading="Załóż konto i zacznij sprzedawać swoje eBooki"
+                subtitle="Publikuj własne treści, ustawiaj ceny, docieraj do czytelników i rozwijaj swoją markę — wszystko w jednym miejscu."
+            />
+        </twig:block>
+
+        <twig:block name="illustration">
+            <twig:Auth:Illustration src="{{ asset('images/register-brand.png') }}" position="right" />
+        </twig:block>
+
+        <twig:block name="form">
+            <twig:Auth:RegisterCard
+                :form="form"
+                registerPath="{{ path('app_register') }}"
+                loginPath="{{ path('app_login') }}"
+            />
+        </twig:block>
+    </twig:Auth:Shell>
 {% endblock %}

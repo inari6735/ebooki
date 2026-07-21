@@ -1,0 +1,49 @@
+{% props badge, heading, subtitle %}
+
+<div class="max-w-lg">
+    <span class="inline-flex items-center gap-2 rounded-full border border-accent-100 bg-white/70 px-4 py-2 text-sm font-semibold text-accent-700 shadow-sm backdrop-blur">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        {{ badge }}
+    </span>
+
+    <h1 class="mt-8 text-5xl font-extrabold leading-tight tracking-tight text-zinc-900">{{ heading }}</h1>
+    <p class="mt-5 max-w-md text-lg leading-relaxed text-zinc-600">{{ subtitle }}</p>
+
+    <ul class="mt-9 space-y-6">
+        <li class="flex items-start gap-4">
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent-50 text-accent-600">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M13 2 3 14h7l-1 8 10-12h-7z"/>
+                </svg>
+            </span>
+            <span>
+                <span class="block text-base font-semibold text-zinc-800">Szybka publikacja</span>
+                <span class="mt-0.5 block text-sm text-zinc-500">Dodaj eBooka i opublikuj go w kilka minut.</span>
+            </span>
+        </li>
+        <li class="flex items-start gap-4">
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent-50 text-accent-600">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M20.6 13.4 12 22l-9-9V3h10z"/><circle cx="7.5" cy="7.5" r="1.5" fill="currentColor" stroke="none"/>
+                </svg>
+            </span>
+            <span>
+                <span class="block text-base font-semibold text-zinc-800">Pełna kontrola nad ceną</span>
+                <span class="mt-0.5 block text-sm text-zinc-500">Ustawiaj ceny, promocje i zarabiaj na swoich zasadach.</span>
+            </span>
+        </li>
+        <li class="flex items-start gap-4">
+            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent-50 text-accent-600">
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 3 5 6v6c0 4 3 6.5 7 8 4-1.5 7-4 7-8V6z"/><path d="m9 12 2 2 4-4"/>
+                </svg>
+            </span>
+            <span>
+                <span class="block text-base font-semibold text-zinc-800">Bezpieczne wypłaty</span>
+                <span class="mt-0.5 block text-sm text-zinc-500">Zarabiaj bezpiecznie i wypłacaj środki w dogodny sposób.</span>
+            </span>
+        </li>
+    </ul>
+</div>

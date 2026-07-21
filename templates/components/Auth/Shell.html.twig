@@ -1,7 +1,7 @@
-{% props backHref = '/' %}
+{% props backHref = '/', backgroundImage %}
 
 <div class="relative min-h-screen w-full bg-canvas bg-cover bg-center bg-no-repeat"
-     style="background-image: url('{{ asset('images/login-bg.png') }}')">
+     style="background-image: url('{{ backgroundImage }}')">
     <div class="flex min-h-screen flex-col px-6 sm:px-10 lg:px-14">
         <header class="flex items-center justify-between py-6 lg:py-8">
             <a href="{{ backHref }}" class="flex items-center gap-2.5">
@@ -24,14 +24,13 @@
 
         <div class="grid flex-1 items-center gap-10 pb-12 lg:grid-cols-2 lg:gap-16">
             <div class="relative hidden h-full self-stretch lg:block">
-                <div class="flex justify-center pt-4">
+                <div class="relative z-10 flex justify-center pt-4">
                     {% block brand %}{% endblock %}
                 </div>
-                {# Illustration anchored to the bottom-right of the full-height column.
-                   `relative` is on THIS column (not the text block), so bottom/right
-                   resolve against the whole left side. #}
-                <img src="{{ asset('images/login-brand.png') }}" alt=""
-                     class="pointer-events-none absolute bottom-0 right-0 w-full max-w-2xl translate-x-[100px] object-contain">
+                {# Illustration slot — each page supplies a positioned <twig:Auth:Illustration>.
+                   `relative` is on THIS column, so its absolute offsets resolve against the
+                   whole left side. #}
+                {% block illustration %}{% endblock %}
             </div>
             <div class="flex w-full justify-center">
                 {% block form %}{% endblock %}
