@@ -68,6 +68,7 @@ backend is stubbed.
 | **Uploaded file + cover** (step 1) | accepted & validated (type/size) but **not persisted** — filename/size kept in session; the cover is base64-encoded into the session (≤3 MB) only to preview it across steps | move/store binaries to a real store + serve via URL; virus/format scan; generate previews |
 | **"Zapisz szkic"** (all steps) | flashes "Szkic zapisany" — no real draft saved | persist a draft (DB) tied to the author |
 | **Detailed info (klucz:wartość)** (step 2) | captured into the session DTO (`PublishEbookData::$details`), not persisted | persist; render as a details **table on the eBook detail page** (not built yet) |
+| **"Zapłać ile chcesz" / donations** (step 3) | flag `PublishEbookData::$payWhatYouWant` captured in session | show a voluntary-donation/tip option on the eBook **detail page** + payment handling |
 | **Route is not auth-gated yet** | anyone can open `/wystaw-ebook` | require `ROLE_USER` (author); prefill author from the logged-in user |
 | **Genre "+ Więcej", category/language options** | static lists | real taxonomy |
 

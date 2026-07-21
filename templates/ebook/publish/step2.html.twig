@@ -1,7 +1,5 @@
 {% extends 'ebook/publish/layout.html.twig' %}
 
-{% set keywords = data.keywords ?: ['motywacja', 'nadzieja', 'rozwój osobisty', 'mindset', 'zmiana'] %}
-{% set genreChips = ['Rozwój osobisty', 'Biznes', 'Marketing', 'Fantastyka'] %}
 {% set tips = [
     { icon: 'chart',  title: 'Lepsza widoczność',        text: 'Więcej szczegółów = wyższe pozycje w wynikach wyszukiwania.' },
     { icon: 'check',  title: 'Profesjonalna prezentacja', text: 'Dobrze opisany eBook buduje zaufanie i zachęca do zakupu.' },
@@ -11,7 +9,7 @@
 
 {% block flow_body %}
     {{ form_start(form, { attr: { id: 'wizard-form' } }) }}
-    <div class="grid gap-6 lg:grid-cols-3">
+    <div class="grid gap-6 lg:grid-cols-3" data-controller="preview">
         <div class="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-zinc-100 lg:col-span-2">
             <h2 class="text-xl font-bold text-zinc-900">Szczegóły eBooka</h2>
             <p class="mt-1 text-sm text-zinc-500">Uzupełnij informacje o swoim eBooku. Im więcej szczegółów, tym łatwiej czytelnicy Cię znajdą.</p>
@@ -19,27 +17,27 @@
             <div class="mt-6 grid gap-5 sm:grid-cols-2">
                 <div data-controller="char-counter" data-char-counter-max-value="200">
                     <label class="field-label" for="{{ form.title.vars.id }}">Tytuł eBooka *</label>
-                    {{ form_widget(form.title, { attr: { class: 'field-input', maxlength: 200, 'data-char-counter-target': 'field', 'data-action': 'input->char-counter#update' } }) }}
+                    {{ form_widget(form.title, { attr: { class: 'field-input', maxlength: 200, 'data-char-counter-target': 'field', 'data-preview-field': 'title', 'data-action': 'input->char-counter#update input->preview#update' } }) }}
                     <p class="mt-1 text-right text-xs text-zinc-400" data-char-counter-target="count"></p>
                 </div>
                 <div data-controller="char-counter" data-char-counter-max-value="100">
                     <label class="field-label" for="{{ form.author.vars.id }}">Autor *</label>
-                    {{ form_widget(form.author, { attr: { class: 'field-input', maxlength: 100, 'data-char-counter-target': 'field', 'data-action': 'input->char-counter#update' } }) }}
+                    {{ form_widget(form.author, { attr: { class: 'field-input', maxlength: 100, 'data-char-counter-target': 'field', 'data-preview-field': 'author', 'data-action': 'input->char-counter#update input->preview#update' } }) }}
                     <p class="mt-1 text-right text-xs text-zinc-400" data-char-counter-target="count"></p>
                 </div>
                 <div>
                     <label class="field-label" for="{{ form.category.vars.id }}">Kategoria główna *</label>
-                    {{ form_widget(form.category, { attr: { class: 'field-input' } }) }}
+                    {{ form_widget(form.category, { attr: { class: 'field-input', 'data-preview-field': 'category', 'data-action': 'change->preview#update' } }) }}
                 </div>
                 <div>
                     <label class="field-label" for="{{ form.language.vars.id }}">Język *</label>
-                    {{ form_widget(form.language, { attr: { class: 'field-input' } }) }}
+                    {{ form_widget(form.language, { attr: { class: 'field-input', 'data-preview-field': 'language', 'data-action': 'change->preview#update' } }) }}
                 </div>
             </div>
 
             <div class="mt-5" data-controller="char-counter" data-char-counter-max-value="150">
                 <label class="field-label" for="{{ form.shortDescription.vars.id }}">Krótki opis *</label>
-                {{ form_widget(form.shortDescription, { attr: { class: 'field-input', maxlength: 150, 'data-char-counter-target': 'field', 'data-action': 'input->char-counter#update' } }) }}
+                {{ form_widget(form.shortDescription, { attr: { class: 'field-input', maxlength: 150, 'data-char-counter-target': 'field', 'data-preview-field': 'shortDescription', 'data-action': 'input->char-counter#update input->preview#update' } }) }}
                 <p class="mt-1 text-right text-xs text-zinc-400" data-char-counter-target="count"></p>
             </div>
 
@@ -49,46 +47,8 @@
                 <p class="mt-1 text-right text-xs text-zinc-400" data-char-counter-target="count"></p>
             </div>
 
-            {# Keywords #}
-            <div class="mt-6">
-                <p class="text-sm font-semibold text-zinc-800">Słowa kluczowe</p>
-                <p class="mb-2 text-xs text-zinc-500">Dodaj słowa lub frazy, które opiszą Twój eBook.</p>
-                <div data-controller="tags" data-tags-name-value="keywords">
-                    <div class="flex flex-wrap items-center gap-2 rounded-ui border border-zinc-200 bg-white p-2" data-tags-target="list">
-                        {% for kw in keywords %}
-                            <span class="inline-flex items-center gap-1.5 rounded-full bg-accent-50 px-3 py-1.5 text-sm font-medium text-accent-700">
-                                <input type="hidden" name="keywords[]" value="{{ kw }}">
-                                <span>{{ kw }}</span>
-                                <button type="button" data-action="tags#remove" class="text-accent-600/60 hover:text-accent-700" aria-label="Usuń">&times;</button>
-                            </span>
-                        {% endfor %}
-                        <input type="text" placeholder="+ Dodaj" data-tags-target="input" data-action="keydown->tags#add"
-                               class="flex-1 border-0 bg-transparent px-2 py-1 text-sm outline-none placeholder:text-accent-600">
-                    </div>
-                </div>
-            </div>
-
-            {# Genres #}
-            <div class="mt-6">
-                <p class="text-sm font-semibold text-zinc-800">Gatunek / Tematyka</p>
-                <p class="mb-2 text-xs text-zinc-500">Wybierz do 3, które najlepiej pasują do Twojego eBooka.</p>
-                <div class="flex flex-wrap gap-2" data-controller="chip-select" data-chip-select-name-value="genres" data-chip-select-max-value="3">
-                    {% for g in genreChips %}
-                        {% set on = loop.first %}
-                        <button type="button" data-chip-select-target="chip" data-value="{{ g }}" data-selected="{{ on ? 'true' : 'false' }}"
-                                data-action="chip-select#toggle"
-                                class="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-medium transition-colors {{ on ? 'border-accent-600 bg-accent-50 text-accent-700' : 'border-zinc-200 text-zinc-600 hover:bg-zinc-50' }}">
-                            {{ g }}{% if on %}<input type="hidden" name="genres[]" value="{{ g }}">{% endif %}
-                        </button>
-                    {% endfor %}
-                    <button type="button" class="inline-flex items-center gap-1.5 rounded-full border border-dashed border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-500 hover:border-accent-600 hover:text-accent-600">
-                        <twig:Icon name="plus" class="h-4 w-4" /> Więcej
-                    </button>
-                </div>
-            </div>
-
             {# Detailed info (key : value) — rendered as a table on the eBook detail page #}
-            {% set details = data.details ?: [{ key: 'Liczba stron', value: '248' }, { key: 'Rok wydania', value: '2024' }] %}
+            {% set details = data.details ?: [{ key: 'Liczba stron', value: '' }, { key: 'Rok wydania', value: '' }] %}
             <div class="mt-6" data-controller="key-value">
                 <p class="text-sm font-semibold text-zinc-800">Szczegółowe informacje</p>
                 <p class="mb-2 text-xs text-zinc-500">Dodaj pola w formie „nazwa : wartość" (np. Wydawca : Bookly). Pojawią się jako tabela na stronie eBooka.</p>
@@ -126,12 +86,16 @@
             <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-zinc-100">
                 <h3 class="text-base font-semibold text-zinc-900">Podgląd Twojego eBooka</h3>
                 <div class="mt-4 flex gap-4">
-                    <twig:Ebook:Cover :src="data.coverDataUri" title="{{ data.title ?: 'Tytuł eBooka' }}" width="w-28" />
+                    <twig:Ebook:Cover :src="data.coverDataUri" title="{{ data.title ?: 'Tytuł eBooka' }}" width="w-28"
+                                      data-preview-target="out" data-preview-field="title" data-preview-empty="Tytuł eBooka" />
                     <div class="min-w-0">
-                        <p class="font-semibold text-zinc-900">{{ data.title ?: 'Tytuł eBooka' }}</p>
-                        <p class="text-sm text-zinc-500">{{ data.author ?: 'Autor' }}</p>
-                        <p class="mt-1 text-xs text-zinc-400">{{ data.category ?: 'Kategoria' }} · Polski</p>
-                        <p class="mt-3 text-sm text-zinc-500">{{ data.shortDescription ?: 'Krótki opis Twojego eBooka pojawi się tutaj.' }}</p>
+                        <p class="break-words font-semibold text-zinc-900" data-preview-target="out" data-preview-field="title" data-preview-empty="Tytuł eBooka">{{ data.title ?: 'Tytuł eBooka' }}</p>
+                        <p class="break-words text-sm text-zinc-500" data-preview-target="out" data-preview-field="author" data-preview-empty="Autor">{{ data.author ?: 'Autor' }}</p>
+                        <p class="mt-1 text-xs text-zinc-400">
+                            <span data-preview-target="out" data-preview-field="category" data-preview-empty="Kategoria">{{ data.category ?: 'Kategoria' }}</span>
+                            · <span data-preview-target="out" data-preview-field="language" data-preview-empty="Polski">Polski</span>
+                        </p>
+                        <p class="mt-3 break-words text-sm text-zinc-500" data-preview-target="out" data-preview-field="shortDescription" data-preview-empty="Krótki opis Twojego eBooka pojawi się tutaj.">{{ data.shortDescription ?: 'Krótki opis Twojego eBooka pojawi się tutaj.' }}</p>
                     </div>
                 </div>
             </div>

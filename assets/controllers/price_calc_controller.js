@@ -1,42 +1,75 @@
 import { Controller } from '@hotwired/stimulus';
 
 /*
- * Live revenue preview for the pricing step. Values are also rendered
- * server-side (progressive enhancement); this only refreshes them as the
- * price changes. Each output element declares its role + decimals:
- *   data-price-calc-target="out" data-price-calc-role="earn" data-decimals="2"
- * Roles: final | earn | commission | monthly | gross.
+ * Live price preview + pricing-mode toggles.
+ *   - "free" and "pwyw" (pay-what-you-want) are mutually exclusive.
+ *   - either one disables/dims the price & promo controls.
+ *   - preview shows "Za darmo" / "Dobrowolna wpłata" / the effective price;
+ *     a valid promo (0 < promo < base) reveals the struck original + a badge.
+ * Values are also rendered server-side (progressive enhancement).
  */
 export default class extends Controller {
-    static targets = ['price', 'out'];
-    static values = { share: { type: Number, default: 70 }, sales: { type: Number, default: 100 } };
+    static targets = ['price', 'promo', 'effective', 'original', 'discount', 'free', 'pwyw', 'dim'];
 
     connect() {
         this.update();
     }
 
-    update() {
-        const price = parseFloat(String(this.priceTarget.value).replace(',', '.')) || 0;
-        const author = (price * this.shareValue) / 100;
-        const commission = price - author;
+    update(e) {
+        // Mutual exclusivity: turning one on turns the other off.
+        if (e && this.hasFreeTarget && this.hasPwywTarget) {
+            if (e.target === this.freeTarget && this.freeTarget.checked) this.pwywTarget.checked = false;
+            if (e.target === this.pwywTarget && this.pwywTarget.checked) this.freeTarget.checked = false;
+        }
 
-        const map = {
-            final: price,
-            earn: author * this.salesValue,
-            commission: commission * this.salesValue,
-            monthly: author * this.salesValue,
-            gross: price * this.salesValue,
-        };
+        const free = this.hasFreeTarget && this.freeTarget.checked;
+        const pwyw = this.hasPwywTarget && this.pwywTarget.checked;
+        const noPrice = free || pwyw;
 
-        this.outTargets.forEach((el) => {
-            const value = map[el.dataset.priceCalcRole];
-            if (value === undefined) return;
-            const decimals = parseInt(el.dataset.decimals ?? '2', 10);
-            el.textContent = this.zl(value, decimals);
+        [this.priceTarget, this.hasPromoTarget ? this.promoTarget : null].forEach((el) => {
+            if (el) el.disabled = noPrice;
         });
+        this.dimTargets.forEach((el) => {
+            el.classList.toggle('opacity-50', noPrice);
+            el.classList.toggle('pointer-events-none', noPrice);
+        });
+
+        if (free) return this.effective('Za darmo', 'text-success-600', true);
+        if (pwyw) return this.effective('Dobrowolna wpłata', 'text-accent-600', true);
+
+        const base = this.num(this.priceTarget);
+        const promo = this.hasPromoTarget ? this.num(this.promoTarget) : 0;
+        const discounted = promo > 0 && promo < base;
+
+        this.effective(this.zl(discounted ? promo : base), 'text-zinc-900', false);
+        if (this.hasOriginalTarget) {
+            this.originalTarget.textContent = this.zl(base);
+            this.originalTarget.classList.toggle('hidden', !discounted);
+        }
+        if (this.hasDiscountTarget) {
+            const pct = base > 0 ? Math.round(((base - promo) / base) * 100) : 0;
+            this.discountTarget.textContent = `-${pct}%`;
+            this.discountTarget.classList.toggle('hidden', !discounted);
+        }
     }
 
-    zl(v, decimals) {
-        return v.toLocaleString('pl-PL', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + ' zł';
+    effective(text, colorClass, hideExtras) {
+        if (this.hasEffectiveTarget) {
+            this.effectiveTarget.textContent = text;
+            this.effectiveTarget.classList.remove('text-zinc-900', 'text-success-600', 'text-accent-600');
+            this.effectiveTarget.classList.add(colorClass);
+        }
+        if (hideExtras) {
+            if (this.hasOriginalTarget) this.originalTarget.classList.add('hidden');
+            if (this.hasDiscountTarget) this.discountTarget.classList.add('hidden');
+        }
+    }
+
+    num(el) {
+        return parseFloat(String(el.value).replace(',', '.')) || 0;
+    }
+
+    zl(v) {
+        return v.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' zł';
     }
 }

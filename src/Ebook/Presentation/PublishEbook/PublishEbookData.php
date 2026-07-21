@@ -38,27 +38,24 @@ final class PublishEbookData
     #[Assert\Length(max: 2000, groups: ['details'])]
     public ?string $description = null;
 
-    /** @var list<string> */
-    public array $keywords = [];
-
-    /** @var list<string> */
-    public array $genres = [];
-
     /** @var list<array{key: string, value: string}> extra key:value rows shown as a table on the detail page */
     public array $details = [];
 
     // Step 3 — pricing
-    #[Assert\NotBlank(groups: ['pricing'])]
-    #[Assert\Positive(groups: ['pricing'])]
+    public bool $isFree = false;
+    public bool $payWhatYouWant = false; // allow voluntary donations on the detail page (future)
+
+    #[Assert\When(
+        expression: 'not this.isFree and not this.payWhatYouWant',
+        constraints: [new Assert\NotBlank(), new Assert\Positive()],
+        groups: ['pricing'],
+    )]
     public ?float $price = null;
 
     #[Assert\PositiveOrZero(groups: ['pricing'])]
     public ?float $promoPrice = null;
 
     public bool $freeFragment = true;
-
-    #[Assert\Choice(choices: ['public', 'private', 'limited'], groups: ['pricing'])]
-    public string $salesModel = 'public';
 
     public const int AUTHOR_SHARE = 70; // % the author keeps
 }

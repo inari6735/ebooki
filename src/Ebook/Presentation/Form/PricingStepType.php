@@ -5,7 +5,6 @@ namespace App\Ebook\Presentation\Form;
 use App\Ebook\Presentation\PublishEbook\PublishEbookData;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -15,6 +14,8 @@ final class PricingStepType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
+            ->add('isFree', CheckboxType::class, ['required' => false])
+            ->add('payWhatYouWant', CheckboxType::class, ['required' => false])
             ->add('price', NumberType::class, [
                 'required' => false,
                 'html5' => true,
@@ -24,17 +25,6 @@ final class PricingStepType extends AbstractType
                 'required' => false,
                 'html5' => true,
                 'scale' => 2,
-            ])
-            ->add('freeFragment', CheckboxType::class, ['required' => false])
-            ->add('salesModel', ChoiceType::class, [
-                'required' => false,
-                'expanded' => true,
-                'placeholder' => false,
-                'choices' => [
-                    'public' => 'public',
-                    'private' => 'private',
-                    'limited' => 'limited',
-                ],
             ]);
     }
 

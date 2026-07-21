@@ -34,8 +34,6 @@ final class DetailsStepType extends AbstractType
             ])
             ->add('shortDescription', TextType::class, ['required' => false])
             ->add('description', TextareaType::class, ['required' => false]);
-        // keywords + genres are dynamic tag inputs — posted outside this form's
-        // namespace and merged into the DTO by the controller.
     }
 
     public function configureOptions(OptionsResolver $resolver): void

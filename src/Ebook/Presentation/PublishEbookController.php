@@ -80,10 +80,6 @@ final class PublishEbookController extends AbstractController
             }
 
             if (2 === $step) {
-                // Dynamic tag inputs live outside the form namespace.
-                $data->keywords = array_values(array_filter(array_map('trim', $request->request->all('keywords'))));
-                $data->genres = array_values(array_filter(array_map('trim', $request->request->all('genres'))));
-
                 // Detailed info: parallel detailKeys[]/detailValues[] → list of {key, value}.
                 $keys = $request->request->all('detailKeys');
                 $values = $request->request->all('detailValues');
