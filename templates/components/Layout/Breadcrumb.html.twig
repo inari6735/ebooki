@@ -1,0 +1,22 @@
+{% props items = [] %}
+
+{# items: list of { label, href (optional — last/current item has none) }.
+   The first crumb shows a home icon. #}
+<nav aria-label="Okruszki" class="flex items-center gap-2 text-sm text-zinc-500">
+    {% for item in items %}
+        {% if not loop.first %}
+            <twig:Icon name="chevron-down" class="h-4 w-4 -rotate-90 text-zinc-300" />
+        {% endif %}
+        {% if item.href is defined and item.href %}
+            <a href="{{ item.href }}" class="inline-flex items-center gap-1.5 transition-colors hover:text-accent-600">
+                {% if loop.first %}<twig:Icon name="home" class="h-4 w-4" />{% endif %}
+                {{ item.label }}
+            </a>
+        {% else %}
+            <span class="inline-flex items-center gap-1.5 font-medium text-zinc-700" aria-current="page">
+                {% if loop.first %}<twig:Icon name="home" class="h-4 w-4" />{% endif %}
+                {{ item.label }}
+            </span>
+        {% endif %}
+    {% endfor %}
+</nav>

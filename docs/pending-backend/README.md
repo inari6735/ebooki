@@ -72,6 +72,23 @@ backend is stubbed.
 | **Route is not auth-gated yet** | anyone can open `/wystaw-ebook` | require `ROLE_USER` (author); prefill author from the logged-in user |
 | **Genre "+ Więcej", category/language options** | static lists | real taxonomy |
 
+## eBook detail page (`src/Ebook/Presentation/EbookDetailController.php`, `templates/ebook/show.html.twig`)
+
+Product page at `/ebook/{slug}` (`app_ebook_show`). Reuses the shared header/footer.
+There is **no catalog backend**, so the controller renders one fixed sample eBook —
+`{slug}` is currently cosmetic. Components live in `templates/components/Ebook/Detail/`
+(`Hero`, `PurchaseCard`, `PaymentMarks`) + the generic `Layout:Breadcrumb`.
+
+| Element | Current stub | Backend needed |
+|---|---|---|
+| **Whole page data** (title, author, price, rating, detailed-info table, description) | hard-coded array in the controller | look the eBook up by `{slug}` from the catalog; 404 when missing |
+| **"Kup teraz"** | visual button, no action | add-to-cart / checkout + payment flow |
+| **"Dodaj do ulubionych"** | visual button, no action | wishlist tied to the logged-in user |
+| **Rating (4,8 · 326 ocen)** | static | real reviews/ratings aggregate |
+| **Payment marks** (`PaymentMarks.html.twig`) | self-drawn VISA/Mastercard/blik/Apple Pay placeholders (no real logos) | swap for the actual accepted-provider marks once a payment provider is integrated |
+| **Cover image** | gradient placeholder (`Ebook:Cover`) — no cover store | serve the real uploaded cover |
+| **Breadcrumb category link** | `href="#"` | category listing page |
+
 ## Homepage — Hero (`templates/components/Home/Hero.html.twig`)
 
 | Element | Current stub | Backend needed |

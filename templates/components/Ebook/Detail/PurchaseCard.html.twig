@@ -1,0 +1,47 @@
+{% props ebook %}
+
+{% set perks = [
+    { icon: 'lightning', text: 'Natychmiastowa dostawa' },
+    { icon: 'clock',     text: 'Dostęp na zawsze' },
+    { icon: 'monitor',   text: 'Czytaj na dowolnym urządzeniu' },
+] %}
+
+<div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-zinc-100 sm:p-7">
+    <div class="flex items-center justify-between">
+        <p class="text-sm font-semibold text-zinc-800">Cena eBooka</p>
+        <span class="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500">
+            <twig:Icon name="shield" class="h-4 w-4 text-accent-600" />
+            Bezpieczne zakupy
+        </span>
+    </div>
+
+    <p class="mt-3 text-4xl font-extrabold text-accent-600">
+        {{ ebook.price|number_format(2, ',', ' ') }} <span class="text-2xl">zł</span>
+    </p>
+    <p class="mt-1 text-sm text-zinc-400">Cena zawiera VAT</p>
+
+    {# Cart / favourites — visual only until the checkout backend exists. #}
+    <twig:Button variant="primary" size="lg" wide class="mt-6">
+        <twig:Icon name="cart" class="h-5 w-5" /> Kup teraz
+    </twig:Button>
+    <twig:Button variant="outline" size="lg" wide class="mt-3">
+        <twig:Icon name="heart" class="h-5 w-5" /> Dodaj do ulubionych
+    </twig:Button>
+
+    <ul class="mt-6 space-y-3">
+        {% for p in perks %}
+            <li class="flex items-center gap-3 text-sm text-zinc-600">
+                <twig:Icon name="{{ p.icon }}" class="h-5 w-5 shrink-0 text-accent-600" />
+                {{ p.text }}
+            </li>
+        {% endfor %}
+    </ul>
+
+    <div class="mt-6 rounded-2xl bg-accent-50 p-5">
+        <p class="inline-flex items-center gap-2 text-sm font-semibold text-accent-700">
+            <twig:Icon name="lock" class="h-5 w-5" /> Bezpieczne płatności
+        </p>
+        <p class="mt-2 text-sm text-zinc-600">Płatności obsługiwane przez zaufanych partnerów. Twoje dane są chronione.</p>
+        <twig:Ebook:Detail:PaymentMarks class="mt-4" />
+    </div>
+</div>

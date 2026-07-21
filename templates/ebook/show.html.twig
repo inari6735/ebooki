@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ ebook.title }} — {{ ebook.author }} · Bookly{% endblock %}
+
+{% block body %}
+    <div class="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <twig:Layout:Breadcrumb :items="[
+            { label: 'Strona główna', href: path('app_home') },
+            { label: ebook.category, href: '#' },
+            { label: ebook.title },
+        ]" />
+
+        <div class="mt-6 grid gap-6 lg:grid-cols-3 lg:items-start">
+            {# Left — product content #}
+            <div class="space-y-6 lg:col-span-2">
+                <twig:Ebook:Detail:Hero :ebook="ebook" />
+
+                {# Description — full width #}
+                <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-zinc-100 sm:p-8">
+                    <p class="inline-flex items-center gap-2 text-base font-bold text-zinc-900">
+                        <twig:Icon name="book" class="h-5 w-5 text-accent-600" />
+                        Opis eBooka
+                    </p>
+                    <div class="mt-4 space-y-4 text-sm leading-relaxed text-zinc-600">
+                        {% for paragraph in ebook.description %}
+                            <p class="break-words">{{ paragraph }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            {# Right — purchase + detailed info #}
+            <div class="space-y-6">
+                <twig:Ebook:Detail:PurchaseCard :ebook="ebook" />
+
+                {# Detailed info (key : value) #}
+                <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-zinc-100 sm:p-7">
+                    <p class="inline-flex items-center gap-2 text-base font-bold text-zinc-900">
+                        <twig:Icon name="sliders" class="h-5 w-5 text-accent-600" />
+                        Szczegółowe informacje
+                    </p>
+                    <table class="mt-4 w-full text-sm">
+                        <tbody>
+                            {% for d in ebook.details %}
+                                <tr class="border-b border-zinc-100 last:border-0">
+                                    <th scope="row" class="py-2.5 pr-4 text-left align-top font-medium text-zinc-500">{{ d.key }}</th>
+                                    <td class="break-words py-2.5 text-right align-top font-semibold text-zinc-900">{{ d.value }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

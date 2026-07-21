@@ -1,0 +1,49 @@
+{% props ebook %}
+
+{# Top product card: cover + title, author, taxonomy, short description, rating. #}
+<div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-zinc-100 sm:p-8">
+    <div class="flex flex-col gap-6 sm:flex-row sm:gap-8">
+        <div class="mx-auto w-48 shrink-0 sm:mx-0 sm:w-64">
+            <twig:Ebook:Cover :src="ebook.cover" title="{{ ebook.title }}" width="w-full" />
+        </div>
+
+        <div class="min-w-0 flex-1">
+            <twig:Badge variant="brand">eBook</twig:Badge>
+
+            <h1 class="mt-4 break-words text-3xl font-extrabold leading-tight tracking-tight text-zinc-900 sm:text-4xl">
+                {{ ebook.title }}
+            </h1>
+
+            <p class="mt-4 inline-flex items-center gap-2 text-base font-medium text-zinc-700">
+                <twig:Icon name="user" class="h-5 w-5 text-accent-600" />
+                {{ ebook.author }}
+            </p>
+
+            <div class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-zinc-500">
+                <span class="inline-flex items-center gap-2">
+                    <twig:Icon name="tag" class="h-4 w-4 text-accent-600" />
+                    {{ ebook.category }}
+                </span>
+                <span class="inline-flex items-center gap-2">
+                    <twig:Icon name="globe" class="h-4 w-4 text-accent-600" />
+                    {{ ebook.language }}
+                </span>
+            </div>
+
+            <hr class="my-5 border-zinc-100">
+
+            <p class="break-words text-base leading-relaxed text-zinc-600">{{ ebook.shortDescription }}</p>
+
+            <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+                <span class="inline-flex items-center gap-2">
+                    <twig:Icon name="star" class="h-5 w-5 text-accent-600" />
+                    <span class="font-bold text-zinc-900">{{ ebook.rating|number_format(1, ',', ' ') }}</span>
+                </span>
+                <span class="text-zinc-300">|</span>
+                <span class="text-zinc-500">{{ ebook.ratingCount }} ocen</span>
+                <span class="text-zinc-300">|</span>
+                <span class="text-zinc-500">{{ ebook.ratingNote }}</span>
+            </div>
+        </div>
+    </div>
+</div>
