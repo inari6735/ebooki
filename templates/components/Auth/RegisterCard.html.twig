@@ -7,51 +7,9 @@
             <p class="mt-2 text-sm text-zinc-500">Dołącz do Bookly i zacznij już dziś</p>
         </div>
 
-        <div class="mt-7 space-y-3">
-            <twig:Auth:SocialButton provider="google" label="Zarejestruj z Google" />
-            <twig:Auth:SocialButton provider="apple" label="Zarejestruj z Apple" />
+        <div class="mt-7">
+            <twig:Auth:RegisterForm :registerPath="registerPath" :form="form" :termsPath="termsPath" />
         </div>
-
-        <div class="my-6">
-            <twig:Auth:Divider label="lub zarejestruj się e-mailem" />
-        </div>
-
-        <form method="post" action="{{ registerPath }}" class="space-y-4">
-            <input type="hidden" name="registration[_token]" data-controller="csrf-protection" value="{{ csrf_token('submit') }}">
-
-            {{ form_errors(form) }}
-
-            {# Full name — visual only for now (top-level `fullName`, not part of the Symfony form) #}
-            <twig:Auth:TextField name="fullName" icon="user" placeholder="Imię i nazwisko" autocomplete="name" />
-
-            <div>
-                <twig:Auth:TextField
-                    name="registration[email]" type="email" icon="mail"
-                    placeholder="Adres e-mail" autocomplete="email" required
-                />
-                {{ form_errors(form.email) }}
-            </div>
-
-            <twig:Auth:TextField
-                name="registration[plainPassword][first]" type="password" icon="lock"
-                placeholder="Hasło" autocomplete="new-password" required revealable
-            />
-            <twig:Auth:TextField
-                name="registration[plainPassword][second]" type="password" icon="lock"
-                placeholder="Powtórz hasło" autocomplete="new-password" required revealable
-            />
-
-            <label class="flex items-start gap-2.5 text-sm text-zinc-600">
-                <input type="checkbox" name="terms" checked class="mt-0.5 h-4 w-4 rounded border-zinc-300 text-accent-600 focus:ring-accent-600/30">
-                <span>Akceptuję <a href="{{ termsPath }}" class="font-semibold text-accent-600 hover:text-accent-700">regulamin i politykę prywatności</a></span>
-            </label>
-            <label class="flex items-start gap-2.5 text-sm text-zinc-600">
-                <input type="checkbox" name="newsletter" class="mt-0.5 h-4 w-4 rounded border-zinc-300 text-accent-600 focus:ring-accent-600/30">
-                <span>Chcę otrzymywać informacje o nowościach i promocjach</span>
-            </label>
-
-            <twig:Button type="submit" variant="primary" size="lg" wide>Utwórz konto</twig:Button>
-        </form>
 
         <p class="mt-6 text-center text-sm text-zinc-600">
             Masz już konto?

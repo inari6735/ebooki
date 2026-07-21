@@ -3,6 +3,7 @@
 namespace App\User\Infrastructure\Security;
 
 use App\User\Domain\User;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,6 +27,26 @@ final readonly class JwtCookieSuccessHandler implements AuthenticationSuccessHan
         $jwt = $this->accessTokens->mintFor($user);
         $refreshToken = $this->refreshTokens->issueFor($user);
 
+        // AJAX (e.g. the in-page auth modal): answer with JSON so the caller stays
+        // on the page and drives what happens next; the cookies still get set.
+        $response = $this->wantsJson($request)
+            ? new JsonResponse(['ok' => true])
+            : new RedirectResponse($this->safeTargetPath($request));
+
+        $response->headers->setCookie($this->cookies->authCookie($jwt));
+        $response->headers->setCookie($this->cookies->refreshCookie($refreshToken->getRefreshToken()));
+
+        return $response;
+    }
+
+    public function wantsJson(Request $request): bool
+    {
+        return $request->isXmlHttpRequest()
+            || str_contains((string) $request->headers->get('Accept', ''), 'application/json');
+    }
+
+    private function safeTargetPath(Request $request): string
+    {
         $targetPath = (string) $request->request->get('_target_path', '');
         // Only relative paths: never redirect off-site. Backslashes are rejected
         // because browsers normalise them to `/` when resolving a Location header
@@ -34,13 +55,9 @@ final readonly class JwtCookieSuccessHandler implements AuthenticationSuccessHan
             || !str_starts_with($targetPath, '/')
             || str_starts_with($targetPath, '//')
             || str_contains($targetPath, '\\')) {
-            $targetPath = '/';
+            return '/';
         }
 
-        $response = new RedirectResponse($targetPath);
-        $response->headers->setCookie($this->cookies->authCookie($jwt));
-        $response->headers->setCookie($this->cookies->refreshCookie($refreshToken->getRefreshToken()));
-
-        return $response;
+        return $targetPath;
     }
 }

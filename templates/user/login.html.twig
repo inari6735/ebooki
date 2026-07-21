@@ -19,7 +19,7 @@
         <twig:block name="form">
             <twig:Auth:LoginCard
                 loginPath="{{ path('app_login') }}"
-                registerPath="{{ path('app_register') }}"
+                registerPath="{{ path('app_register', target_path ? { _target_path: target_path } : {}) }}"
                 targetPath="{{ target_path }}"
             />
         </twig:block>

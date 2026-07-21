@@ -8,39 +8,9 @@
 
     <twig:Layout:Flashes />
 
-    <div class="mt-7 space-y-3">
-        <twig:Auth:SocialButton provider="google" label="Kontynuuj z Google" />
-        <twig:Auth:SocialButton provider="apple" label="Kontynuuj z Apple" />
+    <div class="mt-7">
+        <twig:Auth:LoginForm :loginPath="loginPath" :targetPath="targetPath" :forgotPath="forgotPath" />
     </div>
-
-    <div class="my-6">
-        <twig:Auth:Divider label="lub zaloguj się e-mailem" />
-    </div>
-
-    <form method="post" action="{{ loginPath }}" class="space-y-5">
-        <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('authenticate') }}">
-        <input type="hidden" name="_target_path" value="{{ targetPath }}">
-
-        <twig:Auth:TextField
-            label="Adres e-mail" name="email" type="email" icon="mail"
-            placeholder="Wprowadź swój adres e-mail" autocomplete="email" required autofocus
-        />
-        <twig:Auth:TextField
-            label="Hasło" name="password" type="password" icon="lock"
-            placeholder="Wprowadź swoje hasło" autocomplete="current-password" required revealable
-        />
-
-        <div class="flex items-center justify-between">
-            <label class="flex items-center gap-2 text-sm text-zinc-600 select-none">
-                <input type="checkbox" name="_remember_me" checked
-                       class="h-4 w-4 rounded border-zinc-300 text-accent-600 focus:ring-accent-600/30">
-                Zapamiętaj mnie
-            </label>
-            <a href="{{ forgotPath }}" class="text-sm font-semibold text-accent-600 hover:text-accent-700">Nie pamiętasz hasła?</a>
-        </div>
-
-        <twig:Button type="submit" variant="primary" size="lg" wide>Zaloguj się</twig:Button>
-    </form>
 
     <p class="mt-6 text-center text-sm text-zinc-600">
         Nie masz jeszcze konta?

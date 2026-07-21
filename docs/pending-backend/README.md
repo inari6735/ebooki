@@ -58,7 +58,11 @@ backend, move its name into `registration[...]` and add it to `RegistrationFormT
 
 ## Add-eBook wizard (`src/Ebook/Presentation/`, `templates/ebook/publish/`)
 
-4-step session-backed Symfony multi-step form (`/wystaw-ebook/{step}`, `ROLE_USER`).
+4-step session-backed Symfony multi-step form (`/wystaw-ebook/{step}`). **Anyone can
+fill the whole wizard** (incl. uploading files anonymously); login/registration is
+asked for only at the final "Opublikuj"/"Zapisz szkic" click, after which the publish
+completes automatically (session flag `publish_ebook_pending`, `_target_path` back to
+step 4 — preserved through register too).
 **Now persists for real:** files are uploaded to a staging area as they are added
 (`EbookStagingController` → Flysystem `ebook.storage`, `Media` status `pending`),
 and at step 4 ("Opublikuj"/"Zapisz szkic") everything is committed by

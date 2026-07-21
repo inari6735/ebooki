@@ -4,6 +4,7 @@ namespace App\User\Infrastructure\Security;
 
 use App\User\Domain\User;
 use App\User\Domain\UserRepository;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -65,6 +66,10 @@ final class FormLoginAuthenticator extends AbstractAuthenticator
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
         // One generic message — never reveal whether email or password was wrong.
+        if ($this->successHandler->wantsJson($request)) {
+            return new JsonResponse(['error' => 'Nieprawidłowy e-mail lub hasło.'], Response::HTTP_UNAUTHORIZED);
+        }
+
         $request->getSession()->getFlashBag()->add('error', 'Invalid email or password.');
 
         return new RedirectResponse($this->urlGenerator->generate('app_login'));

@@ -11,6 +11,7 @@ use App\User\Domain\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Uid\Uuid;
 
@@ -24,6 +25,7 @@ use Symfony\Component\Uid\Uuid;
 final class PublishEbookController extends AbstractController
 {
     public const string SESSION_KEY = 'publish_ebook_wizard';
+    private const string PENDING_KEY = 'publish_ebook_pending';
     private const int LAST_STEP = 4;
 
     #[Route('/wystaw-ebook/{step}', name: 'app_publish_ebook', requirements: ['step' => '[1-4]'], defaults: ['step' => 1], methods: ['GET', 'POST'])]
@@ -35,6 +37,12 @@ final class PublishEbookController extends AbstractController
 
         // Step 4 — finalize: commit the eBook and its files (publish or draft).
         if (self::LAST_STEP === $step) {
+            // Resume after login: the user hit finalize while anonymous, signed in,
+            // and was sent back here — complete it automatically now.
+            if ($request->isMethod('GET') && null !== $this->getUser() && $session->has(self::PENDING_KEY) && $data->hasFiles()) {
+                return $this->finalize($publisher, $session, $data, 'draft' === $session->get(self::PENDING_KEY));
+            }
+
             if ($request->isMethod('POST')) {
                 if (!$data->hasFiles()) {
                     $this->addFlash('error', 'Dodaj przynajmniej jeden plik eBooka.');
@@ -43,13 +51,20 @@ final class PublishEbookController extends AbstractController
                 }
 
                 $asDraft = $request->query->getBoolean('draft');
-                $publisher($data, $this->ownerId(), $asDraft);
-                $session->remove(self::SESSION_KEY);
-                $this->addFlash('success', $asDraft
-                    ? 'Szkic zapisany — pliki zostały wgrane.'
-                    : 'Opublikowano! Twój eBook i pliki zostały zapisane.');
 
-                return $this->redirectToRoute('app_home');
+                // Friendly gate: anonymous authors keep everything they filled in.
+                // We only ask them to sign in / sign up at the very last click, then
+                // send them straight back here to finish.
+                if (null === $this->getUser()) {
+                    $session->set(self::PENDING_KEY, $asDraft ? 'draft' : 'publish');
+                    $this->addFlash('info', 'Jeszcze chwila! Zaloguj się lub załóż konto, aby dokończyć.');
+
+                    return $this->redirectToRoute('app_login', [
+                        '_target_path' => $this->generateUrl('app_publish_ebook', ['step' => self::LAST_STEP]),
+                    ]);
+                }
+
+                return $this->finalize($publisher, $session, $data, $asDraft);
             }
 
             return $this->render('ebook/publish/step4.html.twig', ['data' => $data, 'step' => $step]);
@@ -123,6 +138,18 @@ final class PublishEbookController extends AbstractController
             'step' => $step,
             'rules' => EbookUploadRules::templateVars(),
         ]);
+    }
+
+    private function finalize(PublishEbookFromWizard $publisher, SessionInterface $session, PublishEbookData $data, bool $asDraft): Response
+    {
+        $publisher($data, $this->ownerId(), $asDraft);
+        $session->remove(self::SESSION_KEY);
+        $session->remove(self::PENDING_KEY);
+        $this->addFlash('success', $asDraft
+            ? 'Szkic zapisany — pliki zostały wgrane.'
+            : 'Opublikowano! Twój eBook i pliki zostały zapisane.');
+
+        return $this->redirectToRoute('app_home');
     }
 
     private function ownerId(): Uuid

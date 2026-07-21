@@ -32,7 +32,6 @@ security:
     access_control:
         - { path: ^/register, roles: PUBLIC_ACCESS }
         - { path: ^/login, roles: PUBLIC_ACCESS }
-        - { path: ^/wystaw-ebook, roles: ROLE_USER }
         - { path: ^/courses/new, roles: ROLE_USER }
         - { path: ^/courses/\S+/(rename|publish), roles: ROLE_USER }
         - { path: ^/courses, roles: PUBLIC_ACCESS }

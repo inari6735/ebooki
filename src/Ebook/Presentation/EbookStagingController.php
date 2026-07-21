@@ -158,12 +158,13 @@ final class EbookStagingController extends AbstractController
         return null;
     }
 
-    private function ownerId(): Uuid
+    private function ownerId(): ?Uuid
     {
+        // The wizard can be filled anonymously — staged files just have no owner
+        // yet. Ownership is set when the (now logged-in) author finalizes.
         $user = $this->getUser();
-        \assert($user instanceof User);
 
-        return $user->getId();
+        return $user instanceof User ? $user->getId() : null;
     }
 
     private function wizard(Request $request): PublishEbookData

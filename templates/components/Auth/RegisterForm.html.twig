@@ -1,0 +1,50 @@
+{% props registerPath, form = null, termsPath = '#', formAttributes = {} %}
+
+{# Shared registration options — used on the register page AND in the wizard's
+   auth modal. Inline field errors render only when a Symfony `form` is passed
+   (the page); the modal shows AJAX errors above the form instead. #}
+<div class="space-y-3">
+    <twig:Auth:SocialButton provider="google" label="Zarejestruj z Google" />
+    <twig:Auth:SocialButton provider="apple" label="Zarejestruj z Apple" />
+</div>
+
+<div class="my-6">
+    <twig:Auth:Divider label="lub zarejestruj się e-mailem" />
+</div>
+
+<form method="post" action="{{ registerPath }}" class="space-y-4"{% for name, value in formAttributes %} {{ name }}="{{ value }}"{% endfor %}>
+    <input type="hidden" name="registration[_token]" data-controller="csrf-protection" value="{{ csrf_token('submit') }}">
+
+    {% if form %}{{ form_errors(form) }}{% endif %}
+
+    {# Full name — visual only for now (top-level `fullName`, not part of the Symfony form) #}
+    <twig:Auth:TextField name="fullName" icon="user" placeholder="Imię i nazwisko" autocomplete="name" />
+
+    <div>
+        <twig:Auth:TextField
+            name="registration[email]" type="email" icon="mail"
+            placeholder="Adres e-mail" autocomplete="email" required
+        />
+        {% if form %}{{ form_errors(form.email) }}{% endif %}
+    </div>
+
+    <twig:Auth:TextField
+        name="registration[plainPassword][first]" type="password" icon="lock"
+        placeholder="Hasło" autocomplete="new-password" required revealable
+    />
+    <twig:Auth:TextField
+        name="registration[plainPassword][second]" type="password" icon="lock"
+        placeholder="Powtórz hasło" autocomplete="new-password" required revealable
+    />
+
+    <label class="flex items-start gap-2.5 text-sm text-zinc-600">
+        <input type="checkbox" name="terms" checked class="mt-0.5 h-4 w-4 rounded border-zinc-300 text-accent-600 focus:ring-accent-600/30">
+        <span>Akceptuję <a href="{{ termsPath }}" class="font-semibold text-accent-600 hover:text-accent-700">regulamin i politykę prywatności</a></span>
+    </label>
+    <label class="flex items-start gap-2.5 text-sm text-zinc-600">
+        <input type="checkbox" name="newsletter" class="mt-0.5 h-4 w-4 rounded border-zinc-300 text-accent-600 focus:ring-accent-600/30">
+        <span>Chcę otrzymywać informacje o nowościach i promocjach</span>
+    </label>
+
+    <twig:Button type="submit" variant="primary" size="lg" wide>Utwórz konto</twig:Button>
+</form>

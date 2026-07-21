@@ -19,8 +19,8 @@
         <twig:block name="form">
             <twig:Auth:RegisterCard
                 :form="form"
-                registerPath="{{ path('app_register') }}"
-                loginPath="{{ path('app_login') }}"
+                registerPath="{{ path('app_register', target_path ? { _target_path: target_path } : {}) }}"
+                loginPath="{{ path('app_login', target_path ? { _target_path: target_path } : {}) }}"
             />
         </twig:block>
     </twig:Auth:Shell>

@@ -6,7 +6,7 @@
     {# App-shell: the whole view is exactly one viewport tall (never larger).
        Title, stepper and the action bar stay fixed; only <main> scrolls when a
        step's content is taller than the space left over. #}
-    <div class="flex h-dvh flex-col overflow-hidden bg-canvas">
+    <div class="flex h-dvh flex-col overflow-hidden bg-canvas"{% block shell_root_attr %}{% endblock %}>
         {# Title #}
         <div class="mx-auto w-full max-w-[1600px] shrink-0 px-4 pt-6 text-center sm:px-6 lg:px-8 lg:pt-8">
             <h1 class="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl lg:text-4xl">Wystaw swojego eBooka</h1>

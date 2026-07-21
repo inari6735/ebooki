@@ -1,5 +1,9 @@
 {% extends 'ebook/publish/layout.html.twig' %}
 
+{# Anonymous authors: mount the in-page auth modal on the shell root so the
+   finalize buttons (in the action bar) and the modal share an ancestor. #}
+{% block shell_root_attr %}{% if app.user is null %} data-controller="auth-modal" data-auth-modal-login-url-value="{{ path('app_login') }}" data-auth-modal-register-url-value="{{ path('app_register') }}"{% endif %}{% endblock %}
+
 {% set basePrice = data.price ?: 29.99 %}
 {% set promoPrice = data.promoPrice %}
 {% set noPrice = data.isFree or data.payWhatYouWant %}
@@ -114,23 +118,57 @@
                          variant="outline" size="lg" wide class="mt-8">
                 <twig:Icon name="eye" class="h-5 w-5" /> Podgląd strony eBooka
             </twig:Button>
-            <twig:Button type="submit" variant="primary" size="lg" wide form="publish-form" class="mt-3">
+            <twig:Button type="submit" variant="primary" size="lg" wide form="publish-form" class="mt-3"
+                         data-action="click->auth-modal#open" data-auth-modal-intent-param="publish">
                 <twig:Icon name="cloud-upload" class="h-5 w-5" /> Opublikuj eBook
             </twig:Button>
             <p class="mt-3 text-xs text-zinc-400">Publikując, akceptujesz regulamin Bookly.</p>
         </div>
     </div>
+    {% if app.user is null %}
+        {# In-page auth modal — no navigation away, the wizard stays filled in. #}
+        <div data-auth-modal-target="modal" data-action="click->auth-modal#backdrop"
+             class="fixed inset-0 z-50 hidden items-center justify-center bg-zinc-900/60 p-4">
+            <div class="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl sm:p-7">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-zinc-900">Jeszcze jeden krok</h3>
+                        <p class="mt-1 text-sm text-zinc-500">Zaloguj się lub załóż konto, aby dokończyć. Twój formularz pozostaje wypełniony.</p>
+                    </div>
+                    <button type="button" data-action="auth-modal#close" class="shrink-0 text-zinc-400 hover:text-zinc-600" aria-label="Zamknij">
+                        <twig:Icon name="x" class="h-5 w-5" />
+                    </button>
+                </div>
+
+                <div class="mt-5 grid grid-cols-2 gap-1 rounded-xl bg-zinc-100 p-1 text-sm font-semibold">
+                    <button type="button" data-auth-modal-target="loginTab" data-action="auth-modal#showLogin" class="rounded-lg bg-white px-3 py-2 text-accent-700 shadow-sm">Zaloguj się</button>
+                    <button type="button" data-auth-modal-target="registerTab" data-action="auth-modal#showRegister" class="rounded-lg px-3 py-2 text-zinc-500">Załóż konto</button>
+                </div>
+
+                {# Same shared forms as the login/register pages — options never diverge. #}
+                <div data-auth-modal-target="loginPanel" class="mt-6">
+                    <p class="mb-3 text-sm text-error-600 empty:hidden" data-auth-modal-target="loginError"></p>
+                    <twig:Auth:LoginForm :loginPath="path('app_login')" :formAttributes="{ 'data-action': 'submit->auth-modal#submitLogin' }" />
+                </div>
+                <div data-auth-modal-target="registerPanel" class="mt-6 hidden">
+                    <p class="mb-3 text-sm text-error-600 empty:hidden" data-auth-modal-target="registerError"></p>
+                    <twig:Auth:RegisterForm :registerPath="path('app_register')" :formAttributes="{ 'data-action': 'submit->auth-modal#submitRegister' }" />
+                </div>
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}
 
 {% block flow_actions %}
     <twig:Button href="{{ path('app_publish_ebook', { step: 3 }) }}" variant="outline">
         <twig:Icon name="arrow-left" class="h-5 w-5" /> Wstecz
     </twig:Button>
-    <button type="submit" form="draft-form" class="inline-flex items-center justify-center rounded-ui border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50">Zapisz szkic</button>
+    <button type="submit" form="draft-form" data-action="click->auth-modal#open" data-auth-modal-intent-param="draft" class="inline-flex items-center justify-center rounded-ui border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50">Zapisz szkic</button>
     <twig:Button href="{{ path('app_publish_ebook_preview') }}" target="_blank" rel="noopener" variant="outline">
         <twig:Icon name="eye" class="h-5 w-5" /> Podgląd
     </twig:Button>
-    <twig:Button type="submit" variant="primary" size="lg" form="publish-form">
+    <twig:Button type="submit" variant="primary" size="lg" form="publish-form"
+                 data-action="click->auth-modal#open" data-auth-modal-intent-param="publish">
         <twig:Icon name="cloud-upload" class="h-5 w-5" /> Opublikuj eBook
     </twig:Button>
 {% endblock %}
