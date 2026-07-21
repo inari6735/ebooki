@@ -1,0 +1,15 @@
+{% props selected = false, removable = false %}
+
+{# Design System section 4. Selectable filter chip, optionally removable. #}
+{% set state = selected
+    ? 'border-accent-600 bg-accent-50 text-accent-700'
+    : 'border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50' %}
+
+<span {{ attributes.defaults({ class: 'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ' ~ state }) }}>
+    {% block content %}{% endblock %}
+    {% if removable %}
+        <button type="button" class="-mr-1 ml-0.5 text-zinc-400 transition-colors hover:text-zinc-600" aria-label="Usuń">
+            <twig:Icon name="x" class="h-3.5 w-3.5" />
+        </button>
+    {% endif %}
+</span>

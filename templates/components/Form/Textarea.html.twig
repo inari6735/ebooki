@@ -1,0 +1,15 @@
+{% props name, id = null, label = null, placeholder = '', rows = 4, value = '', required = false, disabled = false, error = false %}
+{% set fieldId = id ?? name %}
+{% set ring = error
+    ? 'border-error-600 focus:border-error-600 focus:ring-error-600/25'
+    : 'border-zinc-200 focus:border-accent-600 focus:ring-accent-600/25' %}
+
+<div>
+    {% if label %}<label for="{{ fieldId }}" class="mb-1.5 block text-sm font-medium text-zinc-700">{{ label }}</label>{% endif %}
+    <textarea
+        id="{{ fieldId }}" name="{{ name }}" rows="{{ rows }}" placeholder="{{ placeholder }}"
+        {% if disabled %}disabled{% endif %} {{ required ? 'required' }}
+        {% if label is null and placeholder %}aria-label="{{ placeholder }}"{% endif %}
+        class="block w-full rounded-ui border bg-white px-3.5 py-2.5 text-zinc-900 shadow-sm outline-none placeholder:text-zinc-400 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-400 {{ ring }}"
+    >{{ value }}</textarea>
+</div>

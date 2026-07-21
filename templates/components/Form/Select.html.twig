@@ -1,0 +1,25 @@
+{% props name, id = null, label = null, options = [], placeholder = 'Wybierz opcję', value = null, required = false, disabled = false, error = false %}
+{% set fieldId = id ?? name %}
+{% set ring = error
+    ? 'border-error-600 focus:border-error-600 focus:ring-error-600/25'
+    : 'border-zinc-200 focus:border-accent-600 focus:ring-accent-600/25' %}
+
+<div>
+    {% if label %}<label for="{{ fieldId }}" class="mb-1.5 block text-sm font-medium text-zinc-700">{{ label }}</label>{% endif %}
+    <div class="relative">
+        <select id="{{ fieldId }}" name="{{ name }}"
+                {% if disabled %}disabled{% endif %} {{ required ? 'required' }}
+                {% if label is null %}aria-label="{{ placeholder }}"{% endif %}
+                class="block w-full appearance-none rounded-ui border bg-white py-2.5 pl-3.5 pr-10 text-zinc-900 shadow-sm outline-none focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-400 {{ ring }}">
+            {% if placeholder %}<option value="" {{ value ? '' : 'selected' }} disabled hidden>{{ placeholder }}</option>{% endif %}
+            {% for opt in options %}
+                {% set optValue = opt.value is defined ? opt.value : opt %}
+                {% set optLabel = opt.label is defined ? opt.label : opt %}
+                <option value="{{ optValue }}" {{ optValue == value ? 'selected' }}>{{ optLabel }}</option>
+            {% endfor %}
+        </select>
+        <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-400">
+            <twig:Icon name="chevron-down" class="h-4 w-4" />
+        </span>
+    </div>
+</div>

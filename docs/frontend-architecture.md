@@ -19,7 +19,7 @@ explicit rules, so templates stay ordered, reusable, and consistent as the proje
 | Live Components | symfony/ux-live-component: **deferred in this repo** until the first real interactive need (course search/filter) — see adaptations |
 | CSS | Tailwind via symfonycasts/tailwind-bundle (standalone CLI, no Node); design tokens in `@theme` in app.css |
 | Component taxonomy | Two tiers only: shared UI kit in `templates/components/` + pages that compose components (no atomic design) |
-| Aesthetic | Light, neutral zinc palette + indigo accent; statuses: draft = amber, published = emerald; system font stack; centered `max-w-5xl` content; cards with subtle shadows |
+| Aesthetic | Bookly Design System v1.0: Poppins; brand blue `#2048D2` accent; navy ink on light bluish neutrals; DS shadow/radius scale; cards with subtle shadows |
 | Scope | Whole app: base layout, course pages, login/registration |
 
 ## Rules (the clean-front contract)
@@ -52,10 +52,20 @@ explicit rules, so templates stay ordered, reusable, and consistent as the proje
 
 ## Design tokens (@theme in app.css)
 
-- Palette: zinc neutrals (Tailwind default); accent indigo (`--color-accent-*`); status
-  colors draft = amber, published = emerald; error/success/warning aligned with flash
-  types. Shared radius token `--radius-ui` (→ `rounded-ui`) for cards/buttons/inputs.
-- Typography: system font stack (no webfonts); Tailwind default type scale.
+Tokens encode the **Bookly Design System v1.0** (`design/design_system/design_system.png`).
+`assets/styles/app.css` is the single source of truth.
+
+- Palette: Bookly **brand blue** accent (`--color-accent-600` = `#2048D2`, hover `700`
+  `#183DB5`, pressed `800` `#12318F`, light `100` `#EDF3FE`, subtle `50` `#F5F8FF`). The
+  Bookly ink/border/surface ramp (text primary `#06142F`, secondary `#46536D`, muted
+  `#7C879D`, border `#DEE5F0` / strong `#C7D1E6`, background `#FBFCFE`) is mapped onto
+  Tailwind's `zinc` keys, so `text-zinc-*` / `border-zinc-*` / `bg-zinc-*` render DS
+  colors. Semantic tokens: `--color-canvas`, `--color-surface`, `--color-border`,
+  `--color-rating` (`#F6C52E`). Shared radius `--radius-ui` (12px).
+- Elevation: DS navy-tinted `--shadow-sm…2xl` (→ `shadow-sm…shadow-2xl`).
+- Typography: **Poppins**, self-hosted woff2 (weights 400/500/600/700) in `assets/fonts/`,
+  `@font-face` + `--font-sans` in app.css (no external requests). Scale per DS
+  (H1 700 40/48, H2 600 32/40, H3 600 24/32, Body 400 16/24, Small/Button/Link 14/20).
 
 ## Rules of extraction / page mapping
 
@@ -64,6 +74,26 @@ explicit rules, so templates stay ordered, reusable, and consistent as the proje
 | `base.html.twig` | `Layout:Nav` + centered `<main>` with `Layout:Flashes` + block body |
 | `user/login`, `user/register` | `Auth:Card` (narrow, centered) with fields (theme / `Field`) + `Button`, cross-link |
 | `course/*` (future) | `PageHeader`, `Card`, `Badge`, `EmptyState` — built when the course context lands |
+
+## Component library (pre-built from the Design System)
+
+By explicit decision (supersedes rule 4 "extract on demand" for the shared kit), the
+Design System's atoms are built up front in `templates/components/` so pages can be
+composed from them:
+
+- **Primitives:** `Button` (primary/secondary/outline/ghost/danger · md/lg · disabled),
+  `Icon` (DS icon set, `<twig:Icon name="…">`), `Badge` (bestseller/brand/neutral),
+  `Chip` (selectable/removable), `Avatar` (initials/image), `Card`, `Alert`.
+- **Form kit** (`components/Form/`): `Input` (text/email/password/search, icon, error,
+  disabled, revealable), `Textarea`, `Checkbox`, `Radio`, `Toggle` (CSS-only switch),
+  `Select`.
+- **Auth composition:** `Auth:Shell`, `Auth:BrandPanel` / `Auth:RegisterBrand`,
+  `Auth:Illustration`, `Auth:LoginCard` / `Auth:RegisterCard`, `Auth:SocialButton`,
+  `Auth:TextField`, `Auth:Divider`; layout `Layout:Nav` / `Layout:Flashes`.
+
+**Living styleguide:** `GET /_kit` (dev-only, `Shared/Presentation/StyleguideController`)
+renders `templates/kit/index.html.twig` — a catalog of every component/state. Use it to
+verify the kit and as a visual reference when building pages.
 
 ## Out of scope (v1)
 

@@ -1,18 +1,72 @@
 @import "tailwindcss";
 
+/* Poppins — self-hosted (Bookly Design System v1.0), latin subset, no external requests. */
+@font-face {
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../fonts/poppins-400.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('../fonts/poppins-500.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('../fonts/poppins-600.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('../fonts/poppins-700.woff2') format('woff2');
+}
+
 @theme {
-    /* Accent — Bookly blue */
-    --color-accent-50: #eff6ff;
-    --color-accent-100: #dbeafe;
-    --color-accent-200: #bfdbfe;
-    --color-accent-500: #3b82f6;
-    --color-accent-600: #2563eb;
-    --color-accent-700: #1d4ed8;
+    /* ---- Typography ---------------------------------------------------- */
+    --font-sans: 'Poppins', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
 
-    /* Page canvas — the light blue backdrop behind the auth split-screen */
-    --color-canvas: #eef3fb;
+    /* ---- Brand blue (Primary / Hover / Pressed + light / subtle) ------- */
+    --color-accent-50:  #f5f8ff;  /* Primary subtle */
+    --color-accent-100: #edf3fe;  /* Primary light  */
+    --color-accent-200: #d6e2fb;
+    --color-accent-500: #3b63e0;
+    --color-accent-600: #2048d2;  /* Primary (default) */
+    --color-accent-700: #183db5;  /* Hover */
+    --color-accent-800: #12318f;  /* Pressed */
 
-    /* Flash / status semantics */
+    /* ---- Neutral ramp: Bookly ink / border / surface -------------------
+       Mapped onto Tailwind's `zinc` keys so existing text-zinc-* /
+       border-zinc-* / bg-zinc-* utilities inherit the DS colors. */
+    --color-zinc-50:  #fbfcfe;  /* Background */
+    --color-zinc-100: #edf3fe;  /* Subtle bluish (hovers, rings) */
+    --color-zinc-200: #dee5f0;  /* Border default */
+    --color-zinc-300: #c7d1e6;  /* Border strong */
+    --color-zinc-400: #7c879d;  /* Text muted / placeholder */
+    --color-zinc-500: #64708a;
+    --color-zinc-600: #46536d;  /* Text secondary */
+    --color-zinc-700: #384763;
+    --color-zinc-800: #26324c;
+    --color-zinc-900: #06142f;  /* Text primary */
+    --color-zinc-950: #030b1c;
+
+    /* ---- Semantic surfaces / borders / rating -------------------------- */
+    --color-canvas: #fbfcfe;          /* page background */
+    --color-surface: #ffffff;         /* cards */
+    --color-surface-subtle: #f7fbfa;  /* footer / subtle panels */
+    --color-border: #dee5f0;
+    --color-border-strong: #c7d1e6;
+    --color-rating: #f6c52e;          /* rating / bestseller accent */
+
+    /* ---- Flash / status semantics ------------------------------------- */
     --color-success-50: #ecfdf5;
     --color-success-600: #059669;
     --color-success-700: #047857;
@@ -23,12 +77,15 @@
     --color-warning-600: #d97706;
     --color-warning-700: #b45309;
 
-    /* Course status colors — draft = amber, published = emerald (used by Badge later) */
-    --color-draft-600: #d97706;
-    --color-published-600: #059669;
+    /* ---- Radius (DS scale 4 / 8 / 12 / 16 / 24 / 32) ------------------- */
+    --radius-ui: 0.75rem;  /* 12px — inputs / buttons */
 
-    /* Shared radius for buttons / inputs */
-    --radius-ui: 0.75rem;
+    /* ---- Shadows (Bookly navy-tinted elevation) ----------------------- */
+    --shadow-sm:  0 1px 2px 0 rgb(6 20 47 / 0.06);
+    --shadow-md:  0 4px 12px 0 rgb(6 20 47 / 0.08);
+    --shadow-lg:  0 8px 24px 0 rgb(6 20 47 / 0.10);
+    --shadow-xl:  0 16px 40px 0 rgb(6 20 47 / 0.12);
+    --shadow-2xl: 0 24px 60px 0 rgb(6 20 47 / 0.14);
 }
 
 /* Single source of truth for form-control appearance (rule 8):
@@ -39,7 +96,7 @@
     }
 
     .field-input {
-        @apply block w-full rounded-ui border border-zinc-300 bg-white px-3 py-2 text-zinc-900
+        @apply block w-full rounded-ui border border-zinc-200 bg-white px-3 py-2 text-zinc-900
                shadow-sm outline-none placeholder:text-zinc-400
                focus:border-accent-600 focus:ring-2 focus:ring-accent-600/30;
     }

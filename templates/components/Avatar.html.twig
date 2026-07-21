@@ -1,0 +1,24 @@
+{% props name = null, src = null, size = 'md', color = 'accent' %}
+
+{# Design System section 7. Initials or image avatar. #}
+{% set sizes = {
+    sm: 'h-8 w-8 text-xs',
+    md: 'h-10 w-10 text-sm',
+    lg: 'h-12 w-12 text-base',
+} %}
+{% set colors = {
+    accent:  'bg-accent-100 text-accent-700',
+    emerald: 'bg-emerald-100 text-emerald-700',
+    teal:    'bg-teal-100 text-teal-700',
+    amber:   'bg-warning-50 text-warning-700',
+    zinc:    'bg-zinc-100 text-zinc-600',
+} %}
+
+{% if src %}
+    <img src="{{ src }}" alt="{{ name }}"
+         {{ attributes.defaults({ class: 'shrink-0 rounded-full object-cover ring-2 ring-white ' ~ sizes[size] }) }}>
+{% else %}
+    <span {{ attributes.defaults({ class: 'inline-flex shrink-0 items-center justify-center rounded-full font-semibold ' ~ sizes[size] ~ ' ' ~ colors[color] }) }}>
+        {{ name|default('?')|slice(0, 2)|upper }}
+    </span>
+{% endif %}

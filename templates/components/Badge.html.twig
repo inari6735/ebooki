@@ -1,0 +1,17 @@
+{% props variant = 'neutral', icon = null %}
+
+{# Design System section 4. variant: bestseller | brand | neutral. #}
+{% set styles = {
+    bestseller: 'bg-warning-50 text-warning-700',
+    brand:      'bg-accent-100 text-accent-700',
+    neutral:    'bg-zinc-100 text-zinc-600',
+} %}
+
+<span {{ attributes.defaults({ class: 'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ' ~ styles[variant] }) }}>
+    {% if variant == 'bestseller' %}
+        <twig:Icon name="star" class="h-3.5 w-3.5 text-rating" />
+    {% elseif icon %}
+        <twig:Icon name="{{ icon }}" class="h-3.5 w-3.5" />
+    {% endif %}
+    {% block content %}{% endblock %}
+</span>

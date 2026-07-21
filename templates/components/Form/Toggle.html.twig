@@ -1,0 +1,13 @@
+{% props name, id = null, label = null, checked = false, disabled = false, value = '1' %}
+
+{# Switch — pure CSS (peer), no JavaScript. #}
+<label class="inline-flex items-center gap-3 text-sm text-zinc-600 {{ disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer' }}">
+    <span class="relative inline-flex shrink-0">
+        <input type="checkbox" name="{{ name }}" id="{{ id ?? name }}" value="{{ value }}"
+               {% if checked %}checked{% endif %} {% if disabled %}disabled{% endif %}
+               class="peer sr-only">
+        <span class="h-6 w-11 rounded-full bg-zinc-300 transition-colors peer-checked:bg-accent-600 peer-focus-visible:ring-2 peer-focus-visible:ring-accent-600/30"></span>
+        <span class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5"></span>
+    </span>
+    {% if label %}<span>{{ label }}</span>{% endif %}
+</label>

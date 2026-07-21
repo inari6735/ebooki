@@ -1,0 +1,35 @@
+{% props type = 'text', name, id = null, label = null, placeholder = '', icon = null, value = '', required = false, disabled = false, error = false, autocomplete = null, revealable = false %}
+{% set fieldId = id ?? name %}
+{% set ring = error
+    ? 'border-error-600 focus:border-error-600 focus:ring-error-600/25'
+    : 'border-zinc-200 focus:border-accent-600 focus:ring-accent-600/25' %}
+
+<div>
+    {% if label %}<label for="{{ fieldId }}" class="mb-1.5 block text-sm font-medium text-zinc-700">{{ label }}</label>{% endif %}
+
+    <div class="relative"{% if revealable %} data-controller="password-toggle"{% endif %}>
+        {% if icon %}
+            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-zinc-400">
+                <twig:Icon name="{{ icon }}" />
+            </span>
+        {% endif %}
+
+        <input
+            type="{{ type }}" id="{{ fieldId }}" name="{{ name }}" value="{{ value }}" placeholder="{{ placeholder }}"
+            {% if disabled %}disabled{% endif %} {{ required ? 'required' }}
+            {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
+            {% if label is null and placeholder %}aria-label="{{ placeholder }}"{% endif %}
+            {% if revealable %}data-password-toggle-target="input"{% endif %}
+            class="block w-full rounded-ui border bg-white py-2.5 text-zinc-900 shadow-sm outline-none placeholder:text-zinc-400 focus:ring-2 disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-400 {{ ring }} {{ icon ? 'pl-11' : 'pl-3.5' }} {{ revealable ? 'pr-11' : 'pr-3.5' }}"
+        >
+
+        {% if revealable %}
+            <button type="button" data-action="password-toggle#toggle"
+                    class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-zinc-400 transition-colors hover:text-zinc-600"
+                    aria-label="Pokaż lub ukryj hasło">
+                <twig:Icon name="eye" data-password-toggle-target="showIcon" />
+                <twig:Icon name="eye-off" class="hidden" data-password-toggle-target="hideIcon" />
+            </button>
+        {% endif %}
+    </div>
+</div>

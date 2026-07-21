@@ -1,0 +1,123 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}UI Kit · Bookly Design System{% endblock %}
+
+{% block body %}
+    <div class="space-y-10">
+        <header>
+            <h1 class="text-3xl font-bold text-zinc-900">Bookly UI Kit</h1>
+            <p class="mt-1 text-sm text-zinc-500">Design System v1.0 — live component catalog (dev only).</p>
+        </header>
+
+        {# ---- Typography ---- #}
+        <section class="rounded-3xl bg-white p-8 shadow-md ring-1 ring-zinc-100">
+            <h2 class="mb-6 text-sm font-semibold uppercase tracking-wide text-zinc-400">Typografia</h2>
+            <div class="space-y-3">
+                <p class="text-[40px] font-bold leading-[48px] text-zinc-900">H1 — Kupuj i sprzedawaj eBooki</p>
+                <p class="text-[32px] font-semibold leading-[40px] text-zinc-900">H2 — Odkryj tysiące książek</p>
+                <p class="text-2xl font-semibold text-zinc-900">H3 — Najpopularniejsze kategorie</p>
+                <p class="text-base text-zinc-700">Body — Znajdź, kup i czytaj eBooki w jednym miejscu.</p>
+                <p class="text-sm text-zinc-500">Small — Darmowy fragment dostępny do pobrania.</p>
+            </div>
+        </section>
+
+        {# ---- Buttons ---- #}
+        <section class="rounded-3xl bg-white p-8 shadow-md ring-1 ring-zinc-100">
+            <h2 class="mb-6 text-sm font-semibold uppercase tracking-wide text-zinc-400">Przyciski</h2>
+            <div class="flex flex-wrap items-center gap-3">
+                <twig:Button variant="primary">Primary</twig:Button>
+                <twig:Button variant="secondary">Secondary</twig:Button>
+                <twig:Button variant="outline">Outline</twig:Button>
+                <twig:Button variant="ghost">Ghost</twig:Button>
+                <twig:Button variant="danger">Danger</twig:Button>
+                <twig:Button variant="primary" disabled>Disabled</twig:Button>
+            </div>
+            <div class="mt-4 flex flex-wrap items-center gap-3">
+                <twig:Button variant="primary" size="lg">Large</twig:Button>
+                <twig:Button variant="primary">Medium</twig:Button>
+                <a href="#" class="text-sm font-medium text-accent-600 hover:text-accent-700">Tekst link →</a>
+            </div>
+        </section>
+
+        {# ---- Badges & chips ---- #}
+        <section class="rounded-3xl bg-white p-8 shadow-md ring-1 ring-zinc-100">
+            <h2 class="mb-6 text-sm font-semibold uppercase tracking-wide text-zinc-400">Badges i chipy</h2>
+            <div class="flex flex-wrap items-center gap-3">
+                <twig:Badge variant="bestseller">Bestseller</twig:Badge>
+                <twig:Badge variant="brand">Nowość</twig:Badge>
+                <twig:Badge variant="brand">Promocja</twig:Badge>
+                <twig:Badge variant="neutral" icon="book">Darmowy fragment</twig:Badge>
+            </div>
+            <div class="mt-4 flex flex-wrap items-center gap-3">
+                <twig:Chip>Neutral chip</twig:Chip>
+                <twig:Chip selected>Wybrany chip</twig:Chip>
+                <twig:Chip removable>Chip z akcją</twig:Chip>
+            </div>
+        </section>
+
+        {# ---- Icons ---- #}
+        <section class="rounded-3xl bg-white p-8 shadow-md ring-1 ring-zinc-100">
+            <h2 class="mb-6 text-sm font-semibold uppercase tracking-wide text-zinc-400">Ikony</h2>
+            <div class="flex flex-wrap gap-5 text-accent-600">
+                {% for n in ['book','cloud-upload','cart','search','user','heart','shield','chart','bookmark','bell','settings','star','tag','chat','calendar','lock','mail','eye','edit','lightning','rocket','users'] %}
+                    <twig:Icon name="{{ n }}" class="h-6 w-6" />
+                {% endfor %}
+            </div>
+        </section>
+
+        {# ---- Avatars ---- #}
+        <section class="rounded-3xl bg-white p-8 shadow-md ring-1 ring-zinc-100">
+            <h2 class="mb-6 text-sm font-semibold uppercase tracking-wide text-zinc-400">Avatary</h2>
+            <div class="flex flex-wrap items-center gap-3">
+                <twig:Avatar name="JS" color="accent" />
+                <twig:Avatar name="AK" color="emerald" />
+                <twig:Avatar name="MK" color="teal" />
+                <twig:Avatar name="AN" color="amber" />
+                <twig:Avatar name="XL" size="lg" />
+                <twig:Avatar name="XS" size="sm" />
+                <button type="button" class="flex h-10 w-10 items-center justify-center rounded-full border border-dashed border-zinc-300 text-zinc-400 hover:border-accent-600 hover:text-accent-600">
+                    <twig:Icon name="plus" class="h-5 w-5" />
+                </button>
+            </div>
+        </section>
+
+        {# ---- Form fields ---- #}
+        <section class="rounded-3xl bg-white p-8 shadow-md ring-1 ring-zinc-100">
+            <h2 class="mb-6 text-sm font-semibold uppercase tracking-wide text-zinc-400">Pola formularzy</h2>
+            <div class="grid gap-6 sm:grid-cols-2">
+                <twig:Form:Input name="kit_text" label="Text input" placeholder="Wpisz tekst…" />
+                <twig:Form:Input name="kit_email" type="email" icon="mail" label="Email" placeholder="jan.kowalski@email.com" />
+                <twig:Form:Input name="kit_pass" type="password" icon="lock" label="Hasło" placeholder="••••••••" revealable />
+                <twig:Form:Input name="kit_search" icon="search" label="Wyszukaj" placeholder="Szukaj książek…" />
+                <twig:Form:Input name="kit_err" label="Error state" placeholder="Wpisz tekst…" error />
+                <twig:Form:Input name="kit_dis" label="Disabled" placeholder="Wpisz tekst…" disabled />
+                <div class="sm:col-span-2">
+                    <twig:Form:Textarea name="kit_area" label="Textarea" placeholder="Wpisz wiadomość…" />
+                </div>
+                <twig:Form:Select name="kit_select" label="Select / Dropdown" :options="['Opcja 1', 'Opcja 2', 'Opcja 3']" />
+                <div class="flex flex-col justify-end gap-3">
+                    <twig:Form:Checkbox name="kit_cb1" label="Opcja domyślna" />
+                    <twig:Form:Checkbox name="kit_cb2" label="Zaznaczona" checked />
+                </div>
+                <div class="flex items-center gap-6">
+                    <twig:Form:Radio name="kit_radio" value="1" label="Opcja 1" />
+                    <twig:Form:Radio name="kit_radio" value="2" label="Opcja 2" checked />
+                </div>
+                <div class="flex items-center gap-6">
+                    <twig:Form:Toggle name="kit_t1" label="Wyłączone" />
+                    <twig:Form:Toggle name="kit_t2" label="Włączone" checked />
+                </div>
+            </div>
+        </section>
+
+        {# ---- Elevation ---- #}
+        <section class="rounded-3xl bg-white p-8 shadow-md ring-1 ring-zinc-100">
+            <h2 class="mb-6 text-sm font-semibold uppercase tracking-wide text-zinc-400">Cienie</h2>
+            <div class="flex flex-wrap gap-6">
+                {% for s in ['shadow-sm','shadow-md','shadow-lg','shadow-xl','shadow-2xl'] %}
+                    <div class="flex h-24 w-32 items-center justify-center rounded-2xl bg-white text-xs text-zinc-500 {{ s }}">{{ s }}</div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+{% endblock %}
