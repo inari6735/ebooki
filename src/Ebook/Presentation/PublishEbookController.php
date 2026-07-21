@@ -115,24 +115,22 @@ final class PublishEbookController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $advance = true;
             if (2 === $step) {
                 // Detailed info: parallel detailKeys[]/detailValues[] → list of {key, value}.
-                $keys = $request->request->all('detailKeys');
-                $values = $request->request->all('detailValues');
-                $details = [];
-                foreach ($keys as $i => $k) {
-                    $k = trim((string) $k);
-                    $v = trim((string) ($values[$i] ?? ''));
-                    if ('' !== $k && '' !== $v) {
-                        $details[] = ['key' => $k, 'value' => $v];
-                    }
+                // Keep the typed rows on $data so a rejected submit re-renders them.
+                $data->details = $this->collectDetails($request);
+                if (null !== ($error = $this->detailsError($data->details))) {
+                    $this->addFlash('error', $error);
+                    $advance = false;
                 }
-                $data->details = $details;
             }
 
-            $session->set(self::SESSION_KEY, $data);
+            if ($advance) {
+                $session->set(self::SESSION_KEY, $data);
 
-            return $this->redirectToRoute('app_publish_ebook', ['step' => $step + 1]);
+                return $this->redirectToRoute('app_publish_ebook', ['step' => $step + 1]);
+            }
         }
 
         return $this->render("ebook/publish/step{$step}.html.twig", [
@@ -141,6 +139,49 @@ final class PublishEbookController extends AbstractController
             'step' => $step,
             'rules' => EbookUploadRules::templateVars(),
         ]);
+    }
+
+    /**
+     * Pair the parallel detailKeys[]/detailValues[] fields into rows, dropping any
+     * where either side is blank.
+     *
+     * @return list<array{key: string, value: string}>
+     */
+    private function collectDetails(Request $request): array
+    {
+        $keys = $request->request->all('detailKeys');
+        $values = $request->request->all('detailValues');
+        $details = [];
+        foreach ($keys as $i => $k) {
+            $k = trim((string) $k);
+            $v = trim((string) ($values[$i] ?? ''));
+            if ('' !== $k && '' !== $v) {
+                $details[] = ['key' => $k, 'value' => $v];
+            }
+        }
+
+        return $details;
+    }
+
+    /**
+     * Enforce the per-row length caps (the frontend applies the same via maxlength).
+     *
+     * @param list<array{key: string, value: string}> $details
+     */
+    private function detailsError(array $details): ?string
+    {
+        foreach ($details as $d) {
+            if (mb_strlen($d['key']) > PublishEbookData::DETAIL_KEY_MAX
+                || mb_strlen($d['value']) > PublishEbookData::DETAIL_VALUE_MAX) {
+                return sprintf(
+                    'Szczegółowe informacje: nazwa może mieć maksymalnie %d znaków, a wartość %d znaków.',
+                    PublishEbookData::DETAIL_KEY_MAX,
+                    PublishEbookData::DETAIL_VALUE_MAX,
+                );
+            }
+        }
+
+        return null;
     }
 
     private function finalize(PublishEbookFromWizard $publisher, SessionInterface $session, PublishEbookData $data, bool $asDraft): Response
