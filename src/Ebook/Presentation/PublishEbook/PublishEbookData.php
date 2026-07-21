@@ -14,6 +14,7 @@ final class PublishEbookData
     public ?string $fileName = null;
     public ?string $fileSize = null;
     public ?string $coverName = null;
+    public ?string $coverDataUri = null; // base64 preview (no file store yet)
 
     // Step 2 — details
     #[Assert\NotBlank(groups: ['details'])]

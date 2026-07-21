@@ -85,7 +85,7 @@
             <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-zinc-100">
                 <h3 class="text-base font-semibold text-zinc-900">Podgląd Twojego eBooka</h3>
                 <div class="mt-4 flex gap-4">
-                    <div class="flex h-40 w-28 shrink-0 items-center justify-center rounded-lg bg-gradient-to-b from-zinc-700 to-zinc-900 p-2 text-center text-xs font-semibold text-white">{{ data.title ?: 'Tytuł eBooka' }}</div>
+                    <twig:Ebook:Cover :src="data.coverDataUri" title="{{ data.title ?: 'Tytuł eBooka' }}" width="w-28" />
                     <div>
                         <p class="font-semibold text-zinc-900">{{ data.title ?: 'Tytuł eBooka' }}</p>
                         <p class="text-sm text-zinc-500">{{ data.author ?: 'Autor' }}</p>

@@ -61,7 +61,10 @@ Tokens encode the **Bookly Design System v1.0** (`design/design_system/design_sy
   `#7C879D`, border `#DEE5F0` / strong `#C7D1E6`, background `#FBFCFE`) is mapped onto
   Tailwind's `zinc` keys, so `text-zinc-*` / `border-zinc-*` / `bg-zinc-*` render DS
   colors. Semantic tokens: `--color-canvas`, `--color-surface`, `--color-border`,
-  `--color-rating` (`#F6C52E`). Shared radius `--radius-ui` (12px).
+  `--color-rating` (`#F6C52E`). Shared radius `--radius-ui` (12px). eBook covers use a
+  fixed **`--aspect-cover` = 2:3** (portrait) — render them everywhere via
+  `<twig:Ebook:Cover width="…">` (object-cover crops off-ratio uploads so the layout
+  never distorts).
 - Elevation: DS navy-tinted `--shadow-sm…2xl` (→ `shadow-sm…shadow-2xl`).
 - Typography: **Poppins**, self-hosted woff2 (weights 400/500/600/700) in `assets/fonts/`,
   `@font-face` + `--font-sans` in app.css (no external requests). Scale per DS

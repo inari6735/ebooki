@@ -2,7 +2,7 @@ import { Controller } from '@hotwired/stimulus';
 
 /* Styled file dropzone: click/drag to pick a file, shows its name + size. */
 export default class extends Controller {
-    static targets = ['input', 'idle', 'filled', 'name', 'size'];
+    static targets = ['input', 'idle', 'filled', 'name', 'size', 'preview'];
 
     open() {
         this.inputTarget.click();
@@ -13,6 +13,9 @@ export default class extends Controller {
         if (!f) return;
         if (this.hasNameTarget) this.nameTarget.textContent = f.name;
         if (this.hasSizeTarget) this.sizeTarget.textContent = this.human(f.size);
+        if (this.hasPreviewTarget && f.type.startsWith('image/')) {
+            this.previewTarget.src = URL.createObjectURL(f);
+        }
         this.idleTargets.forEach((el) => el.classList.add('hidden'));
         this.filledTargets.forEach((el) => el.classList.remove('hidden'));
     }

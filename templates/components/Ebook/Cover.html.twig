@@ -1,0 +1,12 @@
+{% props src = null, title = 'Tytuł eBooka', width = 'w-28' %}
+
+{# Covers always render at the 2:3 (portrait) ratio. A correctly-proportioned
+   upload fits perfectly; anything else is cropped with object-cover — never
+   distorting the layout. Height comes from the aspect ratio, so callers only
+   pass a width (e.g. width="w-24"). #}
+{% if src %}
+    <img src="{{ src }}" alt="Okładka eBooka"
+         {{ attributes.defaults({ class: width ~ ' aspect-cover shrink-0 rounded-lg object-cover shadow-sm ring-1 ring-zinc-900/5' }) }}>
+{% else %}
+    <div {{ attributes.defaults({ class: width ~ ' aspect-cover flex shrink-0 items-center justify-center rounded-lg bg-gradient-to-b from-zinc-700 to-zinc-900 p-2 text-center text-xs font-semibold text-white' }) }}>{{ title }}</div>
+{% endif %}

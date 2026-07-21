@@ -65,7 +65,7 @@ backend is stubbed.
 | Element | Current stub | Backend needed |
 |---|---|---|
 | **"Opublikuj eBook"** (step 4) | no-op: clears the wizard session + flashes success + redirects home | create the eBook (entity/command), store files, publish to catalog |
-| **Uploaded file + cover** (step 1) | accepted & validated (type/size) but **not persisted** — only the client filename/size are kept in session for preview | move/store binaries, virus/format scan, generate previews |
+| **Uploaded file + cover** (step 1) | accepted & validated (type/size) but **not persisted** — filename/size kept in session; the cover is base64-encoded into the session (≤3 MB) only to preview it across steps | move/store binaries to a real store + serve via URL; virus/format scan; generate previews |
 | **"Zapisz szkic"** (all steps) | flashes "Szkic zapisany" — no real draft saved | persist a draft (DB) tied to the author |
 | **Detailed info (klucz:wartość)** (step 2) | captured into the session DTO (`PublishEbookData::$details`), not persisted | persist; render as a details **table on the eBook detail page** (not built yet) |
 | **Route is not auth-gated yet** | anyone can open `/wystaw-ebook` | require `ROLE_USER` (author); prefill author from the logged-in user |

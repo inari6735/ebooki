@@ -2,6 +2,7 @@
 
 namespace App\Ebook\Presentation\Form;
 
+use App\Ebook\Presentation\PublishEbook\EbookUploadRules;
 use App\Ebook\Presentation\PublishEbook\PublishEbookData;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
@@ -23,9 +24,12 @@ final class FileStepType extends AbstractType
                 'required' => false,
                 'constraints' => [
                     new Assert\File(
-                        maxSize: '200M',
-                        extensions: ['pdf', 'epub', 'mobi'],
-                        extensionsMessage: 'Obsługiwane formaty: PDF, EPUB, MOBI.',
+                        maxSize: EbookUploadRules::FILE_MAX_SIZE,
+                        // Extension-only whitelist — never blocks a valid ebook whose
+                        // content-type isn't in Symfony's MIME map.
+                        extensions: EbookUploadRules::extensionOnly(EbookUploadRules::FILE_FORMATS),
+                        extensionsMessage: 'Obsługiwane formaty: '.EbookUploadRules::label(EbookUploadRules::FILE_FORMATS).'.',
+                        groups: ['file'],
                     ),
                 ],
             ])
@@ -34,9 +38,10 @@ final class FileStepType extends AbstractType
                 'required' => false,
                 'constraints' => [
                     new Assert\File(
-                        maxSize: '10M',
-                        extensions: ['jpg', 'jpeg', 'png'],
-                        extensionsMessage: 'Obsługiwane formaty: JPG, PNG.',
+                        maxSize: EbookUploadRules::COVER_MAX_SIZE,
+                        extensions: EbookUploadRules::COVER_FORMATS,
+                        extensionsMessage: 'Obsługiwane formaty: '.EbookUploadRules::label(EbookUploadRules::COVER_FORMATS).'.',
+                        groups: ['file'],
                     ),
                 ],
             ]);

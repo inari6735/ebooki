@@ -5,6 +5,7 @@ namespace App\Ebook\Presentation;
 use App\Ebook\Presentation\Form\DetailsStepType;
 use App\Ebook\Presentation\Form\FileStepType;
 use App\Ebook\Presentation\Form\PricingStepType;
+use App\Ebook\Presentation\PublishEbook\EbookUploadRules;
 use App\Ebook\Presentation\PublishEbook\PublishEbookData;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -70,6 +71,11 @@ final class PublishEbookController extends AbstractController
                 }
                 if ($cover = $form->get('cover')->getData()) {
                     $data->coverName = $cover->getClientOriginalName();
+                    // Keep a base64 preview so the cover survives step navigation
+                    // without a file store (capped to keep the session light).
+                    if ($cover->getSize() <= 3_000_000) {
+                        $data->coverDataUri = 'data:'.$cover->getMimeType().';base64,'.base64_encode((string) file_get_contents($cover->getPathname()));
+                    }
                 }
             }
 
@@ -101,6 +107,7 @@ final class PublishEbookController extends AbstractController
             'form' => $form->createView(),
             'data' => $data,
             'step' => $step,
+            'rules' => EbookUploadRules::templateVars(),
         ]);
     }
 
