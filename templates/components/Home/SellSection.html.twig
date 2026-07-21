@@ -1,0 +1,82 @@
+{% set steps = [
+    { icon: 'cloud-upload', num: 1, title: 'Dodaj plik',  text: 'Prześlij eBooka w PDF, EPUB lub MOBI. Dodaj okładkę oraz opis publikacji.' },
+    { icon: 'tag',          num: 2, title: 'Ustaw cenę',  text: 'Wybierz cenę eBooka. Ty decydujesz, ile zarabiasz na każdej sprzedaży.' },
+    { icon: 'chart',        num: 3, title: 'Sprzedawaj',  text: 'Twój eBook trafia do tysięcy czytelników. Zarabiaj i rozwijaj twórczość.' },
+] %}
+{% set reasons = [
+    { icon: 'tag',          title: 'Niskie prowizje',        text: 'Zachowujesz więcej ze sprzedaży – uczciwe zasady dla twórców.' },
+    { icon: 'lightning',    title: 'Szybkie wypłaty',        text: 'Wypłacaj zarobki na konto już od 50 zł – szybko i bezpiecznie.' },
+    { icon: 'cloud-upload', title: 'Łatwe publikowanie',     text: 'Dodaj eBooka w kilka minut bez skomplikowanych formalności.' },
+    { icon: 'chart',        title: 'Szczegółowe statystyki', text: 'Śledź sprzedaż i zarobki w czasie rzeczywistym.' },
+] %}
+{% set benefits = [
+    'Dotrzyj do tysięcy czytelników',
+    'Pełna kontrola nad ceną i prawami',
+    'Wsparcie na każdym etapie',
+] %}
+
+<section class="bg-canvas py-16 lg:py-20">
+    <div class="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
+        <div class="grid gap-6 lg:grid-cols-3 lg:items-stretch">
+            {# Jak sprzedawać eBooki? #}
+            <div class="flex flex-col rounded-3xl bg-white p-8 shadow-sm ring-1 ring-zinc-100 transition-shadow hover:shadow-md">
+                <h2 class="text-xl font-bold text-zinc-900">Jak sprzedawać eBooki? To proste!</h2>
+                <p class="mt-2 text-sm text-zinc-500">Od pliku do pierwszej sprzedaży w trzech krokach.</p>
+                <div class="mt-8 flex flex-1 flex-col justify-between gap-8">
+                    {% for s in steps %}
+                        <div class="flex items-start gap-4">
+                            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent-50 text-accent-600">
+                                <twig:Icon name="{{ s.icon }}" class="h-6 w-6" />
+                            </span>
+                            <div>
+                                <p class="font-semibold text-zinc-900">{{ s.num }}. {{ s.title }}</p>
+                                <p class="mt-1 text-sm text-zinc-500">{{ s.text }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {# Dlaczego autorzy wybierają Bookly? #}
+            <div class="flex flex-col rounded-3xl bg-white p-8 shadow-sm ring-1 ring-zinc-100 transition-shadow hover:shadow-md">
+                <h2 class="text-xl font-bold text-zinc-900">Dlaczego autorzy wybierają Bookly?</h2>
+                <p class="mt-2 text-sm text-zinc-500">Przejrzyste finanse, szybkość i precyzyjna analityka dla twórców.</p>
+                <div class="mt-8 flex flex-1 flex-col justify-between gap-6">
+                    {% for r in reasons %}
+                        <div class="flex items-start gap-4">
+                            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent-50 text-accent-600">
+                                <twig:Icon name="{{ r.icon }}" class="h-5 w-5" />
+                            </span>
+                            <div>
+                                <p class="font-semibold text-zinc-900">{{ r.title }}</p>
+                                <p class="mt-1 text-sm text-zinc-500">{{ r.text }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {# Zostań autorem na Bookly #}
+            <div class="flex flex-col rounded-3xl bg-accent-600 p-8 text-white shadow-lg shadow-accent-600/20">
+                <h2 class="text-2xl font-bold">Zostań autorem na Bookly</h2>
+                <p class="mt-3 text-accent-100">Dołącz do tysięcy twórców i zacznij zarabiać na swojej wiedzy i pasji. My zajmiemy się resztą.</p>
+
+                <ul class="mt-6 flex flex-1 flex-col justify-center gap-4">
+                    {% for benefit in benefits %}
+                        <li class="flex items-center gap-3 text-sm font-medium">
+                            <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/15 text-white">
+                                <twig:Icon name="check" class="h-3.5 w-3.5" />
+                            </span>
+                            {{ benefit }}
+                        </li>
+                    {% endfor %}
+                </ul>
+
+                <twig:Button href="#" variant="secondary" size="lg" wide class="mt-8">
+                    <twig:Icon name="cloud-upload" class="h-5 w-5" />
+                    Wystaw swój eBook
+                </twig:Button>
+            </div>
+        </div>
+    </div>
+</section>
