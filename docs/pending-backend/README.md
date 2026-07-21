@@ -138,10 +138,16 @@ ones, and swaps the cover (a cancelled edit leaves the eBook untouched). CSRF + 
 
 ## Homepage — Hero (`templates/components/Home/Hero.html.twig`)
 
+Redesigned 2026-07-21 to the new mock: gradient bg + soft blobs/dot-grid + curved
+bottom edge, headline with "sprzedawaj" accented, the laptop asset
+(`assets/images/home-hero-laptop.png`) on the right with two **decorative** floating
+cards (sales +24%, "eBook opublikowany!") — native Twig/Tailwind, `hero-float`
+animation (honors reduced-motion). "Wystaw swój eBook" → real wizard (`app_publish_ebook`).
+
 | Element | Current stub | Backend needed |
 |---|---|---|
-| **"Wystaw swój eBook"** (primary CTA) | `href="#"` | author eBook-upload flow (auth-gated) |
 | **"Przeglądaj ofertę"** (outline CTA) | `href="#"` | public catalog / offer listing |
+| **Hero floating cards** (sales +24%, published) | static decoration | — (illustrative only; real figures live in the Phase-2 dashboard) |
 
 ## Homepage — Publish-flow section (`templates/components/Home/PublishFlow.html.twig`)
 
