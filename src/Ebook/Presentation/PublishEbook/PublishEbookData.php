@@ -46,6 +46,10 @@ final class PublishEbookData
     #[Assert\Length(max: 10000, maxMessage: 'Opis może mieć maksymalnie {{ limit }} znaków.', groups: ['details'])]
     public ?string $description = null;
 
+    /** Max lengths for a "Szczegółowe informacje" row — enforced on both the frontend (maxlength) and backend. */
+    public const int DETAIL_KEY_MAX = 60;
+    public const int DETAIL_VALUE_MAX = 200;
+
     /** @var list<array{key: string, value: string}> extra key:value rows shown as a table on the detail page */
     public array $details = [];
 

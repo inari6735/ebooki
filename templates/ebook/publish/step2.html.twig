@@ -59,15 +59,17 @@
 
             {# Detailed info (key : value) — rendered as a table on the eBook detail page #}
             {% set details = data.details ?: [{ key: 'Liczba stron', value: '' }, { key: 'Rok wydania', value: '' }] %}
+            {% set keyMax = constant('App\\Ebook\\Presentation\\PublishEbook\\PublishEbookData::DETAIL_KEY_MAX') %}
+            {% set valueMax = constant('App\\Ebook\\Presentation\\PublishEbook\\PublishEbookData::DETAIL_VALUE_MAX') %}
             <div class="mt-6" data-controller="key-value">
                 <p class="text-sm font-semibold text-zinc-800">Szczegółowe informacje</p>
-                <p class="mb-2 text-xs text-zinc-500">Dodaj pola w formie „nazwa : wartość" (np. Wydawca : Bookly). Pojawią się jako tabela na stronie eBooka.</p>
+                <p class="mb-2 text-xs text-zinc-500">Dodaj pola w formie „nazwa : wartość" (np. Wydawca : Bookly). Pojawią się jako tabela na stronie eBooka. Nazwa do {{ keyMax }} znaków, wartość do {{ valueMax }} znaków.</p>
 
                 <div class="space-y-2" data-key-value-target="list">
                     {% for d in details %}
                         <div class="flex items-center gap-2" data-key-value-target="row">
-                            <input type="text" name="detailKeys[]" value="{{ d.key }}" placeholder="Nazwa, np. Wydawca" class="field-input flex-1">
-                            <input type="text" name="detailValues[]" value="{{ d.value }}" placeholder="Wartość, np. Bookly" class="field-input flex-[2]">
+                            <input type="text" name="detailKeys[]" value="{{ d.key }}" maxlength="{{ keyMax }}" placeholder="Nazwa, np. Wydawca" class="field-input flex-1">
+                            <input type="text" name="detailValues[]" value="{{ d.value }}" maxlength="{{ valueMax }}" placeholder="Wartość, np. Bookly" class="field-input flex-[2]">
                             <button type="button" data-action="key-value#remove" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-ui text-zinc-400 hover:bg-zinc-100 hover:text-error-600" aria-label="Usuń wiersz">
                                 <twig:Icon name="x" class="h-5 w-5" />
                             </button>
@@ -77,8 +79,8 @@
 
                 <template data-key-value-target="template">
                     <div class="flex items-center gap-2" data-key-value-target="row">
-                        <input type="text" name="detailKeys[]" placeholder="Nazwa, np. Wydawca" class="field-input flex-1">
-                        <input type="text" name="detailValues[]" placeholder="Wartość, np. Bookly" class="field-input flex-[2]">
+                        <input type="text" name="detailKeys[]" maxlength="{{ keyMax }}" placeholder="Nazwa, np. Wydawca" class="field-input flex-1">
+                        <input type="text" name="detailValues[]" maxlength="{{ valueMax }}" placeholder="Wartość, np. Bookly" class="field-input flex-[2]">
                         <button type="button" data-action="key-value#remove" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-ui text-zinc-400 hover:bg-zinc-100 hover:text-error-600" aria-label="Usuń wiersz">
                             <twig:Icon name="x" class="h-5 w-5" />
                         </button>
