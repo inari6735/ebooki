@@ -10,18 +10,17 @@
 {% set discounted = not noPrice and promoPrice and promoPrice > 0 and promoPrice < basePrice %}
 {% set effectivePrice = discounted ? promoPrice : basePrice %}
 {% set discountPct = discounted ? ((basePrice - promoPrice) / basePrice * 100)|round : 0 %}
-{% set priceText = data.isFree ? 'eBook dostępny za darmo' : (data.payWhatYouWant ? 'Zapłać ile chcesz — dobrowolna wpłata' : 'Cena eBooka: ' ~ effectivePrice|number_format(2, ',', ' ') ~ ' zł') %}
-{% set checklist = [
-    { title: 'Plik dodany',      text: data.files is not empty ? (data.files|length ~ ' plik(i): ' ~ (data.files|map(f => f.format|upper)|join(', '))) : 'Brak pliku' },
-    { title: 'Okładka gotowa',   text: data.coverName ?: 'Brak okładki' },
-    { title: 'Opis uzupełniony', text: 'Tytuł, autor i opis eBooka zostały dodane.' },
-    { title: 'Cena ustawiona',   text: priceText },
-] %}
-{% set settings = [
-    { icon: 'tag',      title: 'Kategoria',       text: (data.category ?: 'Rozwój osobisty') ~ ' — główna kategoria' },
-    { icon: 'calendar', title: 'Data publikacji', text: 'Natychmiast — opublikuj od razu' },
-    { icon: 'shield',   title: 'Prawa autorskie', text: 'Chronione — Twoje prawa są bezpieczne' },
-] %}
+{% set priceModel = data.isFree ? 'Za darmo' : (data.payWhatYouWant ? 'Zapłać ile chcesz' : 'Płatny') %}
+{% set formats = data.files|map(f => f.format|upper)|join(', ') %}
+
+{# One label→value row of the configuration spec sheet. #}
+{% macro specRow(label, value, muted = false) %}
+    <div class="flex items-center justify-between gap-4 px-4 py-2.5">
+        <dt class="shrink-0 text-sm text-zinc-500">{{ label }}</dt>
+        <dd class="truncate pl-4 text-right text-sm font-semibold {{ muted ? 'text-zinc-400' : 'text-zinc-900' }}">{{ value }}</dd>
+    </div>
+{% endmacro %}
+
 {% set tips = [
     { icon: 'cloud-upload', title: 'Opublikuj natychmiast',      text: 'Twój eBook pojawi się w sklepie od razu po kliknięciu publikuj.' },
     { icon: 'edit',         title: 'Edytuj w dowolnym momencie', text: 'Możesz w każdej chwili zaktualizować opis, cenę lub plik.' },
@@ -33,70 +32,108 @@
     <form id="publish-form" method="post" action="{{ path('app_publish_ebook', { step: 4 }) }}"></form>
     <form id="draft-form" method="post" action="{{ path('app_publish_ebook', { step: 4 }) }}?draft=1"></form>
     <div class="grid gap-6 lg:grid-cols-3">
+        {% import _self as ui %}
         <div class="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-zinc-100 lg:col-span-2">
             <h2 class="text-xl font-bold text-zinc-900">Podsumowanie publikacji</h2>
-            <p class="mt-1 text-sm text-zinc-500">Sprawdź wszystkie elementy przed opublikowaniem eBooka.</p>
+            <p class="mt-1 text-sm text-zinc-500">Sprawdź, co skonfigurowałeś — i zobacz, jak Twój eBook wygląda dla czytelnika.</p>
 
-            <div class="mt-6 grid gap-6 sm:grid-cols-2">
-                <ul class="space-y-5">
-                    {% for c in checklist %}
-                        <li class="flex items-start gap-3">
-                            <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-success-50 text-success-600">
-                                <twig:Icon name="check" class="h-4 w-4" />
-                            </span>
-                            <div>
-                                <p class="text-sm font-semibold text-zinc-900">{{ c.title }}</p>
-                                <p class="text-sm text-zinc-500">{{ c.text }}</p>
-                            </div>
-                        </li>
-                    {% endfor %}
-                </ul>
-
-                <div>
-                    <p class="text-sm font-semibold text-zinc-800">Podgląd eBooka w sklepie</p>
-                    <div class="mt-3 flex gap-4 rounded-2xl border border-zinc-100 p-4">
-                        <twig:Ebook:Cover :src="data.coverMediaId ? path('app_ebook_staged_preview', { mediaId: data.coverMediaId }) : null" title="{{ data.title ?: 'Światło na końcu drogi' }}" width="w-28" />
-                        <div class="min-w-0">
-                            <p class="break-words font-semibold text-zinc-900">{{ data.title ?: 'Światło na końcu drogi' }}</p>
-                            <p class="break-words text-sm text-zinc-500">{{ data.author ?: 'Anna Kowalska' }}</p>
-                            <div class="mt-2 flex gap-1.5">
-                                <twig:Badge variant="brand">eBook</twig:Badge>
-                                <twig:Badge variant="neutral">PDF</twig:Badge>
-                            </div>
-                            <div class="mt-2 flex flex-wrap items-center gap-2">
-                                {% if data.isFree %}
-                                    <span class="text-lg font-bold text-success-600">Za darmo</span>
-                                {% elseif data.payWhatYouWant %}
-                                    <span class="text-lg font-bold text-accent-600">Dobrowolna wpłata</span>
-                                {% else %}
-                                    <span class="text-lg font-bold text-zinc-900">{{ effectivePrice|number_format(2, ',', ' ') }} zł</span>
-                                    {% if discounted %}
-                                        <span class="text-sm text-zinc-400 line-through">{{ basePrice|number_format(2, ',', ' ') }} zł</span>
-                                        <span class="rounded-full bg-error-50 px-2 py-0.5 text-xs font-bold text-error-600">-{{ discountPct }}%</span>
-                                    {% endif %}
-                                {% endif %}
-                            </div>
-                            <p class="mt-1 break-words text-xs text-zinc-500">{{ data.shortDescription }}</p>
+            {# Preview hero: the product's identity + price, with the detail-page
+               preview action right where the summary lives. #}
+            <div class="mt-6 overflow-hidden rounded-2xl border border-zinc-100">
+                <div class="flex flex-col gap-5 bg-gradient-to-br from-accent-50/50 via-white to-white p-5 sm:flex-row">
+                    <twig:Ebook:Cover :src="data.coverMediaId ? path('app_ebook_staged_preview', { mediaId: data.coverMediaId }) : null" title="{{ data.title ?: 'Tytuł eBooka' }}" width="w-24" />
+                    <div class="min-w-0 flex-1">
+                        <p class="break-words text-lg font-bold text-zinc-900">{{ data.title ?: 'Tytuł eBooka' }}</p>
+                        <p class="break-words text-sm text-zinc-500">{{ data.author ?: 'Autor' }}</p>
+                        <div class="mt-2 flex flex-wrap gap-1.5">
+                            <twig:Badge variant="brand">eBook</twig:Badge>
+                            {% for f in data.files %}<twig:Badge variant="neutral">{{ f.format|upper }}</twig:Badge>{% endfor %}
                         </div>
+                        <div class="mt-2.5 flex flex-wrap items-center gap-2">
+                            {% if data.isFree %}
+                                <span class="text-xl font-bold text-success-600">Za darmo</span>
+                            {% elseif data.payWhatYouWant %}
+                                <span class="text-xl font-bold text-accent-600">Zapłać ile chcesz</span>
+                            {% else %}
+                                <span class="text-xl font-bold text-zinc-900">{{ effectivePrice|number_format(2, ',', ' ') }} zł</span>
+                                {% if discounted %}
+                                    <span class="text-sm text-zinc-400 line-through">{{ basePrice|number_format(2, ',', ' ') }} zł</span>
+                                    <span class="rounded-full bg-error-50 px-2 py-0.5 text-xs font-bold text-error-600">-{{ discountPct }}%</span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        {% if data.shortDescription %}
+                            <p class="mt-2 line-clamp-2 break-words text-xs text-zinc-500">{{ data.shortDescription }}</p>
+                        {% endif %}
                     </div>
+                </div>
+                <div class="border-t border-zinc-100 bg-white p-3">
+                    <twig:Button href="{{ path('app_publish_ebook_preview') }}" target="_blank" rel="noopener" variant="ghost" wide>
+                        <twig:Icon name="eye" class="h-5 w-5" /> Zobacz podgląd strony eBooka
+                    </twig:Button>
                 </div>
             </div>
 
-            <p class="mt-8 text-sm font-semibold text-zinc-800">Ustawienia publikacji</p>
-            <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {% for s in settings %}
-                    <div class="rounded-xl border border-zinc-100 p-4">
-                        <twig:Icon name="{{ s.icon }}" class="h-5 w-5 text-accent-600" />
-                        <p class="mt-2 text-sm font-semibold text-zinc-900">{{ s.title }}</p>
-                        <p class="text-xs text-zinc-500">{{ s.text }}</p>
+            {# Configured values, grouped and scannable — a real review sheet. #}
+            <div class="mt-6 grid gap-6 sm:grid-cols-2">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <twig:Icon name="book" class="h-4 w-4 text-accent-600" />
+                        <h3 class="text-sm font-semibold text-zinc-900">O eBooku</h3>
                     </div>
-                {% endfor %}
+                    <dl class="mt-3 divide-y divide-zinc-100 rounded-xl border border-zinc-100">
+                        {{ ui.specRow('Kategoria', categoryName ?: 'Nie wybrano', categoryName is null) }}
+                        {{ ui.specRow('Język', languageName ?: 'Nie wybrano', languageName is null) }}
+                        {{ ui.specRow('Pliki', data.files|length ~ ' · ' ~ formats) }}
+                        {{ ui.specRow('Okładka', data.coverName ? 'Dodana' : 'Brak', not data.coverName) }}
+                        {{ ui.specRow('Opis', data.description|length ~ ' znaków') }}
+                    </dl>
+                </div>
+
+                <div>
+                    <div class="flex items-center gap-2">
+                        <twig:Icon name="wallet" class="h-4 w-4 text-accent-600" />
+                        <h3 class="text-sm font-semibold text-zinc-900">Cena i sprzedaż</h3>
+                    </div>
+                    <dl class="mt-3 divide-y divide-zinc-100 rounded-xl border border-zinc-100">
+                        {{ ui.specRow('Model sprzedaży', priceModel) }}
+                        {% if not noPrice %}
+                            {{ ui.specRow('Cena', (effectivePrice|number_format(2, ',', ' ')) ~ ' zł') }}
+                            {{ ui.specRow('Promocja', discounted ? (promoPrice|number_format(2, ',', ' ') ~ ' zł · -' ~ discountPct ~ '%') : 'Brak', not discounted) }}
+                            {{ ui.specRow('Twój przychód', (effectivePrice * 0.9)|number_format(2, ',', ' ') ~ ' zł') }}
+                        {% else %}
+                            {{ ui.specRow('Twój przychód', data.isFree ? 'eBook bezpłatny' : 'Dobrowolne wpłaty', true) }}
+                        {% endif %}
+                    </dl>
+                    {% if not noPrice %}
+                        <p class="mt-2 px-1 text-xs text-zinc-400">Przychód po 10% prowizji platformy.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# Detailed info the author entered ("Szczegółowe informacje"). #}
+            <div class="mt-6">
+                <div class="flex items-center gap-2">
+                    <twig:Icon name="sliders" class="h-4 w-4 text-accent-600" />
+                    <h3 class="text-sm font-semibold text-zinc-900">Szczegółowe informacje</h3>
+                </div>
+                {% if data.details is not empty %}
+                    <dl class="mt-3 divide-y divide-zinc-100 rounded-xl border border-zinc-100">
+                        {% for d in data.details %}
+                            {{ ui.specRow(d.key, d.value) }}
+                        {% endfor %}
+                    </dl>
+                {% else %}
+                    <p class="mt-3 rounded-xl border border-dashed border-zinc-200 px-4 py-3 text-sm text-zinc-400">Nie dodano — szczegółowe informacje są opcjonalne.</p>
+                {% endif %}
             </div>
         </div>
 
         {# Side panel — ready to publish #}
         <div class="rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-zinc-100">
-            <span class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent-50 text-3xl">🎉</span>
+            <span class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-accent-500 to-accent-700 text-white shadow-lg shadow-accent-600/25">
+                <twig:Icon name="rocket" class="h-8 w-8" />
+            </span>
             <h3 class="mt-4 text-xl font-bold text-zinc-900">Gotowe do publikacji!</h3>
             <p class="mt-1 text-sm text-zinc-500">Twój eBook jest gotowy, aby trafić do tysięcy czytelników.</p>
 
@@ -114,15 +151,17 @@
                 {% endfor %}
             </ul>
 
-            <twig:Button href="{{ path('app_publish_ebook_preview') }}" target="_blank" rel="noopener"
-                         variant="outline" size="lg" wide class="mt-8">
-                <twig:Icon name="eye" class="h-5 w-5" /> Podgląd strony eBooka
-            </twig:Button>
-            <twig:Button type="submit" variant="primary" size="lg" wide form="publish-form" class="mt-3"
-                         data-action="click->auth-modal#open" data-auth-modal-intent-param="publish">
-                <twig:Icon name="cloud-upload" class="h-5 w-5" /> Opublikuj eBook
-            </twig:Button>
-            <p class="mt-3 text-xs text-zinc-400">Publikując, akceptujesz regulamin Bookly.</p>
+            <div class="mt-8 space-y-3">
+                <twig:Button type="submit" variant="primary" size="lg" wide form="publish-form"
+                             data-action="click->auth-modal#open" data-auth-modal-intent-param="publish">
+                    <twig:Icon name="cloud-upload" class="h-5 w-5" /> Opublikuj eBook
+                </twig:Button>
+                <twig:Button type="submit" variant="outline" size="lg" wide form="draft-form"
+                             data-action="click->auth-modal#open" data-auth-modal-intent-param="draft">
+                    <twig:Icon name="bookmark" class="h-5 w-5" /> Zapisz jako szkic
+                </twig:Button>
+            </div>
+            <p class="mt-4 text-xs text-zinc-400">Publikując, akceptujesz regulamin Bookly.</p>
         </div>
     </div>
     {% if app.user is null %}
@@ -162,10 +201,6 @@
 {% block flow_actions %}
     <twig:Button href="{{ path('app_publish_ebook', { step: 3 }) }}" variant="outline">
         <twig:Icon name="arrow-left" class="h-5 w-5" /> Wstecz
-    </twig:Button>
-    <button type="submit" form="draft-form" data-action="click->auth-modal#open" data-auth-modal-intent-param="draft" class="inline-flex items-center justify-center rounded-ui border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50">Zapisz szkic</button>
-    <twig:Button href="{{ path('app_publish_ebook_preview') }}" target="_blank" rel="noopener" variant="outline">
-        <twig:Icon name="eye" class="h-5 w-5" /> Podgląd
     </twig:Button>
     <twig:Button type="submit" variant="primary" size="lg" form="publish-form"
                  data-action="click->auth-modal#open" data-auth-modal-intent-param="publish">

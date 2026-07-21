@@ -127,7 +127,7 @@ export default class extends Controller {
     uploadCover(file) {
         this.clearError();
         this.listTarget.replaceChildren();
-        const item = this.buildItem(file);
+        const item = this.buildCoverItem(file);
         this.listTarget.appendChild(item);
         this.listTarget.classList.remove('hidden');
 
@@ -251,10 +251,15 @@ export default class extends Controller {
         fetch(this.removeUrlValue.replace('__ID__', item.dataset.mediaId), { method: 'POST', body })
             .then((response) => {
                 if (response.ok) {
+                    this.revokePreview(item);
                     item.remove();
                     if (!this.listTarget.children.length) this.listTarget.classList.add('hidden');
                 }
             });
+    }
+
+    revokePreview(item) {
+        if (item.dataset.objectUrl) URL.revokeObjectURL(item.dataset.objectUrl);
     }
 
     // ── DOM ──────────────────────────────────────────────────────────────────
@@ -284,6 +289,42 @@ export default class extends Controller {
         return item;
     }
 
+    // The cover gets a real, visible thumbnail (portrait 2:3) shown INSTANTLY from
+    // a local object URL — the reader sees their chosen image the moment they pick
+    // it, before the upload even finishes.
+    buildCoverItem(file) {
+        const item = document.createElement('div');
+        item.className = 'flex items-center gap-4 rounded-2xl border border-zinc-100 bg-white p-4 shadow-sm';
+        item.dataset.humanSize = this.humanSize(file.size);
+        item.innerHTML = `
+            <span data-thumb class="block w-16 shrink-0 overflow-hidden rounded-lg bg-accent-50 shadow ring-1 ring-zinc-100/60" style="aspect-ratio: 2 / 3;">
+                <img data-preview alt="Podgląd okładki" class="h-full w-full object-cover">
+            </span>
+            <div class="min-w-0 flex-1">
+                <p class="text-xs font-semibold uppercase tracking-wide text-accent-600">Podgląd okładki</p>
+                <p class="mt-0.5 truncate text-sm font-medium text-zinc-900" data-name></p>
+                <p class="mt-1 text-xs text-zinc-400" data-meta>Wysyłanie…</p>
+                <div class="mt-1.5 h-1 overflow-hidden rounded-full bg-zinc-100" data-bar-wrap>
+                    <div class="h-full w-0 rounded-full bg-accent-600 transition-[width]" data-bar></div>
+                </div>
+            </div>
+            <button type="button" data-action="staged-upload#remove" class="hidden shrink-0 text-zinc-400 hover:text-error-600" aria-label="Usuń">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="h-5 w-5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>`;
+        item.querySelector('[data-name]').textContent = file.name;
+        const objectUrl = URL.createObjectURL(file);
+        item.dataset.objectUrl = objectUrl;
+        item.querySelector('[data-preview]').src = objectUrl;
+        return item;
+    }
+
+    humanSize(bytes) {
+        const mb = bytes / (1024 * 1024);
+        return mb >= 1
+            ? `${mb.toLocaleString('pl-PL', { maximumFractionDigits: 1 })} MB`
+            : `${Math.round(bytes / 1024).toLocaleString('pl-PL')} KB`;
+    }
+
     setProgress(item, percent) {
         const bar = item.querySelector('[data-bar]');
         if (bar) bar.style.width = `${Math.min(100, percent)}%`;
@@ -291,23 +332,21 @@ export default class extends Controller {
 
     markDone(item, payload) {
         item.dataset.mediaId = payload.mediaId;
-        item.querySelector('[data-bar-wrap]').classList.add('hidden');
-        item.querySelector('[data-meta]').textContent = [payload.size, (payload.format || '').toUpperCase()].filter(Boolean).join(' · ');
-        item.querySelector('[data-action]').classList.remove('hidden');
-        if (this.coverValue && payload.previewUrl) {
-            const thumb = item.querySelector('[data-thumb]');
-            thumb.innerHTML = '';
-            const img = document.createElement('img');
-            img.src = payload.previewUrl;
-            img.alt = '';
-            img.className = 'h-full w-full object-cover';
-            thumb.appendChild(img);
+        item.querySelector('[data-bar-wrap]')?.classList.add('hidden');
+        const meta = item.querySelector('[data-meta]');
+        if (meta) {
+            meta.textContent = this.coverValue
+                ? (item.dataset.humanSize || '')
+                : [payload.size, (payload.format || '').toUpperCase()].filter(Boolean).join(' · ');
         }
+        item.querySelector('[data-action]').classList.remove('hidden');
+        // The instant object-URL preview already shows the image; nothing to swap.
     }
 
     // The server rejected the upload — it was never staged, so drop the row and
     // surface the reason (a duplicate the client couldn't detect, etc.).
     reject(item, message) {
+        this.revokePreview(item);
         item.remove();
         if (!this.listTarget.children.length) this.listTarget.classList.add('hidden');
         this.showError(message);

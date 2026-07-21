@@ -3,6 +3,7 @@
 namespace App\Ebook\Presentation;
 
 use App\Ebook\Application\PublishEbookFromWizard;
+use App\Ebook\Domain\CategoryRepository;
 use App\Ebook\Presentation\Form\DetailsStepType;
 use App\Ebook\Presentation\Form\PricingStepType;
 use App\Ebook\Presentation\PublishEbook\EbookUploadRules;
@@ -12,6 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Intl\Languages;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Uid\Uuid;
 
@@ -27,6 +29,10 @@ final class PublishEbookController extends AbstractController
     public const string SESSION_KEY = 'publish_ebook_wizard';
     private const string PENDING_KEY = 'publish_ebook_pending';
     private const int LAST_STEP = 4;
+
+    public function __construct(private readonly CategoryRepository $categories)
+    {
+    }
 
     #[Route('/wystaw-ebook/{step}', name: 'app_publish_ebook', requirements: ['step' => '[1-4]'], defaults: ['step' => 1], methods: ['GET', 'POST'])]
     public function __invoke(int $step, Request $request, PublishEbookFromWizard $publisher): Response
@@ -67,7 +73,12 @@ final class PublishEbookController extends AbstractController
                 return $this->finalize($publisher, $session, $data, $asDraft);
             }
 
-            return $this->render('ebook/publish/step4.html.twig', ['data' => $data, 'step' => $step]);
+            return $this->render('ebook/publish/step4.html.twig', [
+                'data' => $data,
+                'step' => $step,
+                'categoryName' => null !== $data->category ? $this->categories->findBySlug($data->category)?->getName() : null,
+                'languageName' => null !== $data->language && Languages::exists($data->language) ? Languages::getName($data->language, 'pl') : null,
+            ]);
         }
 
         // Step 1 — files are handled by the async uploader; "Dalej" just gates on
