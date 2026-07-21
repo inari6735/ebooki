@@ -151,14 +151,15 @@ final class PublishEbookController extends AbstractController
 
     private function finalize(PublishEbookFromWizard $publisher, SessionInterface $session, PublishEbookData $data, bool $asDraft): Response
     {
-        $publisher($data, $this->ownerId(), $asDraft);
+        $ebook = $publisher($data, $this->ownerId(), $asDraft);
         $session->remove(self::SESSION_KEY);
         $session->remove(self::PENDING_KEY);
         $this->addFlash('success', $asDraft
             ? 'Szkic zapisany — pliki zostały wgrane.'
             : 'Opublikowano! Twój eBook i pliki zostały zapisane.');
 
-        return $this->redirectToRoute('app_home');
+        // Land on "Wystawione" with the freshly-added eBook highlighted.
+        return $this->redirectToRoute('app_dashboard_listed', ['new' => $ebook->getId()->toRfc4122()]);
     }
 
     private function ownerId(): Uuid

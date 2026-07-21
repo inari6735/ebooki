@@ -47,7 +47,8 @@ final class ModalAuthTest extends WebTestCase
 
         // The modal then submits the finalize form — now an authenticated request.
         $client->request('POST', 'https://localhost/wystaw-ebook/4');
-        self::assertResponseRedirects('/');
+        self::assertResponseRedirects();
+        self::assertStringContainsString('/panel/wystawione?new=', (string) $client->getResponse()->headers->get('Location'));
         self::assertSame(1, self::getContainer()->get(EntityManagerInterface::class)->getRepository(Ebook::class)->count([]));
     }
 

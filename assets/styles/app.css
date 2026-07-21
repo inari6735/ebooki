@@ -112,3 +112,14 @@
         @apply mt-1 text-sm text-error-600;
     }
 }
+
+/* "Just added" row highlight — a brief accent flash that settles into the ring
+   (see the Wystawione list after publishing/saving a draft). */
+@keyframes just-added-flash {
+    0%   { background-color: var(--color-accent-100); }
+    100% { background-color: transparent; }
+}
+
+.just-added {
+    animation: just-added-flash 2.8s ease-out;
+}

@@ -52,16 +52,18 @@ final class AnonymousPublishFlowTest extends WebTestCase
         $client->submitForm('Zaloguj się', ['email' => 'author@example.com', 'password' => 'password123']);
         $client->followRedirect(); // → /wystaw-ebook/4, which auto-finalizes
 
-        // 5. The eBook is now published, no second click needed.
-        self::assertResponseRedirects('/');
+        // 5. The eBook is now published, no second click needed — landing on
+        //    "Wystawione" with the new record highlighted.
+        self::assertResponseRedirects();
+        self::assertStringContainsString('/panel/wystawione?new=', (string) $client->getResponse()->headers->get('Location'));
         self::assertSame(1, $em->getRepository(Ebook::class)->count([]));
 
-        // 6. The Pulpit lists the published eBook (real row: title + status + price).
-        $client->request('GET', 'https://localhost/panel');
+        // 6. The list shows the published eBook, flagged "Nowo dodany".
+        $client->followRedirect();
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('h1', 'Pulpit');
         self::assertSelectorTextContains('body', 'Skuteczna produktywność');
         self::assertSelectorTextContains('body', 'Opublikowany');
+        self::assertSelectorTextContains('body', 'Nowo dodany');
     }
 
     private function fillSession(): void

@@ -60,6 +60,7 @@ final class ListedEbooksController extends AbstractController
             'ebooks' => array_values($ebooks),
             'counts' => $counts,
             'filter' => \array_key_exists($filter, $counts) ? $filter : 'all',
+            'highlight' => $request->query->getString('new'),
         ]);
     }
 
