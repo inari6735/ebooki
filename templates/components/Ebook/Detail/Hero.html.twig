@@ -4,13 +4,15 @@
 <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-zinc-100 sm:p-8">
     <div class="flex flex-col gap-6 sm:flex-row sm:gap-8">
         <div class="mx-auto w-48 shrink-0 sm:mx-0 sm:w-64">
-            <twig:Ebook:Cover :src="ebook.cover" title="{{ ebook.title }}" width="w-full" />
+            <twig:Ebook:Cover :src="ebook.cover" title="{{ ebook.title }}" width="w-full"
+                              style="view-transition-name: ebook-cover-{{ ebook.slug }}" />
         </div>
 
         <div class="flex min-w-0 flex-1 flex-col">
             <twig:Badge variant="brand" class="self-start">eBook</twig:Badge>
 
-            <h1 class="mt-4 break-words text-3xl font-extrabold leading-tight tracking-tight text-zinc-900 sm:text-4xl">
+            <h1 class="mt-4 break-words text-3xl font-extrabold leading-tight tracking-tight text-zinc-900 sm:text-4xl"
+                style="view-transition-name: ebook-title-{{ ebook.slug }}">
                 {{ ebook.title }}
             </h1>
 
