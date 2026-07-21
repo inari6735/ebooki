@@ -40,8 +40,13 @@ final readonly class DoctrineEbookRepository implements EbookRepository
         $this->entityManager->flush();
     }
 
+    public function findBySlug(string $slug): ?Ebook
+    {
+        return $this->entityManager->getRepository(Ebook::class)->findOneBy(['slug' => $slug]);
+    }
+
     public function slugExists(string $slug): bool
     {
-        return null !== $this->entityManager->getRepository(Ebook::class)->findOneBy(['slug' => $slug]);
+        return null !== $this->findBySlug($slug);
     }
 }

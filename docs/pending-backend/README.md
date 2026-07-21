@@ -85,17 +85,17 @@ Remaining follow-ups:
 
 ## eBook detail page (`src/Ebook/Presentation/EbookDetailController.php`, `templates/ebook/show.html.twig`)
 
-Product page at `/ebook/{slug}` (`app_ebook_show`). Reuses the shared header/footer.
-There is **no catalog backend**, so the controller renders one fixed sample eBook —
-`{slug}` is currently cosmetic. Components live in `templates/components/Ebook/Detail/`
+Product page at `/ebook/{slug}` (`app_ebook_show`). **Reads the real eBook** by slug
+(`EbookRepository::findBySlug`) and maps it to the view. **Only PUBLISHED eBooks are
+public** — draft/hidden/unknown → 404, except the owner may preview their own
+(`EbookVisibilityTest`). Components live in `templates/components/Ebook/Detail/`
 (`Hero`, `PurchaseCard`, `PaymentMarks`) + the generic `Layout:Breadcrumb`.
 
 | Element | Current stub | Backend needed |
 |---|---|---|
-| **Whole page data** (title, author, price, rating, detailed-info table, description) | hard-coded array in the controller | look the eBook up by `{slug}` from the catalog; 404 when missing |
 | **"Kup teraz"** | visual button, no action | add-to-cart / checkout + payment flow |
 | **"Dodaj do ulubionych"** | visual button, no action | wishlist tied to the logged-in user |
-| **Rating (4,8 · 326 ocen)** | static | real reviews/ratings aggregate |
+| **Rating** | hidden (mapped to null until reviews exist) | real reviews/ratings aggregate |
 | **Payment marks** (`PaymentMarks.html.twig`) | self-drawn VISA/Mastercard/blik/Apple Pay placeholders (no real logos) | swap for the actual accepted-provider marks once a payment provider is integrated |
 | **Cover image** | gradient placeholder (`Ebook:Cover`) — no cover store | serve the real uploaded cover |
 | **Breadcrumb category link** | `href="#"` | category listing page |
