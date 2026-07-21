@@ -1,0 +1,111 @@
+{% extends 'ebook/publish/layout.html.twig' %}
+
+{% set effectivePrice = data.promoPrice ?: data.price ?: 19.90 %}
+{% set checklist = [
+    { title: 'Plik dodany',      text: (data.fileName ?: 'Światło na końcu drogi.pdf') ~ ' · ' ~ (data.fileSize ?: 'PDF · 2.4 MB') },
+    { title: 'Okładka gotowa',   text: (data.coverName ?: 'okladka_swiatlo.png') ~ ' · 1200 × 1600 px' },
+    { title: 'Opis uzupełniony', text: 'Tytuł, autor i opis eBooka zostały dodane.' },
+    { title: 'Cena ustawiona',   text: 'Cena eBooka: ' ~ effectivePrice|number_format(2, ',', ' ') ~ ' PLN' },
+] %}
+{% set settings = [
+    { icon: 'globe',    title: 'Widoczność w sklepie', text: 'Publiczny — widoczny dla wszystkich' },
+    { icon: 'tag',      title: 'Kategoria',            text: (data.category ?: 'Rozwój osobisty') ~ ' — główna kategoria' },
+    { icon: 'calendar', title: 'Data publikacji',      text: 'Natychmiast — opublikuj od razu' },
+    { icon: 'shield',   title: 'Prawa autorskie',      text: 'Chronione — Twoje prawa są bezpieczne' },
+] %}
+{% set tips = [
+    { icon: 'cloud-upload', title: 'Opublikuj natychmiast',      text: 'Twój eBook pojawi się w sklepie od razu po kliknięciu publikuj.' },
+    { icon: 'edit',         title: 'Edytuj w dowolnym momencie', text: 'Możesz w każdej chwili zaktualizować opis, cenę lub plik.' },
+    { icon: 'chart',        title: 'Bezpieczne wypłaty',         text: 'Regularne wypłaty wprost na Twoje konto.' },
+    { icon: 'lightning',    title: 'Dotrzyj do czytelników szybko', text: 'Skuteczne narzędzia promocyjne pomogą Ci zbudować zasięg.' },
+] %}
+
+{% block flow_body %}
+    <form id="publish-form" method="post" action="{{ path('app_publish_ebook', { step: 4 }) }}"></form>
+    <div class="grid gap-6 lg:grid-cols-3">
+        <div class="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-zinc-100 lg:col-span-2">
+            <h2 class="text-xl font-bold text-zinc-900">Podsumowanie publikacji</h2>
+            <p class="mt-1 text-sm text-zinc-500">Sprawdź wszystkie elementy przed opublikowaniem eBooka.</p>
+
+            <div class="mt-6 grid gap-6 sm:grid-cols-2">
+                <ul class="space-y-5">
+                    {% for c in checklist %}
+                        <li class="flex items-start gap-3">
+                            <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-success-50 text-success-600">
+                                <twig:Icon name="check" class="h-4 w-4" />
+                            </span>
+                            <div>
+                                <p class="text-sm font-semibold text-zinc-900">{{ c.title }}</p>
+                                <p class="text-sm text-zinc-500">{{ c.text }}</p>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+
+                <div>
+                    <p class="text-sm font-semibold text-zinc-800">Podgląd eBooka w sklepie</p>
+                    <div class="mt-3 flex gap-4 rounded-2xl border border-zinc-100 p-4">
+                        <div class="flex h-36 w-24 shrink-0 items-center justify-center rounded-lg bg-gradient-to-b from-zinc-700 to-zinc-900 p-2 text-center text-[10px] font-semibold text-white">{{ data.title ?: 'Światło na końcu drogi' }}</div>
+                        <div class="min-w-0">
+                            <p class="font-semibold text-zinc-900">{{ data.title ?: 'Światło na końcu drogi' }}</p>
+                            <p class="text-sm text-zinc-500">{{ data.author ?: 'Anna Kowalska' }}</p>
+                            <div class="mt-2 flex gap-1.5">
+                                <twig:Badge variant="brand">eBook</twig:Badge>
+                                <twig:Badge variant="neutral">PDF</twig:Badge>
+                            </div>
+                            <p class="mt-2 text-lg font-bold text-accent-600">{{ effectivePrice|number_format(2, ',', ' ') }} PLN</p>
+                            <p class="mt-1 text-xs text-zinc-500">{{ data.shortDescription ?: 'Poruszająca opowieść o nadziei, odwadze i odnajdywaniu siebie.' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <p class="mt-8 text-sm font-semibold text-zinc-800">Ustawienia publikacji</p>
+            <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {% for s in settings %}
+                    <div class="rounded-xl border border-zinc-100 p-4">
+                        <twig:Icon name="{{ s.icon }}" class="h-5 w-5 text-accent-600" />
+                        <p class="mt-2 text-sm font-semibold text-zinc-900">{{ s.title }}</p>
+                        <p class="text-xs text-zinc-500">{{ s.text }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {# Side panel — ready to publish #}
+        <div class="rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-zinc-100">
+            <span class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent-50 text-3xl">🎉</span>
+            <h3 class="mt-4 text-xl font-bold text-zinc-900">Gotowe do publikacji!</h3>
+            <p class="mt-1 text-sm text-zinc-500">Twój eBook jest gotowy, aby trafić do tysięcy czytelników.</p>
+
+            <ul class="mt-6 space-y-4 text-left">
+                {% for t in tips %}
+                    <li class="flex items-start gap-3">
+                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-50 text-accent-600">
+                            <twig:Icon name="{{ t.icon }}" class="h-5 w-5" />
+                        </span>
+                        <div>
+                            <p class="text-sm font-semibold text-zinc-800">{{ t.title }}</p>
+                            <p class="mt-0.5 text-sm text-zinc-500">{{ t.text }}</p>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <twig:Button type="submit" variant="primary" size="lg" wide form="publish-form" class="mt-8">
+                <twig:Icon name="cloud-upload" class="h-5 w-5" /> Opublikuj eBook
+            </twig:Button>
+            <p class="mt-3 text-xs text-zinc-400">Publikując, akceptujesz regulamin Bookly.</p>
+        </div>
+    </div>
+{% endblock %}
+
+{% block flow_actions %}
+    <twig:Button href="{{ path('app_publish_ebook', { step: 3 }) }}" variant="outline">
+        <twig:Icon name="arrow-left" class="h-5 w-5" /> Wstecz
+    </twig:Button>
+    <a href="{{ path('app_publish_ebook', { step: 4 }) }}?draft=1" class="inline-flex items-center justify-center rounded-ui border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50">Zapisz szkic</a>
+    <twig:Button type="submit" variant="primary" size="lg" form="publish-form">
+        <twig:Icon name="cloud-upload" class="h-5 w-5" /> Opublikuj eBook
+    </twig:Button>
+{% endblock %}

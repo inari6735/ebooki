@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Wystaw swojego eBooka · Bookly{% endblock %}
+
+{% block shell %}
+    {# App-shell: the whole view is exactly one viewport tall (never larger).
+       Title, stepper and the action bar stay fixed; only <main> scrolls when a
+       step's content is taller than the space left over. #}
+    <div class="flex h-dvh flex-col overflow-hidden bg-canvas">
+        {# Title #}
+        <div class="mx-auto w-full max-w-[1600px] shrink-0 px-4 pt-6 text-center sm:px-6 lg:px-8 lg:pt-8">
+            <h1 class="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl lg:text-4xl">Wystaw swojego eBooka</h1>
+            <p class="mt-1 text-sm text-zinc-500 sm:text-base">Cztery proste kroki do dotarcia do tysięcy czytelników.</p>
+        </div>
+
+        {# Stepper #}
+        <div class="mx-auto mt-5 w-full max-w-4xl shrink-0 px-4 sm:px-6 lg:px-8">
+            <twig:Ebook:Stepper :current="step" />
+        </div>
+
+        {# Body — the only scrollable region (min-h-0 lets it shrink below content) #}
+        <main class="mx-auto w-full min-h-0 max-w-[1600px] flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
+            {% block flow_body %}{% endblock %}
+        </main>
+
+        {# Bottom action bar #}
+        <div class="shrink-0 border-t border-zinc-200 bg-white">
+            <div class="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+                <div class="hidden items-center gap-3 sm:flex">
+                    <twig:Icon name="shield" class="h-6 w-6 shrink-0 text-accent-600" />
+                    <div class="text-sm">
+                        <p class="font-semibold text-zinc-800">Bezpieczne przesyłanie</p>
+                        <p class="text-zinc-500">Twoje pliki są szyfrowane podczas przesyłania.</p>
+                    </div>
+                </div>
+                <div class="flex flex-1 items-center justify-end gap-3">
+                    {% block flow_actions %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

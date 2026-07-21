@@ -1,0 +1,21 @@
+{% props current = 1 %}
+{% set labels = ['Dodaj plik', 'Szczegóły', 'Cena i sprzedaż', 'Publikacja'] %}
+
+<div class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-zinc-100 sm:px-6">
+    <ol class="flex items-center">
+        {% for label in labels %}
+            {% set n = loop.index %}
+            {% set done = n < current %}
+            {% set active = n == current %}
+            <li class="flex items-center gap-3">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold {{ done or active ? 'bg-accent-600 text-white' : 'bg-zinc-100 text-zinc-400' }}">
+                    {% if done %}<twig:Icon name="check" class="h-4 w-4" />{% else %}{{ n }}{% endif %}
+                </span>
+                <span class="hidden text-sm font-semibold sm:inline {{ done or active ? 'text-accent-600' : 'text-zinc-400' }}">{{ label }}</span>
+            </li>
+            {% if not loop.last %}
+                <li class="mx-3 h-px flex-1 {{ done ? 'bg-accent-600' : 'bg-zinc-200' }}"></li>
+            {% endif %}
+        {% endfor %}
+    </ol>
+</div>

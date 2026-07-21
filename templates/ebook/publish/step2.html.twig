@@ -1,0 +1,172 @@
+{% extends 'ebook/publish/layout.html.twig' %}
+
+{% set keywords = data.keywords ?: ['motywacja', 'nadzieja', 'rozwój osobisty', 'mindset', 'zmiana'] %}
+{% set genreChips = ['Rozwój osobisty', 'Biznes', 'Marketing', 'Fantastyka'] %}
+{% set tips = [
+    { icon: 'chart',  title: 'Lepsza widoczność',        text: 'Więcej szczegółów = wyższe pozycje w wynikach wyszukiwania.' },
+    { icon: 'check',  title: 'Profesjonalna prezentacja', text: 'Dobrze opisany eBook buduje zaufanie i zachęca do zakupu.' },
+    { icon: 'edit',   title: 'Łatwa edycja później',      text: 'W każdej chwili możesz wrócić i zaktualizować dane.' },
+    { icon: 'shield', title: 'Większe zaufanie czytelników', text: 'Przejrzyste informacje zwiększają wiarygodność i liczbę pozytywnych opinii.' },
+] %}
+
+{% block flow_body %}
+    {{ form_start(form, { attr: { id: 'wizard-form' } }) }}
+    <div class="grid gap-6 lg:grid-cols-3">
+        <div class="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-zinc-100 lg:col-span-2">
+            <h2 class="text-xl font-bold text-zinc-900">Szczegóły eBooka</h2>
+            <p class="mt-1 text-sm text-zinc-500">Uzupełnij informacje o swoim eBooku. Im więcej szczegółów, tym łatwiej czytelnicy Cię znajdą.</p>
+
+            <div class="mt-6 grid gap-5 sm:grid-cols-2">
+                <div data-controller="char-counter" data-char-counter-max-value="200">
+                    <label class="field-label" for="{{ form.title.vars.id }}">Tytuł eBooka *</label>
+                    {{ form_widget(form.title, { attr: { class: 'field-input', maxlength: 200, 'data-char-counter-target': 'field', 'data-action': 'input->char-counter#update' } }) }}
+                    <p class="mt-1 text-right text-xs text-zinc-400" data-char-counter-target="count"></p>
+                </div>
+                <div data-controller="char-counter" data-char-counter-max-value="100">
+                    <label class="field-label" for="{{ form.author.vars.id }}">Autor *</label>
+                    {{ form_widget(form.author, { attr: { class: 'field-input', maxlength: 100, 'data-char-counter-target': 'field', 'data-action': 'input->char-counter#update' } }) }}
+                    <p class="mt-1 text-right text-xs text-zinc-400" data-char-counter-target="count"></p>
+                </div>
+                <div>
+                    <label class="field-label" for="{{ form.category.vars.id }}">Kategoria główna *</label>
+                    {{ form_widget(form.category, { attr: { class: 'field-input' } }) }}
+                </div>
+                <div>
+                    <label class="field-label" for="{{ form.language.vars.id }}">Język *</label>
+                    {{ form_widget(form.language, { attr: { class: 'field-input' } }) }}
+                </div>
+            </div>
+
+            <div class="mt-5" data-controller="char-counter" data-char-counter-max-value="150">
+                <label class="field-label" for="{{ form.shortDescription.vars.id }}">Krótki opis *</label>
+                {{ form_widget(form.shortDescription, { attr: { class: 'field-input', maxlength: 150, 'data-char-counter-target': 'field', 'data-action': 'input->char-counter#update' } }) }}
+                <p class="mt-1 text-right text-xs text-zinc-400" data-char-counter-target="count"></p>
+            </div>
+
+            <div class="mt-5" data-controller="char-counter" data-char-counter-max-value="2000">
+                <label class="field-label" for="{{ form.description.vars.id }}">Opis eBooka *</label>
+                {{ form_widget(form.description, { attr: { class: 'field-input', rows: 5, maxlength: 2000, 'data-char-counter-target': 'field', 'data-action': 'input->char-counter#update' } }) }}
+                <p class="mt-1 text-right text-xs text-zinc-400" data-char-counter-target="count"></p>
+            </div>
+
+            {# Keywords #}
+            <div class="mt-6">
+                <p class="text-sm font-semibold text-zinc-800">Słowa kluczowe</p>
+                <p class="mb-2 text-xs text-zinc-500">Dodaj słowa lub frazy, które opiszą Twój eBook.</p>
+                <div data-controller="tags" data-tags-name-value="keywords">
+                    <div class="flex flex-wrap items-center gap-2 rounded-ui border border-zinc-200 bg-white p-2" data-tags-target="list">
+                        {% for kw in keywords %}
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-accent-50 px-3 py-1.5 text-sm font-medium text-accent-700">
+                                <input type="hidden" name="keywords[]" value="{{ kw }}">
+                                <span>{{ kw }}</span>
+                                <button type="button" data-action="tags#remove" class="text-accent-600/60 hover:text-accent-700" aria-label="Usuń">&times;</button>
+                            </span>
+                        {% endfor %}
+                        <input type="text" placeholder="+ Dodaj" data-tags-target="input" data-action="keydown->tags#add"
+                               class="flex-1 border-0 bg-transparent px-2 py-1 text-sm outline-none placeholder:text-accent-600">
+                    </div>
+                </div>
+            </div>
+
+            {# Genres #}
+            <div class="mt-6">
+                <p class="text-sm font-semibold text-zinc-800">Gatunek / Tematyka</p>
+                <p class="mb-2 text-xs text-zinc-500">Wybierz do 3, które najlepiej pasują do Twojego eBooka.</p>
+                <div class="flex flex-wrap gap-2" data-controller="chip-select" data-chip-select-name-value="genres" data-chip-select-max-value="3">
+                    {% for g in genreChips %}
+                        {% set on = loop.first %}
+                        <button type="button" data-chip-select-target="chip" data-value="{{ g }}" data-selected="{{ on ? 'true' : 'false' }}"
+                                data-action="chip-select#toggle"
+                                class="inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-medium transition-colors {{ on ? 'border-accent-600 bg-accent-50 text-accent-700' : 'border-zinc-200 text-zinc-600 hover:bg-zinc-50' }}">
+                            {{ g }}{% if on %}<input type="hidden" name="genres[]" value="{{ g }}">{% endif %}
+                        </button>
+                    {% endfor %}
+                    <button type="button" class="inline-flex items-center gap-1.5 rounded-full border border-dashed border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-500 hover:border-accent-600 hover:text-accent-600">
+                        <twig:Icon name="plus" class="h-4 w-4" /> Więcej
+                    </button>
+                </div>
+            </div>
+
+            {# Detailed info (key : value) — rendered as a table on the eBook detail page #}
+            {% set details = data.details ?: [{ key: 'Liczba stron', value: '248' }, { key: 'Rok wydania', value: '2024' }] %}
+            <div class="mt-6" data-controller="key-value">
+                <p class="text-sm font-semibold text-zinc-800">Szczegółowe informacje</p>
+                <p class="mb-2 text-xs text-zinc-500">Dodaj pola w formie „nazwa : wartość" (np. Wydawca : Bookly). Pojawią się jako tabela na stronie eBooka.</p>
+
+                <div class="space-y-2" data-key-value-target="list">
+                    {% for d in details %}
+                        <div class="flex items-center gap-2" data-key-value-target="row">
+                            <input type="text" name="detailKeys[]" value="{{ d.key }}" placeholder="Nazwa, np. Wydawca" class="field-input flex-1">
+                            <input type="text" name="detailValues[]" value="{{ d.value }}" placeholder="Wartość, np. Bookly" class="field-input flex-[2]">
+                            <button type="button" data-action="key-value#remove" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-ui text-zinc-400 hover:bg-zinc-100 hover:text-error-600" aria-label="Usuń wiersz">
+                                <twig:Icon name="x" class="h-5 w-5" />
+                            </button>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <template data-key-value-target="template">
+                    <div class="flex items-center gap-2" data-key-value-target="row">
+                        <input type="text" name="detailKeys[]" placeholder="Nazwa, np. Wydawca" class="field-input flex-1">
+                        <input type="text" name="detailValues[]" placeholder="Wartość, np. Bookly" class="field-input flex-[2]">
+                        <button type="button" data-action="key-value#remove" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-ui text-zinc-400 hover:bg-zinc-100 hover:text-error-600" aria-label="Usuń wiersz">
+                            <twig:Icon name="x" class="h-5 w-5" />
+                        </button>
+                    </div>
+                </template>
+
+                <button type="button" data-action="key-value#add" class="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-accent-600 hover:text-accent-700">
+                    <twig:Icon name="plus" class="h-4 w-4" /> Dodaj pole
+                </button>
+            </div>
+        </div>
+
+        {# Side panel #}
+        <div class="space-y-6">
+            <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-zinc-100">
+                <h3 class="text-base font-semibold text-zinc-900">Podgląd Twojego eBooka</h3>
+                <div class="mt-4 flex gap-4">
+                    <div class="flex h-40 w-28 shrink-0 items-center justify-center rounded-lg bg-gradient-to-b from-zinc-700 to-zinc-900 p-2 text-center text-xs font-semibold text-white">{{ data.title ?: 'Tytuł eBooka' }}</div>
+                    <div class="min-w-0">
+                        <p class="font-semibold text-zinc-900">{{ data.title ?: 'Tytuł eBooka' }}</p>
+                        <p class="text-sm text-zinc-500">{{ data.author ?: 'Autor' }}</p>
+                        <p class="mt-1 text-xs text-zinc-400">{{ data.category ?: 'Kategoria' }} · Polski</p>
+                        <p class="mt-3 text-sm text-zinc-500">{{ data.shortDescription ?: 'Krótki opis Twojego eBooka pojawi się tutaj.' }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-zinc-100">
+                <div class="flex items-center gap-2">
+                    <twig:Icon name="check" class="h-5 w-5 text-accent-600" />
+                    <h3 class="text-base font-semibold text-zinc-900">Dlaczego warto uzupełnić szczegóły?</h3>
+                </div>
+                <p class="mt-2 text-sm text-zinc-500">Kompletne informacje pomagają czytelnikom odkryć Twój eBook.</p>
+                <ul class="mt-4 space-y-4">
+                    {% for t in tips %}
+                        <li class="flex items-start gap-3">
+                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-50 text-accent-600">
+                                <twig:Icon name="{{ t.icon }}" class="h-5 w-5" />
+                            </span>
+                            <div>
+                                <p class="text-sm font-semibold text-zinc-800">{{ t.title }}</p>
+                                <p class="mt-0.5 text-sm text-zinc-500">{{ t.text }}</p>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    {{ form_end(form) }}
+{% endblock %}
+
+{% block flow_actions %}
+    <twig:Button href="{{ path('app_publish_ebook', { step: 1 }) }}" variant="outline">
+        <twig:Icon name="arrow-left" class="h-5 w-5" /> Wstecz
+    </twig:Button>
+    <a href="{{ path('app_publish_ebook', { step: 2 }) }}?draft=1" class="inline-flex items-center justify-center rounded-ui border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50">Zapisz szkic</a>
+    <twig:Button type="submit" variant="primary" size="lg" form="wizard-form">
+        Dalej <twig:Icon name="arrow-right" class="h-5 w-5" />
+    </twig:Button>
+{% endblock %}

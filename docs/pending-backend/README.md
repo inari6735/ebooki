@@ -56,6 +56,21 @@ backend, move its name into `registration[...]` and add it to `RegistrationFormT
 
 ---
 
+## Add-eBook wizard (`src/Ebook/Presentation/`, `templates/ebook/publish/`)
+
+4-step session-backed Symfony multi-step form (`/wystaw-ebook/{step}`). The step
+navigation, per-step validation and session persistence WORK; only the post-submit
+backend is stubbed.
+
+| Element | Current stub | Backend needed |
+|---|---|---|
+| **"Opublikuj eBook"** (step 4) | no-op: clears the wizard session + flashes success + redirects home | create the eBook (entity/command), store files, publish to catalog |
+| **Uploaded file + cover** (step 1) | accepted & validated (type/size) but **not persisted** — only the client filename/size are kept in session for preview | move/store binaries, virus/format scan, generate previews |
+| **"Zapisz szkic"** (all steps) | flashes "Szkic zapisany" — no real draft saved | persist a draft (DB) tied to the author |
+| **Detailed info (klucz:wartość)** (step 2) | captured into the session DTO (`PublishEbookData::$details`), not persisted | persist; render as a details **table on the eBook detail page** (not built yet) |
+| **Route is not auth-gated yet** | anyone can open `/wystaw-ebook` | require `ROLE_USER` (author); prefill author from the logged-in user |
+| **Genre "+ Więcej", category/language options** | static lists | real taxonomy |
+
 ## Homepage — Hero (`templates/components/Home/Hero.html.twig`)
 
 | Element | Current stub | Backend needed |
