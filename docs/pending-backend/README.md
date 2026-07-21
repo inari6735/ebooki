@@ -58,19 +58,25 @@ backend, move its name into `registration[...]` and add it to `RegistrationFormT
 
 ## Add-eBook wizard (`src/Ebook/Presentation/`, `templates/ebook/publish/`)
 
-4-step session-backed Symfony multi-step form (`/wystaw-ebook/{step}`). The step
-navigation, per-step validation and session persistence WORK; only the post-submit
-backend is stubbed.
+4-step session-backed Symfony multi-step form (`/wystaw-ebook/{step}`, `ROLE_USER`).
+**Now persists for real:** files are uploaded to a staging area as they are added
+(`EbookStagingController` → Flysystem `ebook.storage`, `Media` status `pending`),
+and at step 4 ("Opublikuj"/"Zapisz szkic") everything is committed by
+`PublishEbookFromWizard` — `Ebook` + `EbookFile` created, blobs moved to their
+permanent key, `Media` marked `ready`. Storage: local disk in dev, S3-ready.
 
-| Element | Current stub | Backend needed |
+Remaining follow-ups:
+
+| Element | Current state | Still needed |
 |---|---|---|
-| **"Opublikuj eBook"** (step 4) | no-op: clears the wizard session + flashes success + redirects home | create the eBook (entity/command), store files, publish to catalog |
-| **Uploaded file + cover** (step 1) | accepted & validated (type/size) but **not persisted** — filename/size kept in session; the cover is base64-encoded into the session (≤3 MB) only to preview it across steps | move/store binaries to a real store + serve via URL; virus/format scan; generate previews |
-| **"Zapisz szkic"** (all steps) | flashes "Szkic zapisany" — no real draft saved | persist a draft (DB) tied to the author |
-| **Detailed info (klucz:wartość)** (step 2) | captured into the session DTO (`PublishEbookData::$details`), not persisted | persist; render as a details **table on the eBook detail page** (not built yet) |
-| **"Zapłać ile chcesz" / donations** (step 3) | flag `PublishEbookData::$payWhatYouWant` captured in session | show a voluntary-donation/tip option on the eBook **detail page** + payment handling |
-| **Route is not auth-gated yet** | anyone can open `/wystaw-ebook` | require `ROLE_USER` (author); prefill author from the logged-in user |
-| **Genre "+ Więcej", category/language options** | static lists | real taxonomy |
+| **Storage provider** | local disk (`var/storage/ebooks`) via Flysystem | wire the S3 adapter for prod (config block already stubbed in `flysystem.yaml`) |
+| **Async processing** | `Media` marked `ready` at commit, no scan | virus/format scan + checksum + thumbnails before `ready`; `MediaStatus::FAILED` path |
+| **CSRF on wizard navigation** | staging endpoints are CSRF-checked (`ebook_upload`); the step-1 "Dalej" and step-4 finalize forms are plain POST | add stateless CSRF (`data-controller="csrf-protection"`) to those forms |
+| **Staging GC** | `ebook:prune-staged` command exists | schedule it (Messenger Scheduler / cron) |
+| **Category** | committed eBook has `category_id = null` (no taxonomy seeded) | seed `categories`, look up by slug at commit |
+| **Direct-to-storage upload** | bytes pass through the app on staging | optional: presigned PUT / multipart (Uppy/tus) for very large / resumable uploads |
+| **Viewing a published eBook** | detail page still renders a fixed mock (below) | read the persisted `Ebook` by slug |
+| **"Zapłać ile chcesz" / donations** (step 3) | `payWhatYouWant` persisted on the eBook | voluntary-donation option on the detail page + payment handling |
 
 ## eBook detail page (`src/Ebook/Presentation/EbookDetailController.php`, `templates/ebook/show.html.twig`)
 

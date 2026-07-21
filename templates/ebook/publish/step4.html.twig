@@ -8,8 +8,8 @@
 {% set discountPct = discounted ? ((basePrice - promoPrice) / basePrice * 100)|round : 0 %}
 {% set priceText = data.isFree ? 'eBook dostępny za darmo' : (data.payWhatYouWant ? 'Zapłać ile chcesz — dobrowolna wpłata' : 'Cena eBooka: ' ~ effectivePrice|number_format(2, ',', ' ') ~ ' zł') %}
 {% set checklist = [
-    { title: 'Plik dodany',      text: (data.fileName ?: 'Światło na końcu drogi.pdf') ~ ' · ' ~ (data.fileSize ?: 'PDF · 2.4 MB') },
-    { title: 'Okładka gotowa',   text: (data.coverName ?: 'okladka_swiatlo.png') ~ ' · 1200 × 1600 px' },
+    { title: 'Plik dodany',      text: data.files is not empty ? (data.files|length ~ ' plik(i): ' ~ (data.files|map(f => f.format|upper)|join(', '))) : 'Brak pliku' },
+    { title: 'Okładka gotowa',   text: data.coverName ?: 'Brak okładki' },
     { title: 'Opis uzupełniony', text: 'Tytuł, autor i opis eBooka zostały dodane.' },
     { title: 'Cena ustawiona',   text: priceText },
 ] %}
@@ -27,6 +27,7 @@
 
 {% block flow_body %}
     <form id="publish-form" method="post" action="{{ path('app_publish_ebook', { step: 4 }) }}"></form>
+    <form id="draft-form" method="post" action="{{ path('app_publish_ebook', { step: 4 }) }}?draft=1"></form>
     <div class="grid gap-6 lg:grid-cols-3">
         <div class="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-zinc-100 lg:col-span-2">
             <h2 class="text-xl font-bold text-zinc-900">Podsumowanie publikacji</h2>
@@ -50,7 +51,7 @@
                 <div>
                     <p class="text-sm font-semibold text-zinc-800">Podgląd eBooka w sklepie</p>
                     <div class="mt-3 flex gap-4 rounded-2xl border border-zinc-100 p-4">
-                        <twig:Ebook:Cover :src="data.coverDataUri" title="{{ data.title ?: 'Światło na końcu drogi' }}" width="w-28" />
+                        <twig:Ebook:Cover :src="data.coverMediaId ? path('app_ebook_staged_preview', { mediaId: data.coverMediaId }) : null" title="{{ data.title ?: 'Światło na końcu drogi' }}" width="w-28" />
                         <div class="min-w-0">
                             <p class="break-words font-semibold text-zinc-900">{{ data.title ?: 'Światło na końcu drogi' }}</p>
                             <p class="break-words text-sm text-zinc-500">{{ data.author ?: 'Anna Kowalska' }}</p>
@@ -125,7 +126,7 @@
     <twig:Button href="{{ path('app_publish_ebook', { step: 3 }) }}" variant="outline">
         <twig:Icon name="arrow-left" class="h-5 w-5" /> Wstecz
     </twig:Button>
-    <a href="{{ path('app_publish_ebook', { step: 4 }) }}?draft=1" class="inline-flex items-center justify-center rounded-ui border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50">Zapisz szkic</a>
+    <button type="submit" form="draft-form" class="inline-flex items-center justify-center rounded-ui border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50">Zapisz szkic</button>
     <twig:Button href="{{ path('app_publish_ebook_preview') }}" target="_blank" rel="noopener" variant="outline">
         <twig:Icon name="eye" class="h-5 w-5" /> Podgląd
     </twig:Button>

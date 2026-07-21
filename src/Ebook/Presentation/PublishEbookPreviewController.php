@@ -50,7 +50,9 @@ final class PublishEbookPreviewController extends AbstractController
             'category' => self::CATEGORY_LABELS[$data->category] ?? ($data->category ?: 'Kategoria'),
             'categorySlug' => $data->category,
             'language' => self::LANGUAGE_LABELS[$data->language] ?? $data->language,
-            'cover' => $data->coverDataUri,
+            'cover' => null !== $data->coverMediaId
+                ? $this->generateUrl('app_ebook_staged_preview', ['mediaId' => $data->coverMediaId])
+                : null,
             'shortDescription' => $data->shortDescription ?: 'Krótki opis eBooka pojawi się tutaj.',
             'rating' => null, // no reviews yet for an unpublished eBook
             'price' => $data->price,

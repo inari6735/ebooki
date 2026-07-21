@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Also scan Stimulus controllers so classes applied only from JS (e.g. the
+   uploader's progress bar and drag-highlight) are not purged. */
+@source "../controllers/**/*.js";
+
 /* Poppins — self-hosted (Bookly Design System v1.0), latin subset, no external requests. */
 @font-face {
     font-family: 'Poppins';

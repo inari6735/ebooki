@@ -114,6 +114,11 @@ class Media
         return $this->extension;
     }
 
+    public function getMimeType(): string
+    {
+        return $this->mimeType;
+    }
+
     public function getSize(): int
     {
         return $this->size;
@@ -133,5 +138,17 @@ class Media
     {
         $this->status = MediaStatus::READY;
         $this->touch();
+    }
+
+    /** Record that the blob moved to a new storage key (e.g. staging → permanent). */
+    public function relocate(string $path): void
+    {
+        $this->path = $path;
+        $this->touch();
+    }
+
+    public function getDisk(): string
+    {
+        return $this->disk;
     }
 }

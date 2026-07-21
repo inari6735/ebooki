@@ -86,7 +86,7 @@
             <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-zinc-100">
                 <h3 class="text-base font-semibold text-zinc-900">Podgląd Twojego eBooka</h3>
                 <div class="mt-4 flex gap-4">
-                    <twig:Ebook:Cover :src="data.coverDataUri" title="{{ data.title ?: 'Tytuł eBooka' }}" width="w-28"
+                    <twig:Ebook:Cover :src="data.coverMediaId ? path('app_ebook_staged_preview', { mediaId: data.coverMediaId }) : null" title="{{ data.title ?: 'Tytuł eBooka' }}" width="w-28"
                                       data-preview-target="out" data-preview-field="title" data-preview-empty="Tytuł eBooka" />
                     <div class="min-w-0">
                         <p class="break-words font-semibold text-zinc-900" data-preview-target="out" data-preview-field="title" data-preview-empty="Tytuł eBooka">{{ data.title ?: 'Tytuł eBooka' }}</p>

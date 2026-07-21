@@ -11,6 +11,10 @@ parameters:
     # This is the fallback rate; richer rules are added as CommissionPolicy classes.
     app.ebook.commission_bps: 1000
 
+    # Logical name recorded on every uploaded file (media.disk). Change together
+    # with the flysystem adapter when moving to S3.
+    app.ebook.storage_disk: 'local'
+
 services:
     _defaults:
         autowire: true
@@ -37,6 +41,15 @@ services:
     App\User\Domain\UserRepository:
         alias: App\User\Infrastructure\DoctrineUserRepository
         public: true
+
+    App\Ebook\Domain\Storage\FileStorage:
+        alias: App\Ebook\Infrastructure\Storage\FlysystemFileStorage
+
+    App\Ebook\Domain\MediaRepository:
+        alias: App\Ebook\Infrastructure\DoctrineMediaRepository
+
+    App\Ebook\Domain\EbookRepository:
+        alias: App\Ebook\Infrastructure\DoctrineEbookRepository
 
     App\User\Infrastructure\Security\RefreshTokenRotator:
         public: true

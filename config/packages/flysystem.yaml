@@ -1,0 +1,31 @@
+# Storage abstraction. Swapping the provider = changing the adapter here only;
+# the app talks to the domain port App\Ebook\Domain\Storage\FileStorage, never to
+# Flysystem directly. `media.disk` records which storage a file lives on.
+flysystem:
+    storages:
+        ebook.storage:
+            adapter: 'local'
+            options:
+                directory: '%kernel.project_dir%/var/storage/ebooks'
+
+# Production: switch to Amazon S3 without touching application code.
+#   composer require league/flysystem-aws-s3-v3
+# then define an S3 client service and enable the block below.
+#
+# when@prod:
+#     flysystem:
+#         storages:
+#             ebook.storage:
+#                 adapter: 'aws'
+#                 options:
+#                     client: 'ebook.s3_client'          # Aws\S3\S3Client service
+#                     bucket: '%env(EBOOK_S3_BUCKET)%'
+#                     prefix: '%env(default::EBOOK_S3_PREFIX)%'
+
+when@test:
+    flysystem:
+        storages:
+            ebook.storage:
+                adapter: 'local'
+                options:
+                    directory: '%kernel.project_dir%/var/storage/test'

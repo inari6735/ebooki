@@ -10,11 +10,18 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 final class PublishEbookData
 {
-    // Step 1 — file (names only; binaries are not persisted yet)
-    public ?string $fileName = null;
-    public ?string $fileSize = null;
+    // Step 1 — files are uploaded to a staging area as they are added; here we keep
+    // only lightweight references (media ids). They are committed at step 4.
+    /** @var list<array{mediaId: string, name: string, size: string, format: string}> */
+    public array $files = [];
+
+    public ?string $coverMediaId = null;
     public ?string $coverName = null;
-    public ?string $coverDataUri = null; // base64 preview (no file store yet)
+
+    public function hasFiles(): bool
+    {
+        return [] !== $this->files;
+    }
 
     // Step 2 — details
     #[Assert\NotBlank(groups: ['details'])]

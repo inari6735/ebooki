@@ -2,20 +2,24 @@
 
 namespace App\Ebook\Presentation;
 
+use App\Ebook\Application\PublishEbookFromWizard;
 use App\Ebook\Presentation\Form\DetailsStepType;
-use App\Ebook\Presentation\Form\FileStepType;
 use App\Ebook\Presentation\Form\PricingStepType;
 use App\Ebook\Presentation\PublishEbook\EbookUploadRules;
 use App\Ebook\Presentation\PublishEbook\PublishEbookData;
+use App\User\Domain\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Uid\Uuid;
 
 /**
- * Session-backed multi-step "Wystaw swojego eBooka" wizard (4 steps).
- * Backend persistence is intentionally not implemented yet — the final
- * "Opublikuj" action is a no-op that clears the wizard and flashes success.
+ * Session-backed multi-step "Wystaw swojego eBooka" wizard (4 steps). Files are
+ * staged as they are added (see {@see EbookStagingController}); the wizard carries
+ * only references. At step 4 the whole thing is committed — Ebook + files persisted
+ * and moved to permanent storage — for both "Opublikuj" (published) and "Zapisz
+ * szkic" (draft).
  */
 final class PublishEbookController extends AbstractController
 {
@@ -23,13 +27,35 @@ final class PublishEbookController extends AbstractController
     private const int LAST_STEP = 4;
 
     #[Route('/wystaw-ebook/{step}', name: 'app_publish_ebook', requirements: ['step' => '[1-4]'], defaults: ['step' => 1], methods: ['GET', 'POST'])]
-    public function __invoke(int $step, Request $request): Response
+    public function __invoke(int $step, Request $request, PublishEbookFromWizard $publisher): Response
     {
         $session = $request->getSession();
         /** @var PublishEbookData $data */
         $data = $session->get(self::SESSION_KEY) ?? new PublishEbookData();
 
-        // "Zapisz szkic" — mock action for now.
+        // Step 4 — finalize: commit the eBook and its files (publish or draft).
+        if (self::LAST_STEP === $step) {
+            if ($request->isMethod('POST')) {
+                if (!$data->hasFiles()) {
+                    $this->addFlash('error', 'Dodaj przynajmniej jeden plik eBooka.');
+
+                    return $this->redirectToRoute('app_publish_ebook', ['step' => 1]);
+                }
+
+                $asDraft = $request->query->getBoolean('draft');
+                $publisher($data, $this->ownerId(), $asDraft);
+                $session->remove(self::SESSION_KEY);
+                $this->addFlash('success', $asDraft
+                    ? 'Szkic zapisany — pliki zostały wgrane.'
+                    : 'Opublikowano! Twój eBook i pliki zostały zapisane.');
+
+                return $this->redirectToRoute('app_home');
+            }
+
+            return $this->render('ebook/publish/step4.html.twig', ['data' => $data, 'step' => $step]);
+        }
+
+        // "Zapisz szkic" on steps 1–3 — save progress in the session and stay.
         if ($request->query->getBoolean('draft')) {
             $session->set(self::SESSION_KEY, $data);
             $this->addFlash('success', 'Szkic został zapisany.');
@@ -37,16 +63,24 @@ final class PublishEbookController extends AbstractController
             return $this->redirectToRoute('app_publish_ebook', ['step' => $step]);
         }
 
-        // Step 4 — review + publish (no-op).
-        if (self::LAST_STEP === $step) {
+        // Step 1 — files are handled by the async uploader; "Dalej" just gates on
+        // at least one staged file before advancing.
+        if (1 === $step) {
             if ($request->isMethod('POST')) {
-                $session->remove(self::SESSION_KEY);
-                $this->addFlash('success', 'Gotowe! Twój eBook został przygotowany do publikacji.');
+                if (!$data->hasFiles()) {
+                    $this->addFlash('error', 'Dodaj przynajmniej jeden plik eBooka, aby przejść dalej.');
 
-                return $this->redirectToRoute('app_home');
+                    return $this->redirectToRoute('app_publish_ebook', ['step' => 1]);
+                }
+
+                return $this->redirectToRoute('app_publish_ebook', ['step' => 2]);
             }
 
-            return $this->render('ebook/publish/step4.html.twig', ['data' => $data, 'step' => $step]);
+            return $this->render('ebook/publish/step1.html.twig', [
+                'data' => $data,
+                'step' => 1,
+                'rules' => EbookUploadRules::templateVars(),
+            ]);
         }
 
         if (3 === $step && null === $data->price) {
@@ -55,7 +89,6 @@ final class PublishEbookController extends AbstractController
 
         $form = $this->createForm(
             match ($step) {
-                1 => FileStepType::class,
                 2 => DetailsStepType::class,
                 3 => PricingStepType::class,
             },
@@ -64,21 +97,6 @@ final class PublishEbookController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            if (1 === $step) {
-                if ($file = $form->get('file')->getData()) {
-                    $data->fileName = $file->getClientOriginalName();
-                    $data->fileSize = $this->humanSize($file->getSize());
-                }
-                if ($cover = $form->get('cover')->getData()) {
-                    $data->coverName = $cover->getClientOriginalName();
-                    // Keep a base64 preview so the cover survives step navigation
-                    // without a file store (capped to keep the session light).
-                    if ($cover->getSize() <= 3_000_000) {
-                        $data->coverDataUri = 'data:'.$cover->getMimeType().';base64,'.base64_encode((string) file_get_contents($cover->getPathname()));
-                    }
-                }
-            }
-
             if (2 === $step) {
                 // Detailed info: parallel detailKeys[]/detailValues[] → list of {key, value}.
                 $keys = $request->request->all('detailKeys');
@@ -107,15 +125,11 @@ final class PublishEbookController extends AbstractController
         ]);
     }
 
-    private function humanSize(?int $bytes): string
+    private function ownerId(): Uuid
     {
-        if (null === $bytes) {
-            return '';
-        }
-        $mb = $bytes / 1_048_576;
+        $user = $this->getUser();
+        \assert($user instanceof User);
 
-        return $mb >= 1
-            ? number_format($mb, 1, ',', ' ').' MB'
-            : number_format($bytes / 1024, 0, ',', ' ').' KB';
+        return $user->getId();
     }
 }
