@@ -23,19 +23,30 @@ export default class extends Controller {
         finalizeUrl: String, // file: assemble
         removeUrl: String,
         token: String,
+        context: String, // staging workspace: '' = wizard, an eBook id = its edit session
         cover: Boolean,
         maxSizeMb: Number,
         maxCount: Number,
         accept: String, // comma-separated extensions
+        formId: { type: String, default: 'wizard-form' }, // form whose submit to guard
     };
+
+    // Every staging request carries the token + the workspace context.
+    body(fields = {}) {
+        const body = new FormData();
+        Object.entries(fields).forEach(([key, value]) => body.append(key, value));
+        body.append('_token', this.tokenValue);
+        body.append('ctx', this.contextValue || '');
+        return body;
+    }
 
     connect() {
         // Guard the step-1 "Dalej" button: you may not advance while a file (or
         // the cover) is still uploading — its session reference only exists once
         // the upload has finalised, so leaving early would drop it. The backend
         // enforces "at least one staged file" too; this is the instant, no-reload
-        // feedback in front of it.
-        this.form = document.getElementById('wizard-form');
+        // feedback in front of it (the edit form is guarded the same way).
+        this.form = document.getElementById(this.formIdValue);
         if (this.form) {
             this.onSubmit = (event) => this.guardSubmit(event);
             this.form.addEventListener('submit', this.onSubmit);
@@ -131,10 +142,6 @@ export default class extends Controller {
         this.listTarget.appendChild(item);
         this.listTarget.classList.remove('hidden');
 
-        const body = new FormData();
-        body.append('file', file);
-        body.append('_token', this.tokenValue);
-
         const xhr = new XMLHttpRequest();
         xhr.open('POST', this.uploadUrlValue);
         xhr.upload.addEventListener('progress', (event) => {
@@ -149,7 +156,7 @@ export default class extends Controller {
             }
         });
         xhr.addEventListener('error', () => this.reject(item, 'Błąd sieci podczas wysyłania.'));
-        xhr.send(body);
+        xhr.send(this.body({ file }));
     }
 
     // ── eBook file: chunked upload ─────────────────────────────────────────────
@@ -179,10 +186,7 @@ export default class extends Controller {
     }
 
     async chunkInit(file) {
-        const body = new FormData();
-        body.append('name', file.name);
-        body.append('size', file.size);
-        body.append('_token', this.tokenValue);
+        const body = this.body({ name: file.name, size: file.size });
         const response = await fetch(this.initUrlValue, { method: 'POST', body });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(payload.error || 'Nie udało się rozpocząć wysyłania.');
@@ -192,11 +196,7 @@ export default class extends Controller {
     // Sends one chunk, retrying transient failures a few times before giving up.
     sendChunk(uploadId, index, blob, onProgress, attempt = 1) {
         return new Promise((resolve, reject) => {
-            const body = new FormData();
-            body.append('uploadId', uploadId);
-            body.append('index', index);
-            body.append('chunk', blob);
-            body.append('_token', this.tokenValue);
+            const body = this.body({ uploadId, index, chunk: blob });
 
             const xhr = new XMLHttpRequest();
             xhr.open('POST', this.chunkUrlValue);
@@ -230,13 +230,7 @@ export default class extends Controller {
     }
 
     async chunkFinalize(uploadId, total, file) {
-        const body = new FormData();
-        body.append('uploadId', uploadId);
-        body.append('total', total);
-        body.append('name', file.name);
-        body.append('size', file.size);
-        body.append('mime', file.type || 'application/octet-stream');
-        body.append('_token', this.tokenValue);
+        const body = this.body({ uploadId, total, name: file.name, size: file.size, mime: file.type || 'application/octet-stream' });
         const response = await fetch(this.finalizeUrlValue, { method: 'POST', body });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(payload.error || 'Nie udało się zapisać pliku.');
@@ -246,9 +240,7 @@ export default class extends Controller {
     remove(event) {
         const item = event.target.closest('[data-media-id]');
         if (!item) return;
-        const body = new FormData();
-        body.append('_token', this.tokenValue);
-        fetch(this.removeUrlValue.replace('__ID__', item.dataset.mediaId), { method: 'POST', body })
+        fetch(this.removeUrlValue.replace('__ID__', item.dataset.mediaId), { method: 'POST', body: this.body() })
             .then((response) => {
                 if (response.ok) {
                     this.revokePreview(item);

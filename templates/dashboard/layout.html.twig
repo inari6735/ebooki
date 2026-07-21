@@ -4,7 +4,7 @@
    Pages set `active` (via the controller) to highlight the current menu item. #}
 {% set panelMenu = [
     { key: 'pulpit',     label: 'Pulpit',     icon: 'home',     href: path('app_dashboard') },
-    { key: 'wystawione', label: 'Wystawione', icon: 'book',     href: '#' },
+    { key: 'wystawione', label: 'Wystawione', icon: 'book',     href: path('app_dashboard_listed') },
     { key: 'zakupione',  label: 'Zakupione',  icon: 'cart',     href: '#' },
     { key: 'ustawienia', label: 'Ustawienia', icon: 'settings', href: '#' },
 ] %}
@@ -40,6 +40,7 @@
 
                 {# Content #}
                 <div class="min-w-0 flex-1">
+                    <twig:Layout:Flashes />
                     {% block panel_content %}{% endblock %}
                 </div>
             </div>

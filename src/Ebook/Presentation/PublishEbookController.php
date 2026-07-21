@@ -4,6 +4,7 @@ namespace App\Ebook\Presentation;
 
 use App\Ebook\Application\PublishEbookFromWizard;
 use App\Ebook\Domain\CategoryRepository;
+use App\Ebook\Presentation\Form\DetailFields;
 use App\Ebook\Presentation\Form\DetailsStepType;
 use App\Ebook\Presentation\Form\PricingStepType;
 use App\Ebook\Presentation\PublishEbook\EbookUploadRules;
@@ -119,8 +120,8 @@ final class PublishEbookController extends AbstractController
             if (2 === $step) {
                 // Detailed info: parallel detailKeys[]/detailValues[] → list of {key, value}.
                 // Keep the typed rows on $data so a rejected submit re-renders them.
-                $data->details = $this->collectDetails($request);
-                if (null !== ($error = $this->detailsError($data->details))) {
+                $data->details = DetailFields::collect($request);
+                if (null !== ($error = DetailFields::error($data->details))) {
                     $this->addFlash('error', $error);
                     $advance = false;
                 }
@@ -133,55 +134,19 @@ final class PublishEbookController extends AbstractController
             }
         }
 
-        return $this->render("ebook/publish/step{$step}.html.twig", [
+        $response = $this->render("ebook/publish/step{$step}.html.twig", [
             'form' => $form->createView(),
             'data' => $data,
             'step' => $step,
             'rules' => EbookUploadRules::templateVars(),
         ]);
-    }
-
-    /**
-     * Pair the parallel detailKeys[]/detailValues[] fields into rows, dropping any
-     * where either side is blank.
-     *
-     * @return list<array{key: string, value: string}>
-     */
-    private function collectDetails(Request $request): array
-    {
-        $keys = $request->request->all('detailKeys');
-        $values = $request->request->all('detailValues');
-        $details = [];
-        foreach ($keys as $i => $k) {
-            $k = trim((string) $k);
-            $v = trim((string) ($values[$i] ?? ''));
-            if ('' !== $k && '' !== $v) {
-                $details[] = ['key' => $k, 'value' => $v];
-            }
+        // A failed submit re-renders with errors — return 422 so Turbo shows it
+        // (Turbo drops a 200 response to a form POST, expecting a redirect on success).
+        if ($form->isSubmitted()) {
+            $response->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        return $details;
-    }
-
-    /**
-     * Enforce the per-row length caps (the frontend applies the same via maxlength).
-     *
-     * @param list<array{key: string, value: string}> $details
-     */
-    private function detailsError(array $details): ?string
-    {
-        foreach ($details as $d) {
-            if (mb_strlen($d['key']) > PublishEbookData::DETAIL_KEY_MAX
-                || mb_strlen($d['value']) > PublishEbookData::DETAIL_VALUE_MAX) {
-                return sprintf(
-                    'Szczegółowe informacje: nazwa może mieć maksymalnie %d znaków, a wartość %d znaków.',
-                    PublishEbookData::DETAIL_KEY_MAX,
-                    PublishEbookData::DETAIL_VALUE_MAX,
-                );
-            }
-        }
-
-        return null;
+        return $response;
     }
 
     private function finalize(PublishEbookFromWizard $publisher, SessionInterface $session, PublishEbookData $data, bool $asDraft): Response

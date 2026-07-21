@@ -13,5 +13,7 @@ interface EbookRepository
     /** @return list<Ebook> the owner's eBooks, newest first */
     public function findByOwner(Uuid $ownerId): array;
 
+    public function remove(Ebook $ebook): void;
+
     public function slugExists(string $slug): bool;
 }

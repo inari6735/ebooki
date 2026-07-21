@@ -23,7 +23,7 @@ final class DetailAttributeLengthTest extends WebTestCase
 
         $this->submitDetails($client, str_repeat('a', PublishEbookData::DETAIL_KEY_MAX + 1), 'Bookly');
 
-        self::assertResponseIsSuccessful(); // re-rendered step 2, not redirected on
+        self::assertResponseStatusCodeSame(422); // re-rendered step 2 (Turbo-friendly)
         self::assertSelectorTextContains('body', 'Szczegółowe informacje: nazwa może mieć maksymalnie');
     }
 
@@ -34,7 +34,7 @@ final class DetailAttributeLengthTest extends WebTestCase
 
         $this->submitDetails($client, 'Wydawca', str_repeat('b', PublishEbookData::DETAIL_VALUE_MAX + 1));
 
-        self::assertResponseIsSuccessful();
+        self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('body', 'Szczegółowe informacje: nazwa może mieć maksymalnie');
     }
 

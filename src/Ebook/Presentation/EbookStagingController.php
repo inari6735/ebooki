@@ -3,7 +3,9 @@
 namespace App\Ebook\Presentation;
 
 use App\Ebook\Application\EbookUploadStaging;
+use App\Ebook\Domain\EbookRepository;
 use App\Ebook\Domain\MediaRepository;
+use App\Ebook\Domain\MediaStatus;
 use App\Ebook\Domain\MediaVisibility;
 use App\Ebook\Presentation\PublishEbook\EbookUploadRules;
 use App\Ebook\Presentation\PublishEbook\PublishEbookData;
@@ -33,6 +35,7 @@ final class EbookStagingController extends AbstractController
     public function __construct(
         private readonly EbookUploadStaging $staging,
         private readonly MediaRepository $media,
+        private readonly EbookRepository $ebooks,
     ) {
     }
 
@@ -53,7 +56,7 @@ final class EbookStagingController extends AbstractController
         $name = (string) $request->request->get('name');
         $size = $request->request->getInt('size');
 
-        if ($error = $this->validateFileMeta($this->wizard($request), $name, $size)) {
+        if ($error = $this->validateFileMeta($this->stagingData($request), $name, $size)) {
             return $this->json(['error' => $error], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
@@ -110,7 +113,7 @@ final class EbookStagingController extends AbstractController
             return $this->json(['error' => 'Nieprawidłowe żądanie.'], Response::HTTP_BAD_REQUEST);
         }
 
-        $data = $this->wizard($request);
+        $data = $this->stagingData($request);
         if ($error = $this->validateFileMeta($data, $name, $size)) {
             $this->staging->abortChunks($uploadId);
 
@@ -141,7 +144,7 @@ final class EbookStagingController extends AbstractController
         ];
 
         $data->files[] = $ref;
-        $this->saveWizard($request, $data);
+        $this->saveStagingData($request, $data);
 
         return $this->json($ref, Response::HTTP_CREATED);
     }
@@ -161,22 +164,22 @@ final class EbookStagingController extends AbstractController
             return $this->json(['error' => $error], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $data = $this->wizard($request);
+        $data = $this->stagingData($request);
 
-        // Replace any previously staged cover.
-        if (null !== $data->coverMediaId && null !== ($old = $this->media->get(Uuid::fromString($data->coverMediaId)))) {
-            $this->staging->discard($old);
-        }
+        // Replace the previous cover. A committed (ready) cover — when editing an
+        // existing eBook — is NOT deleted here (the edit might be cancelled); only a
+        // still-staged (pending) cover is discarded. Committed removals happen on save.
+        $this->discardIfPending($data->coverMediaId);
 
         $media = $this->staging->stage($file, MediaVisibility::PUBLIC, $this->ownerId());
         $data->coverMediaId = $media->getId()->toRfc4122();
         $data->coverName = $media->getOriginalName();
-        $this->saveWizard($request, $data);
+        $this->saveStagingData($request, $data);
 
         return $this->json([
             'mediaId' => $data->coverMediaId,
             'name' => $data->coverName,
-            'previewUrl' => $this->generateUrl('app_ebook_staged_preview', ['mediaId' => $data->coverMediaId]),
+            'previewUrl' => $this->previewUrl($request, $data->coverMediaId),
         ], Response::HTTP_CREATED);
     }
 
@@ -187,7 +190,7 @@ final class EbookStagingController extends AbstractController
             return $this->json(['error' => 'Nieprawidłowy token.'], Response::HTTP_FORBIDDEN);
         }
 
-        $data = $this->wizard($request);
+        $data = $this->stagingData($request);
         $isCover = $data->coverMediaId === $mediaId;
         $inFiles = array_filter($data->files, static fn (array $r): bool => $r['mediaId'] === $mediaId);
 
@@ -195,9 +198,9 @@ final class EbookStagingController extends AbstractController
             return $this->json(['error' => 'Nie znaleziono pliku.'], Response::HTTP_NOT_FOUND);
         }
 
-        if (null !== ($media = $this->media->get(Uuid::fromString($mediaId)))) {
-            $this->staging->discard($media);
-        }
+        // Only discard still-staged blobs; committed files removed while editing are
+        // deleted on save (so a cancelled edit keeps the eBook intact).
+        $this->discardIfPending($mediaId);
 
         if ($isCover) {
             $data->coverMediaId = null;
@@ -205,7 +208,7 @@ final class EbookStagingController extends AbstractController
         } else {
             $data->files = array_values(array_filter($data->files, static fn (array $r): bool => $r['mediaId'] !== $mediaId));
         }
-        $this->saveWizard($request, $data);
+        $this->saveStagingData($request, $data);
 
         return $this->json(['ok' => true]);
     }
@@ -213,7 +216,7 @@ final class EbookStagingController extends AbstractController
     #[Route('/wystaw-ebook/podglad-pliku/{mediaId}', name: 'app_ebook_staged_preview', methods: ['GET'])]
     public function preview(string $mediaId, Request $request): Response
     {
-        $data = $this->wizard($request);
+        $data = $this->stagingData($request);
         $referenced = $data->coverMediaId === $mediaId
             || [] !== array_filter($data->files, static fn (array $r): bool => $r['mediaId'] === $mediaId);
 
@@ -288,14 +291,62 @@ final class EbookStagingController extends AbstractController
         return $user instanceof User ? $user->getId() : null;
     }
 
-    private function wizard(Request $request): PublishEbookData
+    private function stagingData(Request $request): PublishEbookData
     {
-        return $request->getSession()->get(PublishEbookController::SESSION_KEY) ?? new PublishEbookData();
+        return $request->getSession()->get($this->contextKey($request)) ?? new PublishEbookData();
     }
 
-    private function saveWizard(Request $request, PublishEbookData $data): void
+    private function saveStagingData(Request $request, PublishEbookData $data): void
     {
-        $request->getSession()->set(PublishEbookController::SESSION_KEY, $data);
+        $request->getSession()->set($this->contextKey($request), $data);
+    }
+
+    /**
+     * Which staging workspace a request belongs to: the wizard by default, or an
+     * edit session (`ctx` = eBook id) — which requires the eBook to belong to the
+     * signed-in user, so one author can't touch another's files.
+     */
+    private function contextKey(Request $request): string
+    {
+        $ctx = $this->ctx($request);
+        if ('' === $ctx) {
+            return PublishEbookController::SESSION_KEY;
+        }
+
+        $ebook = Uuid::isValid($ctx) ? $this->ebooks->get(Uuid::fromString($ctx)) : null;
+        $user = $this->getUser();
+        if (null === $ebook || !$user instanceof User || !$ebook->getOwnerId()->equals($user->getId())) {
+            throw $this->createAccessDeniedException();
+        }
+
+        return ListedEbooksController::EDIT_SESSION_PREFIX.$ctx;
+    }
+
+    private function discardIfPending(?string $mediaId): void
+    {
+        if (null === $mediaId) {
+            return;
+        }
+        $media = $this->media->get(Uuid::fromString($mediaId));
+        if (null !== $media && MediaStatus::PENDING === $media->getStatus()) {
+            $this->staging->discard($media);
+        }
+    }
+
+    private function previewUrl(Request $request, string $mediaId): string
+    {
+        $params = ['mediaId' => $mediaId];
+        if ('' !== $ctx = $this->ctx($request)) {
+            $params['ctx'] = $ctx;
+        }
+
+        return $this->generateUrl('app_ebook_staged_preview', $params);
+    }
+
+    /** The staging workspace context (an eBook id, or '' for the wizard), from body or query. */
+    private function ctx(Request $request): string
+    {
+        return (string) ($request->request->get('ctx') ?? $request->query->get('ctx') ?? '');
     }
 
     private function humanSize(int $bytes): string

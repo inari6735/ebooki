@@ -112,13 +112,29 @@ avatar dropdown ("Mój panel") + mobile menu. Pages pass `active` to highlight t
 stats — Wystawione / Opublikowane / Szkice counts (`EbookRepository::findByOwner`) —
 plus quick-action shortcuts.
 
+**Wystawione (`app_dashboard_listed`, `dashboard/listed.html.twig`) — working for real:**
+status filter tabs (Wszystkie/Opublikowane/Szkice/Ukryte), and per-eBook **hide/publish**
+(`app_ebook_toggle_visibility` → `Ebook::unpublish()`/`publish()`) and **delete**
+(`app_ebook_delete` → `DeleteEbook`: removes the aggregate + its Media rows/blobs). All
+mutations are CSRF-checked (`ebook_manage`) and owner-scoped (others 404); delete asks a
+`data-turbo-confirm`.
+
+**Edit (`app_ebook_edit`, `dashboard/edit.html.twig`) — working for real:** a
+prefilled form editing details + pricing **and files + cover**, reusing the **same**
+fields/validation/uploader as the wizard. Details/pricing: `EbookFields` builds the
+inputs for `DetailsStepType`/`PricingStepType` **and** `EditEbookType`; constraints on
+`PublishEbookData`; markup in shared `_details_fields`/`_pricing_fields` partials;
+`UpdateEbook` via shared `EbookPricingFactory`. Files/cover: the shared `_uploads`
+partial + context-aware staging endpoints (`ctx` = eBook id → a per-eBook edit session,
+owner-checked); on save `ReconcileEbookMedia` deletes dropped files, commits newly-staged
+ones, and swaps the cover (a cancelled edit leaves the eBook untouched). CSRF + owner-scoped.
+
 | Element | Current stub | Backend needed |
 |---|---|---|
-| **Menu: Wystawione** | `href="#"` | page listing the author's eBooks (the old list UI — cover, status, price, edit) |
 | **Menu: Zakupione** | `href="#"` | buyer's purchased eBooks (needs the commerce context) |
 | **Menu: Ustawienia** | `href="#"` | account settings (profile, password, preferences) |
-| **"Sprzedaż" stat** | "Wkrótce" / "—" | orders/earnings from the commerce context |
-| **Shortcuts** (Wystawione / Zakupione / Odkrywaj / Ustawienia) | `href="#"` | same targets as the menu items above / public catalog |
+| **"Sprzedaż" stat** (Pulpit) | "Wkrótce" / "—" | orders/earnings from the commerce context |
+| **Shortcuts** (Zakupione / Odkrywaj / Ustawienia) | `href="#"` | commerce context / public catalog / settings |
 
 ## Homepage — Hero (`templates/components/Home/Hero.html.twig`)
 

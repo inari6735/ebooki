@@ -10,10 +10,7 @@ use App\Ebook\Domain\CategoryRepository;
 use App\Ebook\Domain\EbookFileRole;
 use App\Ebook\Domain\EbookRepository;
 use App\Ebook\Domain\MediaRepository;
-use App\Ebook\Domain\Pricing\Pricing;
 use App\Ebook\Presentation\PublishEbook\PublishEbookData;
-use App\Shared\Domain\Money\Currency;
-use App\Shared\Domain\Money\Money;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\Uid\Uuid;
 
@@ -30,6 +27,7 @@ final readonly class PublishEbookFromWizard
         private MediaRepository $media,
         private CategoryRepository $categories,
         private EbookUploadStaging $staging,
+        private EbookPricingFactory $pricing,
         private SluggerInterface $slugger,
     ) {
     }
@@ -45,7 +43,7 @@ final readonly class PublishEbookFromWizard
             $this->uniqueSlug((string) $data->title),
             (string) $data->author,
             $data->language ?? 'pl',
-            $this->pricing($data),
+            $this->pricing->fromData($data),
         );
         $ebook->describe($data->shortDescription, $data->description);
         $ebook->setAttributes(...array_map(
@@ -89,32 +87,6 @@ final readonly class PublishEbookFromWizard
         $this->ebooks->save($ebook);
 
         return $ebook;
-    }
-
-    private function pricing(PublishEbookData $data): Pricing
-    {
-        if ($data->isFree) {
-            return Pricing::free(Currency::PLN);
-        }
-        if ($data->payWhatYouWant) {
-            return Pricing::payWhatYouWant(
-                Currency::PLN,
-                null !== $data->price ? $this->money($data->price) : null,
-            );
-        }
-
-        $price = $this->money($data->price ?? 0.0);
-        // Only treat the promo as active when it is a genuine discount.
-        $promo = (null !== $data->promoPrice && $data->promoPrice > 0 && $data->promoPrice < ($data->price ?? 0.0))
-            ? $this->money($data->promoPrice)
-            : null;
-
-        return Pricing::fixed($price, $promo);
-    }
-
-    private function money(float $major): Money
-    {
-        return Money::of((int) round($major * 100), Currency::PLN);
     }
 
     private function uniqueSlug(string $title): string

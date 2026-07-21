@@ -1,0 +1,46 @@
+{% extends 'dashboard/layout.html.twig' %}
+
+{% block title %}Edytuj: {{ ebook.title }} — Bookly{% endblock %}
+
+{% block panel_content %}
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="min-w-0">
+            <a href="{{ path('app_dashboard_listed') }}" class="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 transition-colors hover:text-accent-600">
+                <twig:Icon name="arrow-left" class="h-4 w-4" /> Wystawione
+            </a>
+            <h1 class="mt-2 truncate text-2xl font-bold tracking-tight text-zinc-900">Edytuj eBook</h1>
+            <p class="mt-1 truncate text-sm text-zinc-500">{{ ebook.title }}</p>
+        </div>
+    </div>
+
+    {{ form_start(form, { attr: { id: 'edit-form', novalidate: 'novalidate' } }) }}
+    <div class="mt-6 space-y-6">
+        {# Details — identical fields/rules to the wizard's step 2 #}
+        <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-zinc-100 lg:p-8">
+            <h2 class="text-lg font-bold text-zinc-900">Szczegóły</h2>
+            {% include 'ebook/publish/_details_fields.html.twig' %}
+        </div>
+
+        {# Pricing — identical fields/rules to the wizard's step 3 #}
+        <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-zinc-100 lg:p-8" data-controller="price-calc">
+            <h2 class="text-lg font-bold text-zinc-900">Cena i sprzedaż</h2>
+            {% include 'ebook/publish/_pricing_fields.html.twig' %}
+        </div>
+
+        {# Files & cover — same uploader as the wizard (add/remove/replace), scoped to
+           this eBook's edit workspace via ctx. #}
+        <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-zinc-100 lg:p-8">
+            <h2 class="text-lg font-bold text-zinc-900">Pliki i okładka</h2>
+            <p class="mt-1 text-sm text-zinc-500">Dodawaj lub usuwaj pliki i podmień okładkę. Zmiany zapiszą się razem z formularzem.</p>
+            {% include 'ebook/publish/_uploads.html.twig' with { data: media, formId: 'edit-form' } %}
+        </div>
+    </div>
+
+    <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <twig:Button href="{{ path('app_dashboard_listed') }}" variant="outline" size="lg">Anuluj</twig:Button>
+        <twig:Button type="submit" variant="primary" size="lg" form="edit-form">
+            <twig:Icon name="check" class="h-5 w-5" /> Zapisz zmiany
+        </twig:Button>
+    </div>
+    {{ form_end(form) }}
+{% endblock %}

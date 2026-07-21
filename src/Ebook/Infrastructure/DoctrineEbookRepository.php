@@ -32,6 +32,14 @@ final readonly class DoctrineEbookRepository implements EbookRepository
             ->findBy(['userId' => $ownerId], ['createdAt' => 'DESC']);
     }
 
+    public function remove(Ebook $ebook): void
+    {
+        // EbookFile rows cascade-remove through the aggregate; the referenced Media
+        // blobs are cleaned up separately (see DeleteEbook).
+        $this->entityManager->remove($ebook);
+        $this->entityManager->flush();
+    }
+
     public function slugExists(string $slug): bool
     {
         return null !== $this->entityManager->getRepository(Ebook::class)->findOneBy(['slug' => $slug]);

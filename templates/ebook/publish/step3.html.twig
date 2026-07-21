@@ -15,72 +15,7 @@
             <h2 class="text-xl font-bold text-zinc-900">Ustaw cenę i sposób sprzedaży</h2>
             <p class="mt-1 text-sm text-zinc-500">Sam decydujesz, ile zarobisz. To proste i przejrzyste.</p>
 
-            {% if form.vars.submitted and not form.vars.valid %}
-                <twig:Alert type="error" class="mt-4">Podaj poprawną cenę (lub wybierz „za darmo"/„zapłać ile chcesz"), aby przejść dalej.</twig:Alert>
-            {% endif %}
-
-            {# Client-side validation message (identical rules, instant feedback). #}
-            <p class="mt-4 hidden rounded-xl bg-error-50 px-4 py-3 text-sm font-medium text-error-700" data-price-calc-target="error"></p>
-
-            <div class="mt-5 grid gap-5 sm:grid-cols-2">
-                <div class="rounded-2xl border border-zinc-200 p-5{{ dimIfNoPrice }}" data-price-calc-target="dim">
-                    <label class="field-label" for="{{ form.price.vars.id }}">Cena eBooka (PLN)</label>
-                    <div class="flex items-baseline gap-2">
-                        {{ form_widget(form.price, { attr: {
-                            class: 'w-full border-0 p-0 text-4xl font-extrabold text-zinc-900 outline-none',
-                            step: '0.01', placeholder: '0,00',
-                            'data-price-calc-target': 'price', 'data-action': 'input->price-calc#update',
-                        } }) }}
-                        <span class="text-lg font-semibold text-zinc-400">zł</span>
-                    </div>
-                    {{ form_errors(form.price) }}
-                </div>
-                <div class="flex items-start gap-3 rounded-2xl bg-accent-50 p-5{{ dimIfNoPrice }}" data-price-calc-target="dim">
-                    <twig:Icon name="chart" class="mt-0.5 h-6 w-6 shrink-0 text-accent-600" />
-                    <div>
-                        <p class="font-semibold text-zinc-900">Twoje wynagrodzenie</p>
-                        <p class="mt-1 text-sm text-zinc-600">Otrzymujesz 90% ceny eBooka</p>
-                        <p class="text-xs text-zinc-400">Prowizja platformy: 10%</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-5 sm:max-w-xs{{ dimIfNoPrice }}" data-price-calc-target="dim">
-                <label class="field-label" for="{{ form.promoPrice.vars.id }}">Cena promocyjna <span class="font-normal text-zinc-400">(opcjonalnie)</span></label>
-                <div class="relative">
-                    {{ form_widget(form.promoPrice, { attr: { class: 'field-input pr-10', step: '0.01', placeholder: '0,00', 'data-price-calc-target': 'promo', 'data-action': 'input->price-calc#update' } }) }}
-                    <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm text-zinc-400">zł</span>
-                </div>
-                {{ form_errors(form.promoPrice) }}
-                <p class="mt-1 text-xs text-zinc-400">Zostaw puste, jeśli nie chcesz promocji.</p>
-            </div>
-
-            {# Free eBook + Pay what you want #}
-            <div class="mt-5 grid gap-4 sm:grid-cols-2">
-                <label class="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-zinc-200 p-4">
-                    <div>
-                        <p class="font-semibold text-zinc-900">Udostępnij eBook za darmo</p>
-                        <p class="text-xs text-zinc-500">Czytelnicy pobiorą go bezpłatnie — cena zostanie ukryta.</p>
-                    </div>
-                    <span class="relative inline-flex shrink-0 items-center">
-                        {{ form_widget(form.isFree, { attr: { class: 'peer sr-only', 'data-price-calc-target': 'free', 'data-action': 'change->price-calc#update' } }) }}
-                        <span class="h-6 w-11 rounded-full bg-zinc-300 transition-colors peer-checked:bg-accent-600"></span>
-                        <span class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5"></span>
-                    </span>
-                </label>
-                <label class="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-zinc-200 p-4">
-                    <div>
-                        <p class="font-semibold text-zinc-900">Zapłać ile chcesz</p>
-                        <p class="text-xs text-zinc-500">Pozwól czytelnikom przekazać dobrowolną wpłatę za eBooka.</p>
-                    </div>
-                    <span class="relative inline-flex shrink-0 items-center">
-                        {{ form_widget(form.payWhatYouWant, { attr: { class: 'peer sr-only', 'data-price-calc-target': 'pwyw', 'data-action': 'change->price-calc#update' } }) }}
-                        <span class="h-6 w-11 rounded-full bg-zinc-300 transition-colors peer-checked:bg-accent-600"></span>
-                        <span class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5"></span>
-                    </span>
-                </label>
-            </div>
-
+            {% include 'ebook/publish/_pricing_fields.html.twig' %}
         </div>
 
         {# Side panel #}

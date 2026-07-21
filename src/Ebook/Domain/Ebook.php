@@ -236,6 +236,44 @@ class Ebook
         $this->touch();
     }
 
+    /** Hide a published eBook from the store without deleting it. */
+    public function unpublish(): void
+    {
+        $this->status = EbookStatus::UNPUBLISHED;
+        $this->touch();
+    }
+
+    /** Edit the core identity fields. The slug is intentionally left unchanged (permalinks). */
+    public function updateDetails(string $title, string $authorName, string $language): void
+    {
+        $this->title = $title;
+        $this->authorName = $authorName;
+        $this->language = $language;
+        $this->touch();
+    }
+
+    public function removeFile(EbookFile $file): void
+    {
+        $this->files->removeElement($file);
+        $this->touch();
+    }
+
+    /** Guarantee exactly one primary FULL file after files were added/removed. */
+    public function ensurePrimaryFile(): void
+    {
+        $firstFull = null;
+        foreach ($this->files as $file) {
+            if (EbookFileRole::FULL !== $file->getRole()) {
+                continue;
+            }
+            if ($file->isPrimary()) {
+                return;
+            }
+            $firstFull ??= $file;
+        }
+        $firstFull?->markPrimary();
+    }
+
     #[ORM\PreUpdate]
     public function touch(): void
     {

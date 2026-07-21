@@ -14,10 +14,11 @@ export default class extends Controller {
     connect() {
         this.update();
 
-        // Guard "Dalej": block advancing (with a clear reason) on an invalid price
-        // — non-numeric input (e.g. "10e"), a price ≤ 0, or a promo above the base
-        // price. Mirrors the server-side pricing rules for instant feedback.
-        this.form = document.getElementById('wizard-form');
+        // Guard submit: block (with a clear reason) on an invalid price — non-numeric
+        // input (e.g. "10e"), a price ≤ 0, or a promo above the base price. Mirrors
+        // the server-side pricing rules for instant feedback. Works for the wizard
+        // and the edit form alike (the enclosing form, not a hard-coded id).
+        this.form = this.element.closest('form');
         if (this.form) {
             this.onSubmit = (event) => {
                 const message = this.priceError();

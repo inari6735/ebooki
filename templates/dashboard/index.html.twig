@@ -19,7 +19,7 @@
 
 {% set shortcuts = [
     { icon: 'cloud-upload', title: 'Wystaw eBook',     text: 'Dodaj nową publikację w kilka minut.',  href: path('app_publish_ebook') },
-    { icon: 'book',         title: 'Wystawione eBooki', text: 'Zarządzaj swoimi publikacjami.',        href: '#' },
+    { icon: 'book',         title: 'Wystawione eBooki', text: 'Zarządzaj swoimi publikacjami.',        href: path('app_dashboard_listed') },
     { icon: 'cart',         title: 'Zakupione',         text: 'Wróć do kupionych tytułów.',            href: '#' },
     { icon: 'search',       title: 'Odkrywaj ofertę',   text: 'Przeglądaj eBooki innych twórców.',     href: '#' },
     { icon: 'settings',     title: 'Ustawienia konta',  text: 'Dane, hasło i preferencje.',            href: '#' },
@@ -115,7 +115,7 @@
                             <a href="{{ path('app_ebook_show', { slug: e.slug }) }}" class="inline-flex items-center gap-1.5 rounded-ui border border-zinc-200 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50">
                                 <twig:Icon name="eye" class="h-4 w-4" /> Podgląd
                             </a>
-                            <a href="#" class="inline-flex items-center gap-1.5 rounded-ui border border-zinc-200 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50">
+                            <a href="{{ path('app_ebook_edit', { id: e.id }) }}" class="inline-flex items-center gap-1.5 rounded-ui border border-zinc-200 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50">
                                 <twig:Icon name="edit" class="h-4 w-4" /> Edytuj
                             </a>
                         </div>
