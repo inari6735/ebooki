@@ -6,7 +6,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
  * The homepage carries a "how easy it is to publish" section under the hero:
- * heading, the prepared infographic, and a CTA into the publish wizard.
+ * heading, the three native step cards, and a CTA into the publish wizard.
  */
 final class HomePublishFlowTest extends WebTestCase
 {
@@ -17,7 +17,8 @@ final class HomePublishFlowTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('body', 'Wystaw eBooka w 3 prostych krokach');
-        self::assertSelectorExists('img[src*="home-easy-flow"]');
+        self::assertSelectorTextContains('body', 'Wypełnij formularz');
+        self::assertSelectorTextContains('body', 'Opublikuj eBook');
         self::assertSelectorExists('a[href*="wystaw-ebook"]');
     }
 }

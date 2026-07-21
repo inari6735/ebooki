@@ -151,21 +151,27 @@ animation (honors reduced-motion). "Wystaw swój eBook" → real wizard (`app_pu
 
 ## Homepage — Publish-flow section (`templates/components/Home/PublishFlow.html.twig`)
 
-Under the hero: "Wystaw eBooka w 3 prostych krokach" — the prepared infographic
-(`assets/images/home-easy-flow.png`, static illustration) + a **real** CTA to the
-wizard (`app_publish_ebook`). Nothing pending; the image is decorative (the actual
-3-step flow it depicts is the live wizard).
+Under the hero: "Wystaw eBooka w 3 prostych krokach" — redesigned to **native step
+cards** (Wypełnij formularz → Opublikuj eBook → Gotowe; gradient icon chips, arrows,
+a soft "stacked cards" backdrop) + a **real** CTA to the wizard (`app_publish_ebook`).
+Nothing pending. (The old `home-easy-flow.png` infographic is no longer used — the actual
+3-step flow it depicts is the live wizard.)
 
 ## Global chrome — Header (`templates/components/Layout/Header.html.twig`)
 
-Nav trimmed to **Odkrywaj · Kategorie · Jak to działa?** (removed Strona główna, Bestsellery, Najnowsze, Promocje, Dla autorów).
+Redesigned 2026-07-21 to the new mock: light **accent-gradient bar**, nav items with
+icons (Odkrywaj active w/ gradient underline · Kategorie ▾ · Jak to działa?), a central
+**search field**, and (logged in) a **bell / cart / settings** icon cluster + avatar.
+Layout matches the design; colours use the site's accent/zinc tokens. The bottom curve
+from the mock is omitted (a curved sticky header overlaps page content).
 
 | Element | Current stub | Backend needed |
 |---|---|---|
-| **Nav: Odkrywaj** | `<a href="#">` | public catalog / discover page |
+| **Search field** (desktop bar + mobile panel) | `<a href="#">` styled as a search box | search page + query backend |
+| **Nav: Odkrywaj** | `<a href="#">`, statically shown active | public catalog / discover page |
 | **Nav: Kategorie (dropdown)** | hover/focus dropdown **lists the real DB categories** (`nav_categories()` Twig fn → `CategoryRepository::all()`); each category link is still `href="#"` | per-category catalog listing pages (the target of each link) |
 | **Nav: Jak to działa?** | `href="#"` | static/marketing page |
-| **Search icon** | `<a href="#">` | search page + query backend |
+| **Bell / Cart / Settings** (logged in) | icon buttons `href="#"` with static indicator dots | notifications, cart/checkout, account settings |
 | **Mobile menu** | works (Stimulus `disclosure`) — visual nav only | same targets as above |
 
 Real: logo → `app_home`; Zaloguj się → `app_login`, Załóż konto → `app_register`; when logged in, a **default avatar** (email initial) opens an account dropdown with **Wystaw eBook** (`app_publish_ebook`, works incl. anonymous) + logout — `disclosure` controller closes on outside-click/Escape; logout form functional + CSRF-protected. (No top-bar "Wystaw eBook" CTA — the link lives in the account/mobile menu.)

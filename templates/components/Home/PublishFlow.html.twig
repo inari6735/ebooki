@@ -1,21 +1,50 @@
-<section class="bg-white py-16 lg:py-24">
+{% set steps = [
+    { num: '1', icon: 'edit',         title: 'Wypełnij formularz', text: 'Dodaj plik i okładkę, wpisz tytuł oraz opis i ustaw cenę.' },
+    { num: '2', icon: 'cloud-upload', title: 'Opublikuj eBook',    text: 'Jedno kliknięcie i Twój eBook trafia prosto do sklepu.' },
+    { num: '3', icon: 'rocket',       title: 'Gotowe!',            text: 'Sprzedawaj, zarabiaj i śledź wyniki w swoim panelu.' },
+] %}
+
+<section class="relative bg-white py-16 lg:py-24">
     <div class="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-2xl text-center">
-            <span class="inline-flex items-center gap-2 rounded-full bg-accent-50 px-4 py-1.5 text-sm font-semibold text-accent-700">
+            <span class="inline-flex items-center gap-2 rounded-full bg-accent-50 px-4 py-1.5 text-sm font-semibold text-accent-700 ring-1 ring-accent-100">
                 <twig:Icon name="lightning" class="h-4 w-4" /> Proste jak nigdy
             </span>
-            <h2 class="mt-4 text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl">Wystaw eBooka w 3 prostych krokach</h2>
-            <p class="mt-3 text-lg text-zinc-500">Wypełnij formularz, kliknij „Opublikuj" i gotowe — Twój eBook trafia do sklepu w kilka minut.</p>
+            <h2 class="mt-4 text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl">
+                Wystaw eBooka w <span class="text-accent-600">3 prostych krokach</span>
+            </h2>
+            <p class="mt-3 text-lg text-zinc-500">Od pomysłu do sklepu w kilka minut — bez zbędnych formalności.</p>
         </div>
 
-        <div class="mx-auto mt-12 max-w-5xl overflow-hidden rounded-3xl ring-1 ring-zinc-100 shadow-sm">
-            <img src="{{ asset('images/home-easy-flow.png') }}"
-                 alt="Trzy kroki wystawienia eBooka: wypełnij formularz, opublikuj eBook, gotowe."
-                 class="w-full" width="1672" height="941" loading="lazy">
+        {# Steps, sitting on a soft stack of cards #}
+        <div class="relative mx-auto mt-14 max-w-6xl">
+            <div aria-hidden="true" class="pointer-events-none absolute inset-x-6 -bottom-4 top-8 rounded-[2.5rem] bg-accent-100/60"></div>
+            <div aria-hidden="true" class="pointer-events-none absolute inset-x-14 -bottom-8 top-12 rounded-[2.5rem] bg-accent-50"></div>
+
+            <div class="relative flex flex-col gap-5 sm:flex-row sm:items-stretch">
+                {% for step in steps %}
+                    <div class="relative flex-1 rounded-3xl bg-white p-7 shadow-lg shadow-zinc-900/5 ring-1 ring-zinc-100">
+                        <div class="flex items-center justify-between">
+                            <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-accent-500 to-accent-700 text-white shadow-md shadow-accent-600/25">
+                                <twig:Icon name="{{ step.icon }}" class="h-6 w-6" />
+                            </span>
+                            <span class="text-5xl font-extrabold leading-none text-accent-200">{{ step.num }}</span>
+                        </div>
+                        <h3 class="mt-5 text-lg font-bold text-zinc-900">{{ step.title }}</h3>
+                        <p class="mt-1.5 text-sm leading-relaxed text-zinc-500">{{ step.text }}</p>
+                    </div>
+
+                    {% if not loop.last %}
+                        <div class="hidden shrink-0 items-center justify-center sm:flex">
+                            <twig:Icon name="arrow-right" class="h-7 w-7 text-accent-500/50" />
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
         </div>
 
-        <div class="mt-10 text-center">
-            <twig:Button href="{{ path('app_publish_ebook') }}" variant="primary" size="lg">
+        <div class="mt-12 text-center">
+            <twig:Button href="{{ path('app_publish_ebook') }}" variant="primary" size="lg" class="btn-3d">
                 <twig:Icon name="cloud-upload" class="h-5 w-5" /> Wystaw swój eBook
             </twig:Button>
         </div>

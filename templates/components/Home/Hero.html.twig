@@ -4,14 +4,14 @@
     { icon: 'users',  title: 'Tysiące twórców',       text: 'Dołącz do naszej społeczności' },
 ] %}
 
-<section class="relative overflow-hidden bg-gradient-to-tl from-accent-200 via-accent-100 to-white">
+<section class="relative -mt-[76px] overflow-hidden bg-gradient-to-tl from-accent-200 via-accent-100 to-white">
     {# Background strongest at the bottom-right, fading out toward the top-left #}
     <div aria-hidden="true" class="pointer-events-none absolute -bottom-28 -right-28 h-[36rem] w-[36rem] rounded-full bg-accent-200/60 blur-3xl"></div>
     <div aria-hidden="true" class="pointer-events-none absolute bottom-4 right-1/4 h-80 w-80 rounded-full bg-accent-500/10 blur-3xl"></div>
     <div aria-hidden="true" class="pointer-events-none absolute -right-16 top-8 h-72 w-72 rounded-full bg-accent-100 blur-3xl"></div>
     <div aria-hidden="true" class="dot-grid pointer-events-none absolute right-8 top-24 hidden h-40 w-56 text-accent-200 opacity-60 lg:block"></div>
 
-    <div class="relative z-10 mx-auto max-w-[1600px] px-4 pb-28 pt-10 sm:px-6 sm:pb-32 lg:px-8 lg:pt-14">
+    <div class="relative z-10 mx-auto max-w-[1600px] px-4 pb-44 pt-24 sm:px-6 sm:pb-56 lg:px-8 lg:pt-28">
         <div class="grid items-center gap-10 lg:grid-cols-2 lg:gap-8">
             {# Left — copy #}
             <div>
@@ -61,6 +61,12 @@
                 {# Decorative shapes behind the laptop — varied sizes, a weaving curve,
                    accent + yellow accents #}
                 <div aria-hidden="true" class="pointer-events-none absolute inset-0">
+                    {# large translucent blobs — transparent fill, clearly visible outline #}
+                    <span class="absolute left-1/2 top-1/2 h-[26rem] w-[26rem] -translate-x-1/2 -translate-y-1/2 border-2 border-accent-500/35" style="border-radius: 42% 58% 62% 38% / 45% 42% 58% 55%"></span>
+                    <span class="absolute -left-16 top-2 h-80 w-80 border-2 border-accent-500/30" style="border-radius: 60% 40% 45% 55% / 55% 45% 60% 40%"></span>
+                    <span class="absolute -right-14 bottom-0 h-80 w-80 border-2 border-accent-500/30" style="border-radius: 45% 55% 58% 42% / 48% 52% 45% 55%"></span>
+                    <span class="absolute right-16 top-8 h-64 w-64 border-2 border-rating/50" style="border-radius: 55% 45% 42% 58% / 60% 40% 55% 45%"></span>
+
                     {# soft blobs (big → small) #}
                     <span class="absolute -right-6 -top-2 h-64 w-64 rotate-12 rounded-[42%] bg-accent-200/45 blur-md"></span>
                     <span class="absolute left-1/4 bottom-6 h-44 w-44 -rotate-6 rounded-[46%] bg-accent-100 blur-sm"></span>
@@ -125,11 +131,11 @@
         </div>
     </div>
 
-    {# Irregular sinusoidal bottom edge: a crest (bulge) on the left that falls
-       away toward the right, blending into the white section below #}
+    {# Custom wavy bottom edge (provided design). Flipped vertically so the white
+       sits at the bottom and blends into the white section below. #}
     <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 bottom-0 z-0">
-        <svg viewBox="0 0 1440 120" preserveAspectRatio="none" class="h-[70px] w-full sm:h-[120px]">
-            <path fill="#ffffff" d="M0,40 C150,4 300,6 440,52 S780,96 960,74 S1280,42 1440,92 L1440,120 L0,120 Z"></path>
+        <svg viewBox="0 0 1440 490" preserveAspectRatio="none" class="h-[100px] w-full -scale-y-100 sm:h-[190px]">
+            <path fill="#ffffff" d="M 0,500 L 0,187 C 80.03023016145656,145.21435932669186 160.06046032291312,103.42871865338371 230,108 C 299.9395396770869,112.57128134661629 359.7883888698041,163.499484713157 423,165 C 486.2116111301959,166.500515286843 552.7859841978701,118.5733424939883 622,107 C 691.2140158021299,95.4266575060117 763.0676743387153,120.20714531088973 820,159 C 876.9323256612847,197.79285468911027 918.9433184472691,250.59807626245274 997,233 C 1075.0566815527309,215.40192373754726 1189.159051872209,127.40054963929923 1269,108 C 1348.840948127791,88.59945036070077 1394.4204740638957,137.79972518035038 1440,187 L 1440,500 L 0,500 Z" transform="rotate(-180 720 250)"></path>
         </svg>
     </div>
 </section>

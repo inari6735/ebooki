@@ -1,20 +1,38 @@
 {% set categories = nav_categories() %}
+{% set nav = [
+    { label: 'Odkrywaj',       icon: 'globe', href: '#', active: true },
+    { label: 'Jak to działa?', icon: 'help',  href: '#' },
+] %}
 
-<header class="sticky top-0 z-40 border-b border-zinc-200 bg-white" style="view-transition-name: site-header" data-controller="disclosure">
-    <div class="mx-auto flex h-[72px] max-w-[1600px] items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
-        <a href="{{ path('app_home') }}" class="flex items-center gap-2.5">
+<header class="sticky top-0 z-40 bg-gradient-to-b from-accent-100/85 to-accent-50/60 backdrop-blur-md" style="view-transition-name: site-header" data-controller="disclosure">
+    {# Curved shapes flowing in from the top-left / top-right corners. Own clipped
+       layer so the corners round off without cutting the dropdowns below. #}
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0 overflow-hidden">
+        <span class="absolute -left-16 -top-12 h-36 w-56 rotate-[16deg] rounded-[46%] bg-accent-200/50"></span>
+        <span class="absolute -left-2 top-8 h-16 w-36 -rotate-6 rounded-[48%] bg-accent-100/70"></span>
+        <span class="absolute -right-16 -top-14 h-40 w-64 -rotate-[16deg] rounded-[46%] bg-accent-200/45"></span>
+        <span class="absolute right-10 top-5 h-14 w-28 rotate-6 rounded-[48%] bg-accent-100/70"></span>
+        <span class="dot-grid absolute right-44 top-3 hidden h-10 w-24 text-accent-200 lg:block"></span>
+    </div>
+
+    <div class="relative mx-auto flex h-[76px] max-w-[1600px] items-center gap-4 px-4 sm:px-6 lg:px-8">
+        <a href="{{ path('app_home') }}" class="flex shrink-0 items-center gap-2.5">
             <img src="{{ asset('images/logo.svg') }}" alt="" class="h-9 w-9">
             <span class="text-[26px] font-extrabold leading-none tracking-tight text-zinc-900">Bookly</span>
         </a>
 
-        <nav class="hidden items-center gap-9 lg:flex">
-            <a href="#" class="text-[15px] font-medium text-zinc-600 transition-colors hover:text-accent-600">Odkrywaj</a>
+        {# Primary nav — centred #}
+        <nav class="hidden flex-1 items-center justify-center gap-1 lg:flex">
+            <a href="#" class="relative inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-[15px] font-semibold text-accent-700">
+                <twig:Icon name="globe" class="h-5 w-5" /> Odkrywaj
+                <span class="absolute inset-x-3 -bottom-1 h-1 rounded-full bg-gradient-to-r from-accent-500 to-accent-700"></span>
+            </a>
 
-            {# Categories — reveal the available categories on hover (and on keyboard focus). #}
+            {# Categories — hover/focus dropdown driven by the DB #}
             <div class="group/cat relative">
-                <a href="#" class="inline-flex items-center gap-1 text-[15px] font-medium text-zinc-600 transition-colors hover:text-accent-600 group-hover/cat:text-accent-600 group-focus-within/cat:text-accent-600">
-                    Kategorie
-                    <twig:Icon name="chevron-down" class="h-4 w-4 text-zinc-400 transition-transform duration-200 group-hover/cat:rotate-180 group-hover/cat:text-accent-600 group-focus-within/cat:rotate-180" />
+                <a href="#" class="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-[15px] font-medium text-zinc-600 transition-colors hover:bg-white/60 hover:text-accent-700 group-hover/cat:bg-white/60 group-hover/cat:text-accent-700 group-focus-within/cat:text-accent-700">
+                    <twig:Icon name="book" class="h-5 w-5" /> Kategorie
+                    <twig:Icon name="chevron-down" class="h-4 w-4 text-zinc-400 transition-transform duration-200 group-hover/cat:rotate-180 group-hover/cat:text-accent-700 group-focus-within/cat:rotate-180" />
                 </a>
                 <div class="invisible absolute left-1/2 top-full z-50 -translate-x-1/2 pt-3 opacity-0 transition-all duration-150 group-hover/cat:visible group-hover/cat:opacity-100 group-focus-within/cat:visible group-focus-within/cat:opacity-100">
                     <div class="w-[34rem] rounded-2xl border border-zinc-100 bg-white p-3 shadow-xl shadow-zinc-900/5">
@@ -31,21 +49,42 @@
                 </div>
             </div>
 
-            <a href="#" class="text-[15px] font-medium text-zinc-600 transition-colors hover:text-accent-600">Jak to działa?</a>
+            <a href="#" class="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-[15px] font-medium text-zinc-600 transition-colors hover:bg-white/60 hover:text-accent-700">
+                <twig:Icon name="help" class="h-5 w-5" /> Jak to działa?
+            </a>
         </nav>
 
-        <div class="flex items-center gap-2 sm:gap-3">
-            <a href="#" class="flex h-11 w-11 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-accent-600" aria-label="Szukaj">
-                <twig:Icon name="search" class="h-[22px] w-[22px]" />
+        {# Right cluster: search + tools #}
+        <div class="ml-auto flex shrink-0 items-center gap-1.5 lg:gap-2">
+            {# Search (stub), capped width #}
+            <a href="#" class="hidden w-56 items-center gap-2.5 rounded-full bg-white/80 px-4 py-2.5 text-sm text-zinc-400 shadow-sm ring-1 ring-white/80 transition hover:bg-white lg:flex xl:w-72" aria-label="Szukaj">
+                <twig:Icon name="search" class="h-5 w-5 shrink-0" />
+                <span class="truncate">Szukaj autorów, tytułów, kategorii…</span>
+            </a>
+            <a href="#" class="flex h-10 w-10 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-white/70 hover:text-accent-700 lg:hidden" aria-label="Szukaj">
+                <twig:Icon name="search" class="h-5 w-5" />
             </a>
 
             {% if app.user %}
-                {# Logged-in: default avatar (email initial) with an account dropdown. #}
+                {# Account tools (bell / cart / settings are visual stubs) #}
+                <a href="#" class="relative hidden h-10 w-10 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-white/70 hover:text-accent-700 sm:flex" aria-label="Powiadomienia">
+                    <twig:Icon name="bell" class="h-5 w-5" />
+                    <span class="absolute right-2 top-2 h-2 w-2 rounded-full bg-error-600 ring-2 ring-accent-100"></span>
+                </a>
+                <a href="#" class="relative hidden h-10 w-10 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-white/70 hover:text-accent-700 sm:flex" aria-label="Koszyk">
+                    <twig:Icon name="cart" class="h-5 w-5" />
+                    <span class="absolute right-2 top-2 h-2 w-2 rounded-full bg-accent-600 ring-2 ring-accent-100"></span>
+                </a>
+                <a href="#" class="hidden h-10 w-10 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-white/70 hover:text-accent-700 sm:flex" aria-label="Ustawienia">
+                    <twig:Icon name="settings" class="h-5 w-5" />
+                </a>
+
+                {# Avatar + account dropdown #}
                 <div class="relative hidden sm:block" data-controller="disclosure">
                     <button type="button" data-action="disclosure#toggle" aria-label="Menu konta"
-                            class="flex items-center gap-1.5 rounded-full p-0.5 pr-1 transition hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2">
+                            class="relative flex items-center rounded-full p-0.5 transition hover:bg-white/70 focus:outline-none focus:ring-2 focus:ring-accent-600 focus:ring-offset-2 focus:ring-offset-accent-50">
                         <span class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-accent-500 to-accent-700 text-base font-bold uppercase text-white shadow-sm">{{ app.user.userIdentifier|first }}</span>
-                        <twig:Icon name="chevron-down" class="h-4 w-4 text-zinc-400" />
+                        <span class="absolute right-0 top-0 h-2.5 w-2.5 rounded-full bg-error-600 ring-2 ring-accent-100"></span>
                     </button>
 
                     <div data-disclosure-target="panel" class="absolute right-0 mt-2 hidden w-60 origin-top-right rounded-2xl border border-zinc-100 bg-white p-2 shadow-xl shadow-zinc-900/5">
@@ -72,41 +111,45 @@
                     </div>
                 </div>
             {% else %}
-                <a href="{{ path('app_login') }}" class="hidden items-center justify-center rounded-ui border border-zinc-200 bg-white px-5 py-2.5 text-[15px] font-semibold text-zinc-700 transition-colors hover:bg-zinc-50 sm:inline-flex">Zaloguj się</a>
-                <a href="{{ path('app_register') }}" class="hidden items-center justify-center rounded-ui bg-accent-600 px-5 py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-accent-700 sm:inline-flex">Załóż konto</a>
+                <a href="{{ path('app_login') }}" class="hidden items-center justify-center rounded-ui bg-white/70 px-5 py-2.5 text-[15px] font-semibold text-zinc-700 shadow-sm ring-1 ring-white/70 backdrop-blur transition-colors hover:bg-white sm:inline-flex">Zaloguj się</a>
+                <a href="{{ path('app_register') }}" class="hidden items-center justify-center rounded-ui bg-accent-600 px-5 py-2.5 text-[15px] font-semibold text-white shadow-md shadow-accent-600/25 transition-colors hover:bg-accent-700 sm:inline-flex">Załóż konto</a>
             {% endif %}
 
             <button type="button" data-action="disclosure#toggle" aria-label="Menu"
-                    class="flex h-11 w-11 items-center justify-center rounded-full text-zinc-600 hover:bg-zinc-100 lg:hidden">
+                    class="flex h-10 w-10 items-center justify-center rounded-full text-zinc-600 transition-colors hover:bg-white/70 lg:hidden">
                 <twig:Icon name="menu" class="h-6 w-6" />
             </button>
         </div>
     </div>
 
     {# Mobile panel #}
-    <div data-disclosure-target="panel" class="hidden border-t border-zinc-200 bg-white lg:hidden">
+    <div data-disclosure-target="panel" class="hidden border-t border-white/60 bg-accent-50/95 backdrop-blur lg:hidden">
         <nav class="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-4 sm:px-6">
-            <a href="#" class="rounded-ui px-3 py-2.5 text-[15px] font-medium text-zinc-700 hover:bg-zinc-50">Odkrywaj</a>
+            <a href="#" class="flex items-center gap-2.5 rounded-full bg-white px-4 py-2.5 text-sm text-zinc-400 shadow-sm ring-1 ring-white">
+                <twig:Icon name="search" class="h-5 w-5" /> Szukaj autorów, tytułów…
+            </a>
+
+            <a href="#" class="mt-2 flex items-center gap-2.5 rounded-ui px-3 py-2.5 text-[15px] font-semibold text-accent-700 hover:bg-white/60">
+                <twig:Icon name="globe" class="h-5 w-5" /> Odkrywaj
+            </a>
 
             <p class="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-wide text-zinc-400">Kategorie</p>
             {% if categories is empty %}
                 <p class="px-3 py-1 text-sm text-zinc-400">Wkrótce dostępne.</p>
             {% else %}
                 {% for c in categories %}
-                    <a href="#" class="rounded-ui px-3 py-2.5 text-[15px] font-medium text-zinc-700 hover:bg-zinc-50">{{ c.name }}</a>
+                    <a href="#" class="rounded-ui px-3 py-2.5 text-[15px] font-medium text-zinc-700 hover:bg-white/60">{{ c.name }}</a>
                 {% endfor %}
             {% endif %}
 
-            <a href="#" class="mt-1 rounded-ui px-3 py-2.5 text-[15px] font-medium text-zinc-700 hover:bg-zinc-50">Jak to działa?</a>
-            <a href="{{ path('app_publish_ebook') }}" class="rounded-ui px-3 py-2.5 text-[15px] font-semibold text-accent-600 hover:bg-accent-50">Wystaw eBook</a>
+            <a href="#" class="mt-1 flex items-center gap-2.5 rounded-ui px-3 py-2.5 text-[15px] font-medium text-zinc-700 hover:bg-white/60">
+                <twig:Icon name="help" class="h-5 w-5" /> Jak to działa?
+            </a>
 
-            <div class="mt-3 flex flex-col gap-2 border-t border-zinc-200 pt-4">
+            <div class="mt-3 flex flex-col gap-2 border-t border-white/60 pt-4">
                 {% if app.user %}
-                    <div class="flex items-center gap-3 px-1 pb-1">
-                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent-500 to-accent-700 text-base font-bold uppercase text-white">{{ app.user.userIdentifier|first }}</span>
-                        <p class="truncate text-sm font-medium text-zinc-700">{{ app.user.userIdentifier }}</p>
-                    </div>
-                    <a href="{{ path('app_dashboard') }}" class="rounded-ui px-3 py-2.5 text-[15px] font-medium text-zinc-700 hover:bg-zinc-50">Mój panel</a>
+                    <a href="{{ path('app_dashboard') }}" class="rounded-ui px-3 py-2.5 text-[15px] font-medium text-zinc-700 hover:bg-white/60">Mój panel</a>
+                    <a href="{{ path('app_publish_ebook') }}" class="rounded-ui px-3 py-2.5 text-[15px] font-semibold text-accent-700 hover:bg-white/60">Wystaw eBook</a>
                     <form method="post" action="{{ path('app_logout') }}">
                         <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('logout') }}">
                         <twig:Button type="submit" variant="outline" wide>Wyloguj</twig:Button>
