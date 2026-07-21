@@ -88,6 +88,7 @@ There is **no catalog backend**, so the controller renders one fixed sample eBoo
 | **Payment marks** (`PaymentMarks.html.twig`) | self-drawn VISA/Mastercard/blik/Apple Pay placeholders (no real logos) | swap for the actual accepted-provider marks once a payment provider is integrated |
 | **Cover image** | gradient placeholder (`Ebook:Cover`) — no cover store | serve the real uploaded cover |
 | **Breadcrumb category link** | `href="#"` | category listing page |
+| **Delivery section** (`Ebook:Detail:Delivery`) | native (Twig/Tailwind) illustration of buy → pay → email-download; the mini mockups (add-to-cart, payment methods, download email) are static | build the real checkout, payment and post-purchase email/download flow it depicts |
 
 ## Homepage — Hero (`templates/components/Home/Hero.html.twig`)
 
