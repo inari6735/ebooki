@@ -9,15 +9,18 @@
     {% set dimIfNoPrice = noPrice ? ' pointer-events-none opacity-50' : '' %}
     {% set effectiveText = data.isFree ? 'Za darmo' : (data.payWhatYouWant ? 'Dobrowolna wpłata' : (discounted ? promo : price)|number_format(2, ',', ' ') ~ ' zł') %}
     {% set effectiveColor = data.isFree ? 'text-success-600' : (data.payWhatYouWant ? 'text-accent-600' : 'text-zinc-900') %}
-    {{ form_start(form, { attr: { id: 'wizard-form' } }) }}
+    {{ form_start(form, { attr: { id: 'wizard-form', novalidate: 'novalidate' } }) }}
     <div class="grid gap-6 lg:grid-cols-3" data-controller="price-calc">
         <div class="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-zinc-100 lg:col-span-2">
             <h2 class="text-xl font-bold text-zinc-900">Ustaw cenę i sposób sprzedaży</h2>
             <p class="mt-1 text-sm text-zinc-500">Sam decydujesz, ile zarobisz. To proste i przejrzyste.</p>
 
             {% if form.vars.submitted and not form.vars.valid %}
-                <twig:Alert type="error" class="mt-4">Podaj cenę eBooka (lub wybierz „za darmo"/„zapłać ile chcesz"), aby przejść dalej.</twig:Alert>
+                <twig:Alert type="error" class="mt-4">Podaj poprawną cenę (lub wybierz „za darmo"/„zapłać ile chcesz"), aby przejść dalej.</twig:Alert>
             {% endif %}
+
+            {# Client-side validation message (identical rules, instant feedback). #}
+            <p class="mt-4 hidden rounded-xl bg-error-50 px-4 py-3 text-sm font-medium text-error-700" data-price-calc-target="error"></p>
 
             <div class="mt-5 grid gap-5 sm:grid-cols-2">
                 <div class="rounded-2xl border border-zinc-200 p-5{{ dimIfNoPrice }}" data-price-calc-target="dim">
@@ -48,6 +51,7 @@
                     {{ form_widget(form.promoPrice, { attr: { class: 'field-input pr-10', step: '0.01', placeholder: '0,00', 'data-price-calc-target': 'promo', 'data-action': 'input->price-calc#update' } }) }}
                     <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-sm text-zinc-400">zł</span>
                 </div>
+                {{ form_errors(form.promoPrice) }}
                 <p class="mt-1 text-xs text-zinc-400">Zostaw puste, jeśli nie chcesz promocji.</p>
             </div>
 

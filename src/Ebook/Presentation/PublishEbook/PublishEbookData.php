@@ -60,7 +60,12 @@ final class PublishEbookData
     )]
     public ?float $price = null;
 
-    #[Assert\PositiveOrZero(groups: ['pricing'])]
+    #[Assert\PositiveOrZero(message: 'Cena promocyjna nie może być ujemna.', groups: ['pricing'])]
+    #[Assert\When(
+        expression: 'this.promoPrice !== null and not this.isFree and not this.payWhatYouWant',
+        constraints: [new Assert\LessThanOrEqual(propertyPath: 'price', message: 'Cena promocyjna nie może być wyższa od ceny eBooka.')],
+        groups: ['pricing'],
+    )]
     public ?float $promoPrice = null;
 
     public bool $freeFragment = true;
