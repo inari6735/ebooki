@@ -15,6 +15,10 @@
             <h2 class="text-xl font-bold text-zinc-900">Ustaw cenę i sposób sprzedaży</h2>
             <p class="mt-1 text-sm text-zinc-500">Sam decydujesz, ile zarobisz. To proste i przejrzyste.</p>
 
+            {% if form.vars.submitted and not form.vars.valid %}
+                <twig:Alert type="error" class="mt-4">Podaj cenę eBooka (lub wybierz „za darmo"/„zapłać ile chcesz"), aby przejść dalej.</twig:Alert>
+            {% endif %}
+
             <div class="mt-5 grid gap-5 sm:grid-cols-2">
                 <div class="rounded-2xl border border-zinc-200 p-5{{ dimIfNoPrice }}" data-price-calc-target="dim">
                     <label class="field-label" for="{{ form.price.vars.id }}">Cena eBooka (PLN)</label>
@@ -109,7 +113,6 @@
     <twig:Button href="{{ path('app_publish_ebook', { step: 2 }) }}" variant="outline">
         <twig:Icon name="arrow-left" class="h-5 w-5" /> Wstecz
     </twig:Button>
-    <a href="{{ path('app_publish_ebook', { step: 3 }) }}?draft=1" class="inline-flex items-center justify-center rounded-ui border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50">Zapisz szkic</a>
     <twig:Button type="submit" variant="primary" size="lg" form="wizard-form">
         Dalej <twig:Icon name="arrow-right" class="h-5 w-5" />
     </twig:Button>

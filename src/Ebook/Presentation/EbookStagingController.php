@@ -3,7 +3,6 @@
 namespace App\Ebook\Presentation;
 
 use App\Ebook\Application\EbookUploadStaging;
-use App\Ebook\Domain\EbookFileFormat;
 use App\Ebook\Domain\MediaRepository;
 use App\Ebook\Domain\MediaVisibility;
 use App\Ebook\Presentation\PublishEbook\EbookUploadRules;
@@ -26,37 +25,121 @@ use Symfony\Component\Uid\Uuid;
  */
 final class EbookStagingController extends AbstractController
 {
+    /** Hard cap per chunk request (must exceed the client's 8 MB chunk + multipart overhead). */
+    private const int CHUNK_MAX_BYTES = 12 * 1024 * 1024;
+    /** Ceiling on a single upload's part count (200 MB / 8 MB ≈ 25; leave slack). */
+    private const int MAX_CHUNK_INDEX = 512;
+
     public function __construct(
         private readonly EbookUploadStaging $staging,
         private readonly MediaRepository $media,
     ) {
     }
 
-    #[Route('/wystaw-ebook/plik', name: 'app_ebook_stage_file', methods: ['POST'])]
-    public function stageFile(Request $request): JsonResponse
+    /**
+     * Begin a chunked eBook-file upload. The whole file is validated up-front from
+     * its declared name/size (cheap, early rejection) and a time-ordered upload id
+     * is minted; the browser then streams the bytes in small chunks so PHP never
+     * has to accept one huge request. The checksum-duplicate check can only run
+     * once the bytes are here, so it lives in {@see finalizeChunkedFile}.
+     */
+    #[Route('/wystaw-ebook/plik/init', name: 'app_ebook_chunk_init', methods: ['POST'])]
+    public function initChunkedFile(Request $request): JsonResponse
     {
         if (!$this->isCsrfTokenValid('ebook_upload', (string) $request->request->get('_token'))) {
             return $this->json(['error' => 'Nieprawidłowy token.'], Response::HTTP_FORBIDDEN);
         }
 
-        $file = $request->files->get('file');
-        if (!$file instanceof UploadedFile) {
-            return $this->json(['error' => 'Brak pliku.'], Response::HTTP_BAD_REQUEST);
-        }
-        if ($error = $this->validate($file, EbookUploadRules::FILE_FORMATS, EbookUploadRules::FILE_MAX_SIZE_MB)) {
+        $name = (string) $request->request->get('name');
+        $size = $request->request->getInt('size');
+
+        if ($error = $this->validateFileMeta($this->wizard($request), $name, $size)) {
             return $this->json(['error' => $error], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $media = $this->staging->stage($file, MediaVisibility::PRIVATE, $this->ownerId());
+        return $this->json(['uploadId' => Uuid::v7()->toRfc4122()], Response::HTTP_CREATED);
+    }
+
+    /** Receive one chunk of an in-progress upload (idempotent by index). */
+    #[Route('/wystaw-ebook/plik/chunk', name: 'app_ebook_chunk', methods: ['POST'])]
+    public function stageChunk(Request $request): JsonResponse
+    {
+        if (!$this->isCsrfTokenValid('ebook_upload', (string) $request->request->get('_token'))) {
+            return $this->json(['error' => 'Nieprawidłowy token.'], Response::HTTP_FORBIDDEN);
+        }
+
+        $uploadId = (string) $request->request->get('uploadId');
+        $index = $request->request->getInt('index');
+        $chunk = $request->files->get('chunk');
+
+        if (!Uuid::isValid($uploadId) || $index < 0 || $index > self::MAX_CHUNK_INDEX) {
+            return $this->json(['error' => 'Nieprawidłowe żądanie.'], Response::HTTP_BAD_REQUEST);
+        }
+        if (!$chunk instanceof UploadedFile || \UPLOAD_ERR_OK !== $chunk->getError()) {
+            return $this->json(['error' => 'Nie udało się wysłać fragmentu — spróbuj ponownie.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        if ($chunk->getSize() > self::CHUNK_MAX_BYTES) {
+            return $this->json(['error' => 'Fragment jest zbyt duży.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $this->staging->putChunk($uploadId, $index, $chunk);
+
+        return $this->json(null, Response::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * Assemble the uploaded chunks into a staged file. Re-validates everything
+     * authoritatively (format/count/duplicate-format up front, then completeness +
+     * size while assembling, then the checksum duplicate) — a failure never leaves
+     * a usable Media, and rejected/incomplete chunks are cleaned up.
+     */
+    #[Route('/wystaw-ebook/plik/finalize', name: 'app_ebook_chunk_finalize', methods: ['POST'])]
+    public function finalizeChunkedFile(Request $request): JsonResponse
+    {
+        if (!$this->isCsrfTokenValid('ebook_upload', (string) $request->request->get('_token'))) {
+            return $this->json(['error' => 'Nieprawidłowy token.'], Response::HTTP_FORBIDDEN);
+        }
+
+        $uploadId = (string) $request->request->get('uploadId');
+        $total = $request->request->getInt('total');
+        $name = (string) $request->request->get('name');
+        $size = $request->request->getInt('size');
+        $mime = (string) ($request->request->get('mime') ?: 'application/octet-stream');
+
+        if (!Uuid::isValid($uploadId) || $total < 1) {
+            return $this->json(['error' => 'Nieprawidłowe żądanie.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $data = $this->wizard($request);
+        if ($error = $this->validateFileMeta($data, $name, $size)) {
+            $this->staging->abortChunks($uploadId);
+
+            return $this->json(['error' => $error], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        try {
+            $media = $this->staging->assembleChunks($uploadId, $total, $name, $mime, $size, MediaVisibility::PRIVATE, $this->ownerId());
+        } catch (\RuntimeException $e) {
+            // Incomplete/mismatched upload: leave the parts for a retry or the GC.
+            return $this->json(['error' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        foreach ($data->files as $existing) {
+            if ($existing['checksum'] === $media->getChecksum()) {
+                $this->staging->discard($media);
+
+                return $this->json(['error' => 'Ten plik został już dodany.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+        }
 
         $ref = [
             'mediaId' => $media->getId()->toRfc4122(),
             'name' => $media->getOriginalName(),
             'size' => $this->humanSize($media->getSize()),
             'format' => $media->getExtension(),
+            'checksum' => $media->getChecksum(),
         ];
 
-        $data = $this->wizard($request);
         $data->files[] = $ref;
         $this->saveWizard($request, $data);
 
@@ -144,15 +227,53 @@ final class EbookStagingController extends AbstractController
         }, Response::HTTP_OK, ['Content-Type' => $media->getMimeType()]);
     }
 
+    /**
+     * Validate an eBook file from its declared name + byte size alone (format,
+     * per-file size cap, count, one-file-per-format) — everything checkable before
+     * the bytes arrive. Shared by chunk init (early rejection) and finalize
+     * (authoritative). Returns a Polish error message, or null when acceptable.
+     */
+    private function validateFileMeta(PublishEbookData $data, string $name, int $size): ?string
+    {
+        $ext = strtolower(pathinfo($name, \PATHINFO_EXTENSION));
+        if ('' === $name || !\in_array($ext, EbookUploadRules::FILE_FORMATS, true)) {
+            return sprintf('Nieobsługiwany format „.%s". Dozwolone: %s.', $ext, EbookUploadRules::label(EbookUploadRules::FILE_FORMATS));
+        }
+        if ($size < 1) {
+            return 'Nie udało się odczytać pliku — spróbuj ponownie.';
+        }
+        if ($size > EbookUploadRules::FILE_MAX_SIZE_MB * 1024 * 1024) {
+            return sprintf('Plik „%s" jest za duży (maks. %d MB).', $name, EbookUploadRules::FILE_MAX_SIZE_MB);
+        }
+        if (\count($data->files) >= EbookUploadRules::fileMaxCount()) {
+            return sprintf('Możesz dodać maksymalnie %d plików.', EbookUploadRules::fileMaxCount());
+        }
+        foreach ($data->files as $existing) {
+            if ($existing['format'] === $ext) {
+                return sprintf('Plik w formacie %s został już dodany — każdy format można dodać tylko raz.', strtoupper($ext));
+            }
+        }
+
+        return null;
+    }
+
     /** @param list<string> $formats */
     private function validate(UploadedFile $file, array $formats, int $maxMb): ?string
     {
+        // A failed upload (e.g. exceeded PHP's upload_max_filesize) has no path —
+        // report it clearly instead of blowing up further down.
+        if (\UPLOAD_ERR_OK !== $file->getError()) {
+            return \in_array($file->getError(), [\UPLOAD_ERR_INI_SIZE, \UPLOAD_ERR_FORM_SIZE], true)
+                ? sprintf('Plik jest za duży (maks. %d MB).', $maxMb)
+                : 'Nie udało się wgrać pliku — spróbuj ponownie.';
+        }
+
         $ext = strtolower($file->getClientOriginalExtension());
         if (!\in_array($ext, $formats, true)) {
-            return 'Obsługiwane formaty: '.EbookUploadRules::label($formats).'.';
+            return sprintf('Nieobsługiwany format „.%s". Dozwolone: %s.', $ext, EbookUploadRules::label($formats));
         }
         if ($file->getSize() > $maxMb * 1024 * 1024) {
-            return sprintf('Plik jest za duży (maks. %d MB).', $maxMb);
+            return sprintf('Plik „%s" jest za duży (maks. %d MB).', $file->getClientOriginalName(), $maxMb);
         }
 
         return null;

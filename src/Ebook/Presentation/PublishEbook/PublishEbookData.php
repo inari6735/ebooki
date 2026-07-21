@@ -12,7 +12,7 @@ final class PublishEbookData
 {
     // Step 1 — files are uploaded to a staging area as they are added; here we keep
     // only lightweight references (media ids). They are committed at step 4.
-    /** @var list<array{mediaId: string, name: string, size: string, format: string}> */
+    /** @var list<array{mediaId: string, name: string, size: string, format: string, checksum: string}> */
     public array $files = [];
 
     public ?string $coverMediaId = null;
@@ -24,25 +24,26 @@ final class PublishEbookData
     }
 
     // Step 2 — details
-    #[Assert\NotBlank(groups: ['details'])]
-    #[Assert\Length(max: 200, groups: ['details'])]
+    #[Assert\NotBlank(message: 'To pole jest wymagane.', groups: ['details'])]
+    #[Assert\Length(max: 200, maxMessage: 'Tytuł może mieć maksymalnie {{ limit }} znaków.', groups: ['details'])]
     public ?string $title = null;
 
-    #[Assert\NotBlank(groups: ['details'])]
-    #[Assert\Length(max: 100, groups: ['details'])]
+    #[Assert\NotBlank(message: 'To pole jest wymagane.', groups: ['details'])]
+    #[Assert\Length(max: 80, maxMessage: 'Autor może mieć maksymalnie {{ limit }} znaków.', groups: ['details'])]
     public ?string $author = null;
 
-    #[Assert\NotBlank(groups: ['details'])]
+    #[Assert\NotBlank(message: 'To pole jest wymagane.', groups: ['details'])]
     public ?string $category = null;
 
-    #[Assert\NotBlank(groups: ['details'])]
-    public string $language = 'pl';
+    #[Assert\NotBlank(message: 'To pole jest wymagane.', groups: ['details'])]
+    public ?string $language = 'pl';
 
-    #[Assert\Length(max: 150, groups: ['details'])]
+    #[Assert\NotBlank(message: 'To pole jest wymagane.', groups: ['details'])]
+    #[Assert\Length(max: 400, maxMessage: 'Krótki opis może mieć maksymalnie {{ limit }} znaków.', groups: ['details'])]
     public ?string $shortDescription = null;
 
-    #[Assert\NotBlank(groups: ['details'])]
-    #[Assert\Length(max: 2000, groups: ['details'])]
+    #[Assert\NotBlank(message: 'To pole jest wymagane.', groups: ['details'])]
+    #[Assert\Length(max: 10000, maxMessage: 'Opis może mieć maksymalnie {{ limit }} znaków.', groups: ['details'])]
     public ?string $description = null;
 
     /** @var list<array{key: string, value: string}> extra key:value rows shown as a table on the detail page */
@@ -54,7 +55,7 @@ final class PublishEbookData
 
     #[Assert\When(
         expression: 'not this.isFree and not this.payWhatYouWant',
-        constraints: [new Assert\NotBlank(), new Assert\Positive()],
+        constraints: [new Assert\NotBlank(message: 'Podaj cenę eBooka.'), new Assert\Positive(message: 'Cena musi być większa od zera.')],
         groups: ['pricing'],
     )]
     public ?float $price = null;

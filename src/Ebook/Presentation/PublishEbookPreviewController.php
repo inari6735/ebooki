@@ -2,10 +2,12 @@
 
 namespace App\Ebook\Presentation;
 
+use App\Ebook\Domain\CategoryRepository;
 use App\Ebook\Presentation\PublishEbook\PublishEbookData;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Intl\Languages;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -16,21 +18,10 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 final class PublishEbookPreviewController extends AbstractController
 {
-    // Mirror of the DetailsStepType choices — kept here so the slug the wizard
-    // stores renders as a human label. Centralise once the catalog backend lands.
-    private const array CATEGORY_LABELS = [
-        'rozwoj-osobisty' => 'Rozwój osobisty',
-        'biznes' => 'Biznes',
-        'marketing' => 'Marketing',
-        'fantastyka' => 'Fantastyka',
-        'literatura' => 'Literatura',
-    ];
-
-    private const array LANGUAGE_LABELS = [
-        'pl' => 'Polski',
-        'en' => 'Angielski',
-        'de' => 'Niemiecki',
-    ];
+    public function __construct(
+        private readonly CategoryRepository $categories,
+    ) {
+    }
 
     #[Route('/wystaw-ebook/podglad', name: 'app_publish_ebook_preview', methods: ['GET'])]
     public function __invoke(Request $request): Response
@@ -47,9 +38,9 @@ final class PublishEbookPreviewController extends AbstractController
             'slug' => 'podglad',
             'title' => $data->title ?: 'Tytuł eBooka',
             'author' => $data->author ?: 'Autor',
-            'category' => self::CATEGORY_LABELS[$data->category] ?? ($data->category ?: 'Kategoria'),
+            'category' => $this->categoryName($data->category),
             'categorySlug' => $data->category,
-            'language' => self::LANGUAGE_LABELS[$data->language] ?? $data->language,
+            'language' => Languages::exists($data->language) ? Languages::getName($data->language) : $data->language,
             'cover' => null !== $data->coverMediaId
                 ? $this->generateUrl('app_ebook_staged_preview', ['mediaId' => $data->coverMediaId])
                 : null,
@@ -65,5 +56,14 @@ final class PublishEbookPreviewController extends AbstractController
         ];
 
         return $this->render('ebook/show.html.twig', ['ebook' => $ebook]);
+    }
+
+    private function categoryName(?string $slug): string
+    {
+        if (null === $slug) {
+            return 'Kategoria';
+        }
+
+        return $this->categories->findBySlug($slug)?->getName() ?? $slug;
     }
 }

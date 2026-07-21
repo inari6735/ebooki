@@ -56,8 +56,8 @@ class Ebook
     #[ORM\Column(name: 'author_name', length: 100)]
     private string $authorName;
 
-    #[ORM\Column(length: 8, enumType: Language::class)]
-    private Language $language;
+    #[ORM\Column(length: 8)]
+    private string $language;
 
     #[ORM\Column(name: 'short_description', length: 150, nullable: true)]
     private ?string $shortDescription = null;
@@ -102,7 +102,7 @@ class Ebook
         string $title,
         string $slug,
         string $authorName,
-        Language $language,
+        string $language,
         Pricing $pricing,
     ) {
         $this->id = $id;
@@ -269,7 +269,7 @@ class Ebook
         return $this->authorName;
     }
 
-    public function getLanguage(): Language
+    public function getLanguage(): string
     {
         return $this->language;
     }

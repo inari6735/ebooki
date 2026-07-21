@@ -70,14 +70,6 @@ final class PublishEbookController extends AbstractController
             return $this->render('ebook/publish/step4.html.twig', ['data' => $data, 'step' => $step]);
         }
 
-        // "Zapisz szkic" on steps 1–3 — save progress in the session and stay.
-        if ($request->query->getBoolean('draft')) {
-            $session->set(self::SESSION_KEY, $data);
-            $this->addFlash('success', 'Szkic został zapisany.');
-
-            return $this->redirectToRoute('app_publish_ebook', ['step' => $step]);
-        }
-
         // Step 1 — files are handled by the async uploader; "Dalej" just gates on
         // at least one staged file before advancing.
         if (1 === $step) {

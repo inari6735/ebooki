@@ -6,9 +6,9 @@ use App\Ebook\Domain\Attribute;
 use App\Ebook\Domain\Ebook;
 use App\Ebook\Domain\EbookFile;
 use App\Ebook\Domain\EbookFileFormat;
+use App\Ebook\Domain\CategoryRepository;
 use App\Ebook\Domain\EbookFileRole;
 use App\Ebook\Domain\EbookRepository;
-use App\Ebook\Domain\Language;
 use App\Ebook\Domain\MediaRepository;
 use App\Ebook\Domain\Pricing\Pricing;
 use App\Ebook\Presentation\PublishEbook\PublishEbookData;
@@ -28,6 +28,7 @@ final readonly class PublishEbookFromWizard
     public function __construct(
         private EbookRepository $ebooks,
         private MediaRepository $media,
+        private CategoryRepository $categories,
         private EbookUploadStaging $staging,
         private SluggerInterface $slugger,
     ) {
@@ -43,7 +44,7 @@ final readonly class PublishEbookFromWizard
             (string) $data->title,
             $this->uniqueSlug((string) $data->title),
             (string) $data->author,
-            Language::from($data->language),
+            $data->language ?? 'pl',
             $this->pricing($data),
         );
         $ebook->describe($data->shortDescription, $data->description);
@@ -51,6 +52,10 @@ final readonly class PublishEbookFromWizard
             static fn (array $row): Attribute => new Attribute($row['key'], $row['value']),
             $data->details,
         ));
+
+        if (null !== $data->category) {
+            $ebook->assignCategory($this->categories->findBySlug($data->category));
+        }
 
         $destination = 'ebooks/'.$id->toRfc4122();
 

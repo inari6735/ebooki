@@ -2,13 +2,13 @@
 
 namespace App\Tests\Ebook\Presentation;
 
+use App\Ebook\Domain\Category;
 use App\Ebook\Domain\Ebook;
 use App\Shared\Application\Bus\CommandBus;
 use App\User\Application\Command\RegisterUser;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -18,6 +18,8 @@ use Symfony\Component\Uid\Uuid;
  */
 final class AnonymousPublishFlowTest extends WebTestCase
 {
+    use StagesEbookFileTrait;
+
     public function testAnonymousFillsThenSignsInAndTheEbookIsPublished(): void
     {
         $client = self::createClient();
@@ -33,7 +35,7 @@ final class AnonymousPublishFlowTest extends WebTestCase
 
         // 2. Anonymous stages a file.
         $token = $crawler->filter('[data-staged-upload-token-value]')->first()->attr('data-staged-upload-token-value');
-        $client->request('POST', 'https://localhost/wystaw-ebook/plik', ['_token' => $token], ['file' => $this->pdf()]);
+        $this->stageEbookFile($client, $token, 'book.pdf', "%PDF-1.4 test\n");
         self::assertResponseStatusCodeSame(201);
 
         // Minimal details/pricing so the commit can build a valid eBook.
@@ -57,6 +59,8 @@ final class AnonymousPublishFlowTest extends WebTestCase
 
     private function fillSession(): void
     {
+        self::getContainer()->get('doctrine.orm.entity_manager')->persist(new Category(Uuid::v7(), 'Rozwój osobisty', 'rozwoj-osobisty'));
+        self::getContainer()->get('doctrine.orm.entity_manager')->flush();
         $client = self::getClient();
         $client->request('POST', 'https://localhost/wystaw-ebook/2', [
             'ebook_details' => [
@@ -72,14 +76,6 @@ final class AnonymousPublishFlowTest extends WebTestCase
         $client->request('POST', 'https://localhost/wystaw-ebook/3', [
             'ebook_pricing' => ['price' => '40', '_token' => 'x'],
         ]);
-    }
-
-    private function pdf(): UploadedFile
-    {
-        $path = tempnam(sys_get_temp_dir(), 'ebk');
-        file_put_contents($path, "%PDF-1.4 test\n");
-
-        return new UploadedFile($path, 'book.pdf', 'application/pdf', null, true);
     }
 
     protected function tearDown(): void

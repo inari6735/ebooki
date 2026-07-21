@@ -42,7 +42,11 @@ final class PruneStagedMediaCommand extends Command
             ++$count;
         }
 
-        $io->success(sprintf('Pruned %d staged file(s).', $count));
+        // Chunk directories from uploads abandoned before finalisation have no
+        // Media row of their own, so prune them by their (time-ordered) upload id.
+        $chunks = $this->staging->pruneStaleChunks($before);
+
+        $io->success(sprintf('Pruned %d staged file(s) and %d abandoned chunk upload(s).', $count, $chunks));
 
         return Command::SUCCESS;
     }

@@ -73,12 +73,13 @@ Remaining follow-ups:
 
 | Element | Current state | Still needed |
 |---|---|---|
+| **PHP upload limits** | eBook files upload in **8 MB chunks** (`init → chunk → finalize`), so no request is large: `php.ini` (dev) + `public/.user.ini` (FPM/prod) set `upload_max_filesize`/`post_max_size` to just **12 MB** | — (done); a request larger than 12 MB (i.e. a broken client) is refused by PHP as intended |
 | **Storage provider** | local disk (`var/storage/ebooks`) via Flysystem | wire the S3 adapter for prod (config block already stubbed in `flysystem.yaml`) |
 | **Async processing** | `Media` marked `ready` at commit, no scan | virus/format scan + checksum + thumbnails before `ready`; `MediaStatus::FAILED` path |
 | **CSRF on wizard navigation** | staging endpoints are CSRF-checked (`ebook_upload`); the step-1 "Dalej" and step-4 finalize forms are plain POST | add stateless CSRF (`data-controller="csrf-protection"`) to those forms |
-| **Staging GC** | `ebook:prune-staged` command exists | schedule it (Messenger Scheduler / cron) |
-| **Category** | committed eBook has `category_id = null` (no taxonomy seeded) | seed `categories`, look up by slug at commit |
-| **Direct-to-storage upload** | bytes pass through the app on staging | optional: presigned PUT / multipart (Uppy/tus) for very large / resumable uploads |
+| **Staging GC** | `ebook:prune-staged` command deletes stale `pending` media **and** abandoned chunk directories (age from the UUIDv7 upload id) | schedule it (Messenger Scheduler / cron) |
+| **Category / language** | categories seeded (`CategoryFixtures`, `doctrine:fixtures:load --append`) and driven by the DB in the form; committed eBook gets its `category_id` by slug. Language uses Symfony `LanguageType` (full list, Polish names) → stored as a code | — (done); optional: sub-categories UI |
+| **Direct-to-storage upload** | chunked upload through the app (small requests, per-chunk retry, completeness-checked assembly) | optional prod upgrade: presigned PUT / S3 multipart (needs S3/MinIO) to keep bytes off the app entirely |
 | **Viewing a published eBook** | detail page still renders a fixed mock (below) | read the persisted `Ebook` by slug |
 | **"Zapłać ile chcesz" / donations** (step 3) | `payWhatYouWant` persisted on the eBook | voluntary-donation option on the detail page + payment handling |
 

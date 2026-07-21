@@ -14,6 +14,7 @@ use Symfony\Component\Uid\Uuid;
  *
  * A partial unique index (in the migration) enforces at most one primary file
  * per eBook: CREATE UNIQUE INDEX ... ON ebook_files (ebook_id) WHERE is_primary.
+ * At most one file per (role, format) — the same extension cannot be added twice.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'ebook_files')]

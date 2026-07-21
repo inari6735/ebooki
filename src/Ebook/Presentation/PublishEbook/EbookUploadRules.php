@@ -22,8 +22,14 @@ final class EbookUploadRules
 
     /** @var list<string> accepted cover image extensions */
     public const array COVER_FORMATS = ['jpg', 'jpeg', 'png'];
-    public const string COVER_MAX_SIZE = '10M';
-    public const int COVER_MAX_SIZE_MB = 10;
+    public const string COVER_MAX_SIZE = '5M';
+    public const int COVER_MAX_SIZE_MB = 5;
+
+    /** Max number of eBook files per eBook — one per supported format. */
+    public static function fileMaxCount(): int
+    {
+        return \count(self::FILE_FORMATS);
+    }
 
     /**
      * Human label, e.g. "PDF, EPUB, MOBI" / "JPG, PNG" (jpeg folded into jpg).
@@ -70,9 +76,12 @@ final class EbookUploadRules
         return [
             'fileFormats' => self::label(self::FILE_FORMATS),
             'fileAccept' => self::accept(self::FILE_FORMATS),
+            'fileExtensions' => implode(',', self::FILE_FORMATS),
             'fileMaxMb' => self::FILE_MAX_SIZE_MB,
+            'fileMaxCount' => self::fileMaxCount(),
             'coverFormats' => self::label(self::COVER_FORMATS),
             'coverAccept' => self::accept(self::COVER_FORMATS),
+            'coverExtensions' => implode(',', self::COVER_FORMATS),
             'coverMaxMb' => self::COVER_MAX_SIZE_MB,
         ];
     }

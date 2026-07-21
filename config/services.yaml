@@ -51,6 +51,9 @@ services:
     App\Ebook\Domain\EbookRepository:
         alias: App\Ebook\Infrastructure\DoctrineEbookRepository
 
+    App\Ebook\Domain\CategoryRepository:
+        alias: App\Ebook\Infrastructure\DoctrineCategoryRepository
+
     App\User\Infrastructure\Security\RefreshTokenRotator:
         public: true
 

@@ -124,6 +124,11 @@ class Media
         return $this->size;
     }
 
+    public function getChecksum(): ?string
+    {
+        return $this->checksum;
+    }
+
     public function getVisibility(): MediaVisibility
     {
         return $this->visibility;

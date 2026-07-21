@@ -19,9 +19,14 @@
             {# eBook files — multiple, staged on add #}
             <div class="mt-5 rounded-2xl border-2 border-dashed border-zinc-200 p-6 transition-colors"
                  data-controller="staged-upload"
-                 data-staged-upload-upload-url-value="{{ path('app_ebook_stage_file') }}"
+                 data-staged-upload-init-url-value="{{ path('app_ebook_chunk_init') }}"
+                 data-staged-upload-chunk-url-value="{{ path('app_ebook_chunk') }}"
+                 data-staged-upload-finalize-url-value="{{ path('app_ebook_chunk_finalize') }}"
                  data-staged-upload-remove-url-value="{{ removeUrl }}"
                  data-staged-upload-token-value="{{ uploadToken }}"
+                 data-staged-upload-max-size-mb-value="{{ rules.fileMaxMb }}"
+                 data-staged-upload-max-count-value="{{ rules.fileMaxCount }}"
+                 data-staged-upload-accept-value="{{ rules.fileExtensions }}"
                  data-action="dragover->staged-upload#dragover dragleave->staged-upload#dragleave drop->staged-upload#drop">
                 <input type="file" multiple class="hidden" accept="{{ rules.fileAccept }}"
                        data-staged-upload-target="input" data-action="staged-upload#change">
@@ -31,11 +36,12 @@
                     </span>
                     <p class="mt-3 font-semibold text-zinc-900">Przeciągnij i upuść pliki tutaj</p>
                     <p class="text-sm text-zinc-500">lub kliknij, aby wybrać z dysku</p>
-                    <p class="mt-2 text-xs text-zinc-400">Obsługiwane formaty: {{ rules.fileFormats }} · Maks. rozmiar: {{ rules.fileMaxMb }} MB</p>
+                    <p class="mt-2 text-xs text-zinc-400">Obsługiwane formaty: {{ rules.fileFormats }} · Maks. rozmiar: {{ rules.fileMaxMb }} MB · Do {{ rules.fileMaxCount }} plików, każdy format raz</p>
                 </div>
+                <p class="mt-3 text-sm text-error-600 empty:hidden" data-staged-upload-target="error"></p>
                 <div class="mt-4 space-y-2 {{ data.files is empty ? 'hidden' }}" data-staged-upload-target="list">
                     {% for f in data.files %}
-                        <div class="flex items-center gap-3 rounded-xl border border-zinc-100 bg-white p-3 shadow-sm" data-media-id="{{ f.mediaId }}">
+                        <div class="flex items-center gap-3 rounded-xl border border-zinc-100 bg-white p-3 shadow-sm" data-media-id="{{ f.mediaId }}" data-format="{{ f.format }}">
                             <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-accent-50 text-accent-600">
                                 <twig:Icon name="book" class="h-5 w-5" />
                             </span>
@@ -61,6 +67,8 @@
                  data-staged-upload-remove-url-value="{{ removeUrl }}"
                  data-staged-upload-token-value="{{ uploadToken }}"
                  data-staged-upload-cover-value="true"
+                 data-staged-upload-max-size-mb-value="{{ rules.coverMaxMb }}"
+                 data-staged-upload-accept-value="{{ rules.coverExtensions }}"
                  data-action="dragover->staged-upload#dragover dragleave->staged-upload#dragleave drop->staged-upload#drop">
                 <input type="file" class="hidden" accept="{{ rules.coverAccept }}"
                        data-staged-upload-target="input" data-action="staged-upload#change">
@@ -72,6 +80,7 @@
                     <p class="text-xs text-zinc-500">lub kliknij, aby wybrać plik</p>
                     <p class="mt-1 text-xs text-zinc-400">{{ rules.coverFormats }} · Maks. rozmiar: {{ rules.coverMaxMb }} MB</p>
                 </div>
+                <p class="mt-3 text-sm text-error-600 empty:hidden" data-staged-upload-target="error"></p>
                 <div class="mt-4 {{ data.coverMediaId is null ? 'hidden' }}" data-staged-upload-target="list">
                     {% if data.coverMediaId %}
                         <div class="flex items-center gap-3 rounded-xl border border-zinc-100 bg-white p-3 shadow-sm" data-media-id="{{ data.coverMediaId }}">
@@ -118,7 +127,6 @@
 {% endblock %}
 
 {% block flow_actions %}
-    <a href="{{ path('app_publish_ebook', { step: 1 }) }}?draft=1" class="inline-flex items-center justify-center rounded-ui border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50">Zapisz szkic</a>
     <twig:Button type="submit" variant="primary" size="lg" form="wizard-form">
         Dalej <twig:Icon name="arrow-right" class="h-5 w-5" />
     </twig:Button>

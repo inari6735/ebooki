@@ -2,6 +2,7 @@
 
 namespace App\Tests\Ebook\Presentation;
 
+use App\Ebook\Domain\Category;
 use App\Ebook\Domain\Ebook;
 use App\Shared\Application\Bus\CommandBus;
 use App\User\Application\Command\RegisterUser;
@@ -9,7 +10,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -19,6 +19,8 @@ use Symfony\Component\Uid\Uuid;
  */
 final class ModalAuthTest extends WebTestCase
 {
+    use StagesEbookFileTrait;
+
     public function testRegisterAndLoginOverAjaxThenPublish(): void
     {
         $client = self::createClient();
@@ -78,23 +80,17 @@ final class ModalAuthTest extends WebTestCase
 
     private function prepareWizard(KernelBrowser $client): void
     {
+        self::getContainer()->get('doctrine.orm.entity_manager')->persist(new Category(Uuid::v7(), 'Rozwój osobisty', 'rozwoj-osobisty'));
+        self::getContainer()->get('doctrine.orm.entity_manager')->flush();
         $crawler = $client->request('GET', 'https://localhost/wystaw-ebook/1');
         $token = $crawler->filter('[data-staged-upload-token-value]')->first()->attr('data-staged-upload-token-value');
 
-        $client->request('POST', 'https://localhost/wystaw-ebook/plik', ['_token' => $token], ['file' => $this->pdf()]);
+        $this->stageEbookFile($client, $token, 'book.pdf', "%PDF-1.4 test\n");
         $client->request('POST', 'https://localhost/wystaw-ebook/2', ['ebook_details' => [
             'title' => 'Test', 'author' => 'Jan', 'category' => 'rozwoj-osobisty', 'language' => 'pl',
             'shortDescription' => 'Krótki', 'description' => 'Opis.', '_token' => 'csrf-token',
         ]]);
         $client->request('POST', 'https://localhost/wystaw-ebook/3', ['ebook_pricing' => ['price' => '40', '_token' => 'x']]);
-    }
-
-    private function pdf(): UploadedFile
-    {
-        $path = tempnam(sys_get_temp_dir(), 'ebk');
-        file_put_contents($path, "%PDF-1.4 test\n");
-
-        return new UploadedFile($path, 'book.pdf', 'application/pdf', null, true);
     }
 
     protected function tearDown(): void

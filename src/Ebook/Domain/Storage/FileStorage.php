@@ -23,4 +23,9 @@ interface FileStorage
     public function fileExists(string $path): bool;
 
     public function fileSize(string $path): int;
+
+    public function deleteDirectory(string $path): void;
+
+    /** @return list<string> paths of the immediate sub-directories of $path */
+    public function directories(string $path): array;
 }

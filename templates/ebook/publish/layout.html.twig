@@ -20,6 +20,7 @@
 
         {# Body — the only scrollable region (min-h-0 lets it shrink below content) #}
         <main class="mx-auto w-full min-h-0 max-w-[1600px] flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">
+            <twig:Layout:Flashes />
             {% block flow_body %}{% endblock %}
         </main>
 

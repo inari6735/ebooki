@@ -2,21 +2,67 @@ import { Controller } from '@hotwired/stimulus';
 
 /*
  * Uploads files to the wizard's staging endpoints as they are added, with a live
- * progress bar, and lets the user remove them. The server keeps the references in
- * the session; here we only mirror them in the UI. Used for both the (multiple)
- * eBook files and the (single) cover — `cover` mode replaces the current item and
- * shows a thumbnail from the returned preview URL.
+ * progress bar and removal. Enforces the SAME rules as the server (size, allowed
+ * formats, max count, one file per format, no duplicate file) so the user gets
+ * instant, clear feedback; the server re-checks everything authoritatively.
+ *
+ * eBook files (which can be up to 200 MB) are uploaded in CHUNK_SIZE pieces so PHP
+ * never receives one huge request — init → chunk×N (sequential, each retried) →
+ * finalize, which reassembles the parts only if the transfer is complete. The
+ * cover (≤5 MB) still goes up in a single POST.
  */
+const CHUNK_SIZE = 8 * 1024 * 1024; // 8 MB — keeps post_max_size small (12 MB)
+const CHUNK_RETRIES = 3;
+
 export default class extends Controller {
-    static targets = ['input', 'list'];
-    static values = { uploadUrl: String, removeUrl: String, token: String, cover: Boolean };
+    static targets = ['input', 'list', 'error'];
+    static values = {
+        uploadUrl: String, // cover: single POST
+        initUrl: String, // file: begin chunked upload
+        chunkUrl: String, // file: one chunk
+        finalizeUrl: String, // file: assemble
+        removeUrl: String,
+        token: String,
+        cover: Boolean,
+        maxSizeMb: Number,
+        maxCount: Number,
+        accept: String, // comma-separated extensions
+    };
+
+    connect() {
+        // Guard the step-1 "Dalej" button: you may not advance while a file (or
+        // the cover) is still uploading — its session reference only exists once
+        // the upload has finalised, so leaving early would drop it. The backend
+        // enforces "at least one staged file" too; this is the instant, no-reload
+        // feedback in front of it.
+        this.form = document.getElementById('wizard-form');
+        if (this.form) {
+            this.onSubmit = (event) => this.guardSubmit(event);
+            this.form.addEventListener('submit', this.onSubmit);
+        }
+    }
+
+    disconnect() {
+        if (this.form) this.form.removeEventListener('submit', this.onSubmit);
+    }
+
+    // A list item without a data-media-id is still uploading (markDone stamps it).
+    guardSubmit(event) {
+        if (!this.listTarget.querySelector(':scope > *:not([data-media-id])')) return;
+        event.preventDefault();
+        this.showError(
+            this.coverValue
+                ? 'Poczekaj, aż okładka zakończy wysyłanie.'
+                : 'Poczekaj, aż pliki zakończą wysyłanie, zanim przejdziesz dalej.',
+        );
+    }
 
     open() {
         this.inputTarget.click();
     }
 
     change() {
-        Array.from(this.inputTarget.files || []).forEach((file) => this.upload(file));
+        Array.from(this.inputTarget.files || []).forEach((file) => this.add(file));
         this.inputTarget.value = '';
     }
 
@@ -32,12 +78,56 @@ export default class extends Controller {
     drop(event) {
         event.preventDefault();
         this.dragleave();
-        Array.from(event.dataTransfer.files || []).forEach((file) => this.upload(file));
+        Array.from(event.dataTransfer.files || []).forEach((file) => this.add(file));
     }
 
-    upload(file) {
-        if (this.coverValue) this.listTarget.replaceChildren();
-        const item = this.buildItem(file.name);
+    add(file) {
+        const error = this.validate(file);
+        if (error) {
+            this.showError(error);
+            return;
+        }
+        if (this.coverValue) {
+            this.uploadCover(file);
+        } else {
+            this.uploadChunked(file);
+        }
+    }
+
+    validate(file) {
+        if (this.maxSizeMbValue && file.size > this.maxSizeMbValue * 1024 * 1024) {
+            return `Plik „${file.name}" jest za duży (maks. ${this.maxSizeMbValue} MB).`;
+        }
+        if (!file.size) {
+            return 'Nie udało się odczytać pliku — spróbuj ponownie.';
+        }
+        if (this.coverValue) return null; // cover: size only; a new one replaces the old
+
+        const ext = (file.name.split('.').pop() || '').toLowerCase();
+        const allowed = (this.acceptValue || '').split(',').filter(Boolean);
+        if (allowed.length && !allowed.includes(ext)) {
+            return `Nieobsługiwany format „.${ext}". Dozwolone: ${allowed.join(', ').toUpperCase()}.`;
+        }
+
+        const items = Array.from(this.listTarget.children);
+        if (this.maxCountValue && items.length >= this.maxCountValue) {
+            return `Możesz dodać maksymalnie ${this.maxCountValue} plików.`;
+        }
+        if (items.some((el) => el.dataset.format === ext)) {
+            return `Plik w formacie ${ext.toUpperCase()} został już dodany — każdy format można dodać tylko raz.`;
+        }
+        if (items.some((el) => el.dataset.fileKey === `${file.name}:${file.size}`)) {
+            return 'Ten plik został już dodany.';
+        }
+        return null;
+    }
+
+    // ── Cover: single POST ─────────────────────────────────────────────────────
+
+    uploadCover(file) {
+        this.clearError();
+        this.listTarget.replaceChildren();
+        const item = this.buildItem(file);
         this.listTarget.appendChild(item);
         this.listTarget.classList.remove('hidden');
 
@@ -51,16 +141,106 @@ export default class extends Controller {
             if (event.lengthComputable) this.setProgress(item, Math.round((event.loaded / event.total) * 100));
         });
         xhr.addEventListener('load', () => {
-            let payload = {};
-            try { payload = JSON.parse(xhr.responseText); } catch (_) { /* ignore */ }
+            const payload = this.parse(xhr);
             if (xhr.status >= 200 && xhr.status < 300) {
                 this.markDone(item, payload);
             } else {
-                this.markError(item, payload.error || 'Nie udało się wgrać pliku.');
+                this.reject(item, payload.error || 'Nie udało się wgrać pliku.');
             }
         });
-        xhr.addEventListener('error', () => this.markError(item, 'Błąd sieci podczas wysyłania.'));
+        xhr.addEventListener('error', () => this.reject(item, 'Błąd sieci podczas wysyłania.'));
         xhr.send(body);
+    }
+
+    // ── eBook file: chunked upload ─────────────────────────────────────────────
+
+    async uploadChunked(file) {
+        this.clearError();
+        const item = this.buildItem(file);
+        this.listTarget.appendChild(item);
+        this.listTarget.classList.remove('hidden');
+
+        try {
+            const uploadId = await this.chunkInit(file);
+            const total = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
+
+            for (let index = 0; index < total; index++) {
+                const blob = file.slice(index * CHUNK_SIZE, Math.min(file.size, (index + 1) * CHUNK_SIZE));
+                await this.sendChunk(uploadId, index, blob, (loaded) => {
+                    this.setProgress(item, Math.round(((index * CHUNK_SIZE + loaded) / file.size) * 100));
+                });
+            }
+
+            const ref = await this.chunkFinalize(uploadId, total, file);
+            this.markDone(item, ref);
+        } catch (error) {
+            this.reject(item, error.message || 'Nie udało się wgrać pliku.');
+        }
+    }
+
+    async chunkInit(file) {
+        const body = new FormData();
+        body.append('name', file.name);
+        body.append('size', file.size);
+        body.append('_token', this.tokenValue);
+        const response = await fetch(this.initUrlValue, { method: 'POST', body });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || 'Nie udało się rozpocząć wysyłania.');
+        return payload.uploadId;
+    }
+
+    // Sends one chunk, retrying transient failures a few times before giving up.
+    sendChunk(uploadId, index, blob, onProgress, attempt = 1) {
+        return new Promise((resolve, reject) => {
+            const body = new FormData();
+            body.append('uploadId', uploadId);
+            body.append('index', index);
+            body.append('chunk', blob);
+            body.append('_token', this.tokenValue);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', this.chunkUrlValue);
+            xhr.upload.addEventListener('progress', (event) => {
+                if (event.lengthComputable) onProgress(event.loaded);
+            });
+            xhr.addEventListener('load', () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    onProgress(blob.size);
+                    resolve();
+                } else if (xhr.status >= 400 && xhr.status < 500) {
+                    // A client error (bad token, chunk too big) won't fix itself.
+                    reject(new Error(this.parse(xhr).error || 'Nie udało się wysłać fragmentu.'));
+                } else {
+                    this.retryChunk(uploadId, index, blob, onProgress, attempt, resolve, reject);
+                }
+            });
+            xhr.addEventListener('error', () => this.retryChunk(uploadId, index, blob, onProgress, attempt, resolve, reject));
+            xhr.send(body);
+        });
+    }
+
+    retryChunk(uploadId, index, blob, onProgress, attempt, resolve, reject) {
+        if (attempt >= CHUNK_RETRIES) {
+            reject(new Error('Przesyłanie przerwane — sprawdź połączenie i spróbuj ponownie.'));
+            return;
+        }
+        setTimeout(() => {
+            this.sendChunk(uploadId, index, blob, onProgress, attempt + 1).then(resolve, reject);
+        }, 500 * attempt);
+    }
+
+    async chunkFinalize(uploadId, total, file) {
+        const body = new FormData();
+        body.append('uploadId', uploadId);
+        body.append('total', total);
+        body.append('name', file.name);
+        body.append('size', file.size);
+        body.append('mime', file.type || 'application/octet-stream');
+        body.append('_token', this.tokenValue);
+        const response = await fetch(this.finalizeUrlValue, { method: 'POST', body });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || 'Nie udało się zapisać pliku.');
+        return payload;
     }
 
     remove(event) {
@@ -79,11 +259,15 @@ export default class extends Controller {
 
     // ── DOM ──────────────────────────────────────────────────────────────────
 
-    buildItem(name) {
+    buildItem(file) {
         const item = document.createElement('div');
         item.className = 'flex items-center gap-3 rounded-xl border border-zinc-100 bg-white p-3 shadow-sm';
+        if (!this.coverValue) {
+            item.dataset.format = (file.name.split('.').pop() || '').toLowerCase();
+            item.dataset.fileKey = `${file.name}:${file.size}`;
+        }
         item.innerHTML = `
-            <span data-thumb class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-accent-50 text-accent-600 overflow-hidden">
+            <span data-thumb class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-accent-50 text-accent-600">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-5 w-5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
             </span>
             <div class="min-w-0 flex-1">
@@ -96,13 +280,13 @@ export default class extends Controller {
             <button type="button" data-action="staged-upload#remove" class="hidden shrink-0 text-zinc-400 hover:text-error-600" aria-label="Usuń">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="h-5 w-5"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>`;
-        item.querySelector('[data-name]').textContent = name;
+        item.querySelector('[data-name]').textContent = file.name;
         return item;
     }
 
     setProgress(item, percent) {
         const bar = item.querySelector('[data-bar]');
-        if (bar) bar.style.width = `${percent}%`;
+        if (bar) bar.style.width = `${Math.min(100, percent)}%`;
     }
 
     markDone(item, payload) {
@@ -121,11 +305,27 @@ export default class extends Controller {
         }
     }
 
-    markError(item, message) {
-        item.querySelector('[data-bar-wrap]').classList.add('hidden');
-        const meta = item.querySelector('[data-meta]');
-        meta.textContent = message;
-        meta.classList.add('text-error-600');
-        item.querySelector('[data-action]').classList.remove('hidden');
+    // The server rejected the upload — it was never staged, so drop the row and
+    // surface the reason (a duplicate the client couldn't detect, etc.).
+    reject(item, message) {
+        item.remove();
+        if (!this.listTarget.children.length) this.listTarget.classList.add('hidden');
+        this.showError(message);
+    }
+
+    parse(xhr) {
+        try {
+            return JSON.parse(xhr.responseText);
+        } catch (_) {
+            return {};
+        }
+    }
+
+    showError(message) {
+        if (this.hasErrorTarget) this.errorTarget.textContent = message;
+    }
+
+    clearError() {
+        if (this.hasErrorTarget) this.errorTarget.textContent = '';
     }
 }

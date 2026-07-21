@@ -45,4 +45,18 @@ final readonly class FlysystemFileStorage implements FileStorage
     {
         return $this->ebookStorage->fileSize($path);
     }
+
+    public function deleteDirectory(string $path): void
+    {
+        $this->ebookStorage->deleteDirectory($path);
+    }
+
+    public function directories(string $path): array
+    {
+        return $this->ebookStorage
+            ->listContents($path, false)
+            ->filter(static fn ($item): bool => $item->isDir())
+            ->map(static fn ($item): string => $item->path())
+            ->toArray();
+    }
 }
