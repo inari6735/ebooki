@@ -50,7 +50,7 @@ final class PayUNotificationTest extends WebTestCase
         self::assertResponseIsSuccessful();
 
         $connection = self::getContainer()->get(Connection::class);
-        $row = $connection->fetchAssociative('SELECT provider, signature_valid, provider_order_id FROM p24_notifications WHERE session_id = ?', [$sessionId]);
+        $row = $connection->fetchAssociative('SELECT provider, signature_valid, provider_order_id FROM payment_notifications WHERE session_id = ?', [$sessionId]);
         self::assertNotFalse($row);
         self::assertSame('payu', $row['provider']);
         self::assertTrue((bool) $row['signature_valid']);
@@ -74,7 +74,7 @@ final class PayUNotificationTest extends WebTestCase
 
         self::assertResponseStatusCodeSame(400);
         $connection = self::getContainer()->get(Connection::class);
-        self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM p24_notifications WHERE session_id = ?', [$sessionId]));
+        self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM payment_notifications WHERE session_id = ?', [$sessionId]));
     }
 
     public function testPendingStatusIsAcknowledgedButNotProcessed(): void
@@ -86,7 +86,7 @@ final class PayUNotificationTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         $connection = self::getContainer()->get(Connection::class);
-        self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM p24_notifications WHERE session_id = ?', [$sessionId]));
+        self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM payment_notifications WHERE session_id = ?', [$sessionId]));
 
         /** @var InMemoryTransport $transport */
         $transport = self::getContainer()->get('messenger.transport.async');
@@ -104,7 +104,7 @@ final class PayUNotificationTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         $connection = self::getContainer()->get(Connection::class);
-        self::assertSame(1, (int) $connection->fetchOne('SELECT COUNT(*) FROM p24_notifications WHERE session_id = ?', [$sessionId]));
+        self::assertSame(1, (int) $connection->fetchOne('SELECT COUNT(*) FROM payment_notifications WHERE session_id = ?', [$sessionId]));
 
         // Transport is reset per request → reflects only the 2nd (duplicate) request.
         /** @var InMemoryTransport $transport */

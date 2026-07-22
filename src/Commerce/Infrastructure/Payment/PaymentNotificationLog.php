@@ -37,7 +37,7 @@ final readonly class PaymentNotificationLog
     ): bool {
         $affected = $this->connection->executeStatement(
             <<<'SQL'
-                INSERT INTO p24_notifications
+                INSERT INTO payment_notifications
                     (id, provider, session_id, provider_order_id, amount, currency,
                      method_id, signature_valid, status, raw_payload, received_at)
                 VALUES (:id, :provider, :session_id, :provider_order_id, :amount, :currency,

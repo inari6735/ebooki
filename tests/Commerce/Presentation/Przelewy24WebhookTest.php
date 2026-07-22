@@ -52,7 +52,7 @@ final class Przelewy24WebhookTest extends WebTestCase
         self::assertResponseIsSuccessful();
 
         $connection = self::getContainer()->get(Connection::class);
-        $row = $connection->fetchAssociative('SELECT signature_valid, provider_order_id FROM p24_notifications WHERE session_id = ?', [$sessionId]);
+        $row = $connection->fetchAssociative('SELECT signature_valid, provider_order_id FROM payment_notifications WHERE session_id = ?', [$sessionId]);
         self::assertNotFalse($row);
         self::assertTrue((bool) $row['signature_valid']);
         self::assertSame('98765', $row['provider_order_id']);
@@ -77,7 +77,7 @@ final class Przelewy24WebhookTest extends WebTestCase
 
         self::assertResponseStatusCodeSame(400);
         $connection = self::getContainer()->get(Connection::class);
-        self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM p24_notifications WHERE session_id = ?', [$sessionId]));
+        self::assertSame(0, (int) $connection->fetchOne('SELECT COUNT(*) FROM payment_notifications WHERE session_id = ?', [$sessionId]));
 
         /** @var InMemoryTransport $transport */
         $transport = self::getContainer()->get('messenger.transport.async');
@@ -97,7 +97,7 @@ final class Przelewy24WebhookTest extends WebTestCase
 
         // The raw log deduped to a single row (its UNIQUE index is the idempotency guard).
         $connection = self::getContainer()->get(Connection::class);
-        self::assertSame(1, (int) $connection->fetchOne('SELECT COUNT(*) FROM p24_notifications WHERE session_id = ?', [$sessionId]));
+        self::assertSame(1, (int) $connection->fetchOne('SELECT COUNT(*) FROM payment_notifications WHERE session_id = ?', [$sessionId]));
 
         // The transport is reset per request, so this reflects only the SECOND
         // (duplicate) request — which must have dispatched nothing.

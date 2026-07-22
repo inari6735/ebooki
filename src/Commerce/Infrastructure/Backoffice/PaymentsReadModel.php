@@ -86,7 +86,7 @@ final readonly class PaymentsReadModel
     public function notifications(string $orderId): array
     {
         return $this->connection->fetchAllAssociative(
-            'SELECT provider_order_id, amount, currency, method_id, signature_valid, status, received_at FROM p24_notifications WHERE session_id = ? ORDER BY received_at ASC',
+            'SELECT provider_order_id, amount, currency, method_id, signature_valid, status, received_at FROM payment_notifications WHERE session_id = ? ORDER BY received_at ASC',
             [$orderId],
         );
     }

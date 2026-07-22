@@ -52,7 +52,7 @@ final readonly class ReconciliationReadModel
     public function invalidSignatureNotifications(): array
     {
         return $this->connection->fetchAllAssociative(
-            'SELECT session_id, provider_order_id, received_at FROM p24_notifications WHERE signature_valid = false ORDER BY received_at DESC LIMIT 100',
+            'SELECT session_id, provider_order_id, received_at FROM payment_notifications WHERE signature_valid = false ORDER BY received_at DESC LIMIT 100',
         );
     }
 }
