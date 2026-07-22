@@ -3,6 +3,7 @@
 namespace App\Commerce\Presentation;
 
 use App\Commerce\Application\ConfirmPaymentFromProvider;
+use App\Commerce\Application\FailPaymentFromProvider;
 use App\Commerce\Infrastructure\Payment\PayU\PayUGateway;
 use App\Commerce\Infrastructure\Payment\PayU\PayUSignatureVerifier;
 use App\Commerce\Infrastructure\Payment\PaymentNotificationLog;
@@ -56,8 +57,11 @@ final class PayUNotificationController extends AbstractController
         $currency = Currency::tryFrom((string) ($order['currencyCode'] ?? ''));
         $amount = (int) ($order['totalAmount'] ?? 0);
 
-        // Acknowledge intermediate/other statuses without acting on them.
-        if ('COMPLETED' !== ($order['status'] ?? null) || null === $currency
+        // Act only on TERMINAL statuses: COMPLETED (paid) or CANCELED (failed).
+        // Everything else (PENDING, WAITING_FOR_CONFIRMATION, NEW, …) is transient
+        // and just acknowledged. Non-usable payloads are acknowledged too.
+        $status = $order['status'] ?? null;
+        if (!\in_array($status, ['COMPLETED', 'CANCELED'], true) || null === $currency
             || !Uuid::isValid($extOrderId) || '' === $payuOrderId) {
             return new Response('', Response::HTTP_OK);
         }
@@ -74,13 +78,9 @@ final class PayUNotificationController extends AbstractController
         );
 
         if ($isNew) {
-            $this->commandBus->dispatch(new ConfirmPaymentFromProvider(
-                orderId: $extOrderId,
-                providerOrderId: $payuOrderId,
-                amountMinor: $amount,
-                currency: $currency,
-                method: null,
-            ));
+            $this->commandBus->dispatch('COMPLETED' === $status
+                ? new ConfirmPaymentFromProvider($extOrderId, $payuOrderId, $amount, $currency, null)
+                : new FailPaymentFromProvider($extOrderId, 'Płatność nieudana (PayU: ' . $status . ').'));
         }
 
         return new Response('', Response::HTTP_OK);

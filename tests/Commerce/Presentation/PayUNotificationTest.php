@@ -3,6 +3,7 @@
 namespace App\Tests\Commerce\Presentation;
 
 use App\Commerce\Application\ConfirmPaymentFromProvider;
+use App\Commerce\Application\FailPaymentFromProvider;
 use App\Commerce\Infrastructure\Payment\PayU\PayUConfig;
 use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -63,6 +64,26 @@ final class PayUNotificationTest extends WebTestCase
         self::assertInstanceOf(ConfirmPaymentFromProvider::class, $message);
         self::assertSame($sessionId, $message->orderId);
         self::assertSame(2990, $message->amountMinor);
+    }
+
+    public function testCanceledNotificationDispatchesFailure(): void
+    {
+        $client = self::createClient();
+        $sessionId = Uuid::v7()->toRfc4122();
+
+        $this->post($client, $this->notification($sessionId, 'CANCELED'));
+
+        self::assertResponseIsSuccessful();
+
+        $connection = self::getContainer()->get(Connection::class);
+        self::assertSame(1, (int) $connection->fetchOne('SELECT COUNT(*) FROM payment_notifications WHERE session_id = ?', [$sessionId]));
+
+        /** @var InMemoryTransport $transport */
+        $transport = self::getContainer()->get('messenger.transport.async');
+        self::assertCount(1, $transport->getSent());
+        $message = $transport->getSent()[0]->getMessage();
+        self::assertInstanceOf(FailPaymentFromProvider::class, $message);
+        self::assertSame($sessionId, $message->orderId);
     }
 
     public function testInvalidSignatureIsRejected(): void
