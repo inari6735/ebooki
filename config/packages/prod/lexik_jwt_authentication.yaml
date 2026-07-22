@@ -1,0 +1,8 @@
+# In production the JWT keypair lives on a persistent mount (var/jwt), generated
+# in the DEPLOY hook where the real (possibly sensitive) JWT_PASSPHRASE is
+# available. Generating it at build time fails when JWT_PASSPHRASE is a
+# build-invisible sensitive variable: the key ends up encrypted with the .env
+# fallback passphrase while runtime decrypts with the real one ("bad decrypt").
+lexik_jwt_authentication:
+    secret_key: '%kernel.project_dir%/var/jwt/private.pem'
+    public_key: '%kernel.project_dir%/var/jwt/public.pem'

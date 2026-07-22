@@ -16,13 +16,17 @@ applications:
         set -ex
         curl -sfS https://get.symfony.com/cloud/configurator | bash
         symfony-build
-        # JWT keypair is gitignored, so generate it at build time (regenerated on
-        # each deploy — acceptable for a test instance; you just re-log in).
-        php bin/console lexik:jwt:generate-keypair --skip-if-exists --no-interaction
 
       deploy: |
         set -ex
         symfony-deploy
+        # Generate the JWT keypair HERE (not in build): the deploy hook runs with
+        # the real runtime JWT_PASSPHRASE (which may be a build-invisible sensitive
+        # variable), and writes to the persistent var/jwt mount. --skip-if-exists =
+        # generated once, then stable across deploys (no forced re-login).
+        # To rotate the passphrase: delete var/jwt/*.pem and redeploy.
+        mkdir -p var/jwt
+        php bin/console lexik:jwt:generate-keypair --skip-if-exists --no-interaction
         # Apply DB schema and create the Messenger (Doctrine) transport table
         # (our DSN uses auto_setup=0, so it is not created lazily).
         php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
@@ -69,6 +73,9 @@ applications:
         source: storage
       # Uploaded eBook files & covers MUST persist across deploys.
       var/storage:
+        source: storage
+      # JWT keypair — generated once in the deploy hook, then persisted.
+      var/jwt:
         source: storage
 
     variables:

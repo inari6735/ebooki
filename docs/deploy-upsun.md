@@ -21,8 +21,17 @@ upsun variable:create env:P24_API_KEY     --value "<key>"  --sensitive true
 ```
 
 - `DATABASE_URL` **ustawia się automatycznie** z relacji `database` (mapuje konfigurator Symfony).
-- Klucze JWT są generowane w hooku `build` (regenerowane przy każdym deployu — po deployu
-  trzeba się przelogować; dla instancji testowej OK).
+- Klucze JWT są generowane **w hooku `deploy`** (ma dostęp do runtime'owego `JWT_PASSPHRASE`,
+  także `--sensitive`) i zapisywane na trwały mount `var/jwt` — generują się **raz** i przeżywają
+  kolejne deploye (nie wylogowuje przy każdym pushu). **Rotacja passphrase:** ustaw nowy
+  `JWT_PASSPHRASE`, usuń stare klucze i przegeneruj:
+  ```bash
+  upsun ssh -- 'rm -f var/jwt/*.pem && php bin/console lexik:jwt:generate-keypair --no-interaction'
+  ```
+  ⚠️ Klucze MUSZĄ powstać już z docelowym `JWT_PASSPHRASE` — ustaw tę zmienną **przed** pierwszym
+  deployem. (Generowanie w `build` nie działa dla zmiennych `--sensitive`: są niewidoczne w
+  buildzie → klucz szyfrowany fallbackiem z `.env`, a runtime odszyfrowuje prawdziwym →
+  „bad decrypt".)
 - `MAILER_DSN` domyślnie `null://null` (brak wysyłki) — podmień, jeśli chcesz realne maile.
 
 ## 2. HTTP Basic Auth (zabezpieczenie całej instancji)
