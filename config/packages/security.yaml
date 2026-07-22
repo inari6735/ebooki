@@ -34,8 +34,9 @@ security:
         - { path: ^/login, roles: PUBLIC_ACCESS }
         # Payment provider webhook + browser return — public (P24 posts with no cookies).
         - { path: ^/platnosc, roles: PUBLIC_ACCESS }
-        # "Buy now" requires a logged-in buyer.
+        # "Buy now" and downloading a purchased eBook require a logged-in buyer.
         - { path: ^/kup, roles: ROLE_USER }
+        - { path: ^/pobierz, roles: ROLE_USER }
         - { path: ^/panel, roles: ROLE_USER }
         - { path: ^/courses/new, roles: ROLE_USER }
         - { path: ^/courses/\S+/(rename|publish), roles: ROLE_USER }

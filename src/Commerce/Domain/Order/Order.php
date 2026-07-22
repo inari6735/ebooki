@@ -2,6 +2,7 @@
 
 namespace App\Commerce\Domain\Order;
 
+use App\Commerce\Domain\Order\Event\OrderFulfilled;
 use App\Commerce\Domain\Order\Event\OrderPlaced;
 use App\Commerce\Domain\Order\Event\PaymentConfirmed;
 use App\Commerce\Domain\Order\Event\PaymentFailed;
@@ -101,7 +102,8 @@ final class Order extends AggregateRoot
      */
     public function confirmPayment(string $providerOrderId, Money $paidAmount, ?string $method, \DateTimeImmutable $now): void
     {
-        if (OrderStatus::PAID === $this->status) {
+        // Already confirmed (possibly already fulfilled) — redelivered notification.
+        if (\in_array($this->status, [OrderStatus::PAID, OrderStatus::FULFILLED], true)) {
             return;
         }
         if (OrderStatus::AWAITING_PAYMENT !== $this->status) {
@@ -116,6 +118,22 @@ final class Order extends AggregateRoot
         }
 
         $this->recordThat(new PaymentConfirmed($this->id, $providerOrderId, $paidAmount, $method, $now));
+    }
+
+    /**
+     * Grant the buyer access to the purchased eBook. For a digital good this
+     * happens right after payment confirmation. Idempotent; requires a paid order.
+     */
+    public function fulfill(\DateTimeImmutable $now): void
+    {
+        if (OrderStatus::FULFILLED === $this->status) {
+            return;
+        }
+        if (OrderStatus::PAID !== $this->status) {
+            throw new \DomainException(sprintf('Cannot fulfil an order that is %s.', $this->status->value));
+        }
+
+        $this->recordThat(new OrderFulfilled($this->id, $this->buyerId, $this->item->ebookId, $now));
     }
 
     /** The payment did not go through. No-op if the order already failed; never overrides a paid order. */
@@ -178,5 +196,10 @@ final class Order extends AggregateRoot
     protected function applyPaymentFailed(PaymentFailed $event): void
     {
         $this->status = OrderStatus::FAILED;
+    }
+
+    protected function applyOrderFulfilled(OrderFulfilled $event): void
+    {
+        $this->status = OrderStatus::FULFILLED;
     }
 }

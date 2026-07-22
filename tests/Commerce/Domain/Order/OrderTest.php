@@ -2,6 +2,7 @@
 
 namespace App\Tests\Commerce\Domain\Order;
 
+use App\Commerce\Domain\Order\Event\OrderFulfilled;
 use App\Commerce\Domain\Order\Event\OrderPlaced;
 use App\Commerce\Domain\Order\Event\PaymentConfirmed;
 use App\Commerce\Domain\Order\Event\PaymentFailed;
@@ -183,5 +184,47 @@ final class OrderTest extends TestCase
         $events = $order->releaseEvents();
         self::assertCount(1, $events);
         self::assertInstanceOf(PaymentFailed::class, $events[0]);
+    }
+
+    private function paidOrder(): Order
+    {
+        $order = $this->placedOrder(2990);
+        $order->initiatePayment('przelewy24', 's', 't', new \DateTimeImmutable());
+        $order->confirmPayment('P24-1', Money::of(2990, Currency::PLN), 'blik', new \DateTimeImmutable());
+        $order->releaseEvents();
+
+        return $order;
+    }
+
+    public function testFulfilGrantsAccess(): void
+    {
+        $order = $this->paidOrder();
+
+        $order->fulfill(new \DateTimeImmutable());
+
+        self::assertSame(OrderStatus::FULFILLED, $order->status());
+        $events = $order->releaseEvents();
+        self::assertCount(1, $events);
+        self::assertInstanceOf(OrderFulfilled::class, $events[0]);
+    }
+
+    public function testFulfilIsIdempotent(): void
+    {
+        $order = $this->paidOrder();
+        $order->fulfill(new \DateTimeImmutable());
+        $order->releaseEvents();
+
+        $order->fulfill(new \DateTimeImmutable());
+
+        self::assertSame(OrderStatus::FULFILLED, $order->status());
+        self::assertCount(0, $order->releaseEvents());
+    }
+
+    public function testCannotFulfilBeforePayment(): void
+    {
+        $order = $this->placedOrder();
+
+        $this->expectException(\DomainException::class);
+        $order->fulfill(new \DateTimeImmutable());
     }
 }

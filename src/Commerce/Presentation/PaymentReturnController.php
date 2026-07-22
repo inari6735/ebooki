@@ -23,7 +23,7 @@ final class PaymentReturnController extends AbstractController
     public function __invoke(string $orderId): Response
     {
         $row = $this->connection->fetchAssociative(
-            'SELECT title, status FROM commerce_orders WHERE id = ?',
+            'SELECT title, status, ebook_id FROM commerce_orders WHERE id = ?',
             [$orderId],
         );
 
@@ -31,10 +31,14 @@ final class PaymentReturnController extends AbstractController
             throw $this->createNotFoundException();
         }
 
+        $fulfilled = 'fulfilled' === $row['status'];
+
         return $this->render('commerce/return.html.twig', [
             'title' => $row['title'],
             'status' => $row['status'],
-            'paid' => 'paid' === $row['status'] || 'fulfilled' === $row['status'],
+            'paid' => 'paid' === $row['status'] || $fulfilled,
+            'fulfilled' => $fulfilled,
+            'ebookId' => $row['ebook_id'],
             'failed' => 'failed' === $row['status'],
         ]);
     }

@@ -9,8 +9,15 @@
                 <twig:Icon name="check" class="h-8 w-8" />
             </div>
             <h1 class="mt-6 text-2xl font-extrabold text-zinc-900">Dziękujemy za zakup!</h1>
-            <p class="mt-2 text-zinc-500">Płatność za „{{ title }}" została potwierdzona. Dostęp znajdziesz w panelu w sekcji „Zakupione".</p>
-            <twig:Button href="{{ path('app_home') }}" variant="primary" size="lg" class="mt-8">Przejdź do biblioteki</twig:Button>
+            <p class="mt-2 text-zinc-500">Płatność za „{{ title }}" została potwierdzona.</p>
+            {% if fulfilled and ebookId %}
+                <twig:Button href="{{ path('app_download', { ebookId: ebookId }) }}" variant="primary" size="lg" class="mt-8">
+                    <twig:Icon name="cloud-upload" class="h-5 w-5 rotate-180" /> Pobierz eBook
+                </twig:Button>
+            {% else %}
+                <p class="mt-4 text-sm text-zinc-400">Przygotowujemy Twój dostęp — link do pobrania pojawi się za chwilę.</p>
+            {% endif %}
+            <twig:Button href="{{ path('app_home') }}" variant="outline" size="md" class="mt-4">Przejdź do biblioteki</twig:Button>
         {% elseif failed %}
             <div class="flex h-16 w-16 items-center justify-center rounded-full bg-error-50 text-error-600">
                 <twig:Icon name="x" class="h-8 w-8" />
@@ -28,8 +35,8 @@
         {% endif %}
     </div>
 
-    {% if not paid and not failed %}
-        {# UX-only auto refresh while the async confirmation lands; the webhook is the source of truth. #}
+    {% if not fulfilled and not failed %}
+        {# UX-only auto refresh while the async confirmation/fulfilment lands; the webhook is the source of truth. #}
         <meta http-equiv="refresh" content="4">
     {% endif %}
 {% endblock %}

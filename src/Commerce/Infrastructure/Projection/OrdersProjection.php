@@ -2,6 +2,7 @@
 
 namespace App\Commerce\Infrastructure\Projection;
 
+use App\Commerce\Domain\Order\Event\OrderFulfilled;
 use App\Commerce\Domain\Order\Event\OrderPlaced;
 use App\Commerce\Domain\Order\Event\PaymentConfirmed;
 use App\Commerce\Domain\Order\Event\PaymentFailed;
@@ -84,6 +85,12 @@ final readonly class OrdersProjection
     public function onPaymentFailed(PaymentFailed $event): void
     {
         $this->setStatus($event->orderId->toRfc4122(), OrderStatus::FAILED);
+    }
+
+    #[AsMessageHandler(bus: 'messenger.bus.event')]
+    public function onOrderFulfilled(OrderFulfilled $event): void
+    {
+        $this->setStatus($event->orderId->toRfc4122(), OrderStatus::FULFILLED);
     }
 
     private function setStatus(string $orderId, OrderStatus $status): void

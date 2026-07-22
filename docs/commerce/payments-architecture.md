@@ -385,9 +385,17 @@ tak, że dołączenie wypłat nie rusza modelu zakupu.
    `PaymentInitiated`/`PaymentConfirmed`/`PaymentFailed`, projekcje `commerce_orders`/`commerce_payments`,
    migracja `Version20260722140000`. Testy: domena (payment lifecycle), `P24Signer`, gateway
    (MockHttpClient), confirm handler, checkout e2e, webhook. **P24 za portem → testy na fake'u.**
-3. **Fulfillment + księga**: reactory `FulfillOrder` (entitlement), `PostToLedger` (double-entry),
-   mail z linkiem.
-4. **Bezpieczne pobieranie**: `DownloadController` (podpisany, wygasający link; limity).
+3. ✅ **Fulfillment + księga** — ZROBIONE: `Order::fulfill()` + event `OrderFulfilled` (confirm+fulfill
+   w jednym zapisie — towar cyfrowy dostępny od razu), `EntitlementProjection`→`commerce_entitlements`
+   (własność trwała, UNIQUE buyer+ebook), `LedgerProjection`→`commerce_ledger_entries` (double-entry na
+   `PaymentConfirmed`: DR psp_clearing / CR seller_payable{sellerId} / CR platform_income, zbilansowane,
+   idempotentne przez `reference=confirm:{orderId}`), migracja `Version20260722170000`. (Mail z linkiem —
+   odłożony.)
+4. ✅ **Bezpieczne pobieranie** — ZROBIONE: `DownloadController` `GET /pobierz/{ebookId}` (ROLE_USER,
+   sprawdza `Entitlements::owns` → brak = 404 nieodróżnialne, streaming z `FileStorage`, ścieżka storage
+   nieujawniana). Link „Pobierz eBook" na stronie powrotu po fulfillmencie. Testy: fulfill (domena),
+   confirm→entitlement→zbilansowana księga, download (entitled/obcy/anonim). (Podpisany-wygasający link —
+   ewentualne wzmocnienie później; auth+entitlement już wystarcza.)
 5. **Adminka/wgląd**: timeline eventów, lista płatności, reconciliation; zwroty.
 6. **Prawo/VAT**: checkbox zgody + snapshot VAT (dane), potem faktury/OSS.
 7. **Wypłaty autorom** (KYC + transfery).

@@ -33,7 +33,8 @@ final readonly class ConfirmPaymentFromProviderHandler
     {
         $order = $this->orders->get(Uuid::fromString($command->orderId));
 
-        if (OrderStatus::PAID === $order->status()) {
+        // Already settled (paid and possibly fulfilled) — redelivered notification.
+        if (\in_array($order->status(), [OrderStatus::PAID, OrderStatus::FULFILLED], true)) {
             return;
         }
 
@@ -54,7 +55,10 @@ final readonly class ConfirmPaymentFromProviderHandler
             amount: $expected,
         ));
 
-        $order->confirmPayment($command->providerOrderId, $expected, $command->method, $this->clock->now());
+        $now = $this->clock->now();
+        $order->confirmPayment($command->providerOrderId, $expected, $command->method, $now);
+        // Digital good: access is granted immediately once payment is confirmed.
+        $order->fulfill($now);
         $this->orders->save($order);
     }
 }

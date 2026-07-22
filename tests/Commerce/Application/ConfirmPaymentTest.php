@@ -50,17 +50,72 @@ final class ConfirmPaymentTest extends KernelTestCase
         return $orderId;
     }
 
-    public function testVerifiedNotificationMarksOrderPaid(): void
+    public function testVerifiedNotificationMarksOrderPaidAndFulfilled(): void
     {
         $orderId = $this->awaitingOrder(2990);
 
         ($this->handler)(new ConfirmPaymentFromProvider($orderId, 'P24-555', 2990, Currency::PLN, '25'));
 
-        self::assertSame('paid', $this->connection->fetchOne('SELECT status FROM commerce_orders WHERE id = ?', [$orderId]));
+        // Digital good: confirmation fulfils the order in the same step.
+        self::assertSame('fulfilled', $this->connection->fetchOne('SELECT status FROM commerce_orders WHERE id = ?', [$orderId]));
         $payment = $this->connection->fetchAssociative('SELECT status, provider_order_id, method FROM commerce_payments WHERE order_id = ?', [$orderId]);
         self::assertSame('confirmed', $payment['status']);
         self::assertSame('P24-555', $payment['provider_order_id']);
         self::assertCount(1, $this->gateway->verified);
+    }
+
+    public function testConfirmationGrantsEntitlementAndPostsBalancedLedger(): void
+    {
+        $orderId = $this->awaitingOrder(2990);
+        $order = $this->connection->fetchAssociative(
+            'SELECT buyer_id, ebook_id, seller_id, author_earnings, platform_fee FROM commerce_orders WHERE id = ?',
+            [$orderId],
+        );
+
+        ($this->handler)(new ConfirmPaymentFromProvider($orderId, 'P24-555', 2990, Currency::PLN, '25'));
+
+        // Entitlement: the buyer now owns the eBook.
+        self::assertSame(1, (int) $this->connection->fetchOne(
+            'SELECT COUNT(*) FROM commerce_entitlements WHERE buyer_id = ? AND ebook_id = ?',
+            [$order['buyer_id'], $order['ebook_id']],
+        ));
+
+        // Ledger: three entries that balance (Σ DR = Σ CR = total).
+        $entries = $this->connection->fetchAllAssociative(
+            'SELECT account, account_ref, direction, amount FROM commerce_ledger_entries WHERE order_id = ? ORDER BY account',
+            [$orderId],
+        );
+        self::assertCount(3, $entries);
+
+        $debits = array_sum(array_map(static fn ($e): int => 'DR' === $e['direction'] ? (int) $e['amount'] : 0, $entries));
+        $credits = array_sum(array_map(static fn ($e): int => 'CR' === $e['direction'] ? (int) $e['amount'] : 0, $entries));
+        self::assertSame(2990, $debits);
+        self::assertSame($debits, $credits, 'Ledger must balance.');
+
+        $byAccount = [];
+        foreach ($entries as $e) {
+            $byAccount[$e['account']] = $e;
+        }
+        self::assertSame((int) $order['author_earnings'], (int) $byAccount['seller_payable']['amount']);
+        self::assertSame($order['seller_id'], $byAccount['seller_payable']['account_ref']);
+        self::assertSame((int) $order['platform_fee'], (int) $byAccount['platform_income']['amount']);
+        self::assertSame(2990, (int) $byAccount['psp_clearing']['amount']);
+    }
+
+    public function testLedgerPostingIsIdempotentOnRedelivery(): void
+    {
+        $orderId = $this->awaitingOrder(2990);
+        $command = new ConfirmPaymentFromProvider($orderId, 'P24-555', 2990, Currency::PLN, '25');
+
+        ($this->handler)($command);
+        // Re-publish the same PaymentConfirmed projection path via a fresh confirm attempt;
+        // the aggregate short-circuits, so no second posting occurs.
+        ($this->handler)($command);
+
+        self::assertSame(3, (int) $this->connection->fetchOne(
+            'SELECT COUNT(*) FROM commerce_ledger_entries WHERE order_id = ?',
+            [$orderId],
+        ));
     }
 
     public function testAmountMismatchDoesNotConfirm(): void
@@ -97,7 +152,7 @@ final class ConfirmPaymentTest extends KernelTestCase
         ($this->handler)($command);
         ($this->handler)($command); // redelivery
 
-        self::assertSame('paid', $this->connection->fetchOne('SELECT status FROM commerce_orders WHERE id = ?', [$orderId]));
-        self::assertCount(1, $this->gateway->verified, 'A paid order short-circuits without re-verifying.');
+        self::assertSame('fulfilled', $this->connection->fetchOne('SELECT status FROM commerce_orders WHERE id = ?', [$orderId]));
+        self::assertCount(1, $this->gateway->verified, 'A settled order short-circuits without re-verifying.');
     }
 }
