@@ -20,6 +20,12 @@ use Symfony\Component\Uid\Uuid;
  */
 final readonly class StartCheckout
 {
+    /** Provider → its server-to-server notification route. */
+    private const array NOTIFY_ROUTES = [
+        'przelewy24' => 'app_p24_status',
+        'payu' => 'app_payu_notify',
+    ];
+
     public function __construct(
         private CommandBus $commandBus,
         private PaymentGateway $gateway,
@@ -44,13 +50,17 @@ final readonly class StartCheckout
             withdrawalConsent: $request->withdrawalConsent,
         ));
 
+        $notifyRoute = self::NOTIFY_ROUTES[$this->gateway->provider()]
+            ?? throw new \LogicException(sprintf('No notification route configured for provider "%s".', $this->gateway->provider()));
+
         $registered = $this->gateway->register(new PaymentRegistration(
             sessionId: $sessionId,
             amount: $request->amount,
             description: mb_substr('eBook: ' . $request->title, 0, 250),
             buyerEmail: $request->buyerEmail,
             urlReturn: $this->urlGenerator->generate('app_checkout_return', ['orderId' => $sessionId], UrlGeneratorInterface::ABSOLUTE_URL),
-            urlStatus: $this->urlGenerator->generate('app_p24_status', [], UrlGeneratorInterface::ABSOLUTE_URL),
+            urlStatus: $this->urlGenerator->generate($notifyRoute, [], UrlGeneratorInterface::ABSOLUTE_URL),
+            buyerIp: $request->buyerIp,
         ));
 
         $this->commandBus->dispatch(new InitiatePayment(

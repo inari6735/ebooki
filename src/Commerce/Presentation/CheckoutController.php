@@ -77,6 +77,7 @@ final class CheckoutController extends AbstractController
                 commissionBps: $this->commissionBps,
                 buyerEmail: $user->getEmail(),
                 withdrawalConsent: true,
+                buyerIp: $request->getClientIp() ?? '127.0.0.1',
             ));
         } catch (PaymentRegistrationFailed) {
             $this->addFlash('error', 'Nie udało się rozpocząć płatności. Spróbuj ponownie za chwilę.');

@@ -12,12 +12,14 @@ Ustaw jako **sensitive** zmienne środowiskowe (widoczne dla aplikacji jako env)
 upsun variable:create env:APP_SECRET     --value "$(openssl rand -hex 32)" --sensitive true
 upsun variable:create env:JWT_PASSPHRASE --value "$(openssl rand -hex 32)" --sensitive true
 
-# Płatności (sandbox Przelewy24) — potrzebne do testów zakupu:
-upsun variable:create env:P24_MERCHANT_ID --value "<id>"
-upsun variable:create env:P24_POS_ID      --value "<id>"
-upsun variable:create env:P24_CRC         --value "<crc>"  --sensitive true
-upsun variable:create env:P24_API_KEY     --value "<key>"  --sensitive true
-# P24_SANDBOX domyślnie 1 (z .env) — zostaw dla środowiska testowego.
+# Płatności — AKTYWNY provider to PayU (sandbox). Potrzebne do testów zakupu:
+upsun variable:create env:PAYU_POS_ID        --value "<pos_id>"
+upsun variable:create env:PAYU_CLIENT_ID     --value "<client_id>"   # zwykle = pos_id
+upsun variable:create env:PAYU_CLIENT_SECRET --value "<secret>"      --sensitive true
+upsun variable:create env:PAYU_SECOND_KEY    --value "<second_key>"  --sensitive true
+# PAYU_SANDBOX domyślnie 1 (z .env) — zostaw dla środowiska testowego.
+# (Przelewy24 pozostaje w kodzie jako alternatywa; przełączenie providera = jeden
+#  alias `PaymentGateway` w config/services.yaml. P24_* trzeba ustawić tylko gdy wrócisz na P24.)
 ```
 
 - `DATABASE_URL` **ustawia się automatycznie** z relacji `database` (mapuje konfigurator Symfony).

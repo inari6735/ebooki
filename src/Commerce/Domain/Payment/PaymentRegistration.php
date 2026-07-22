@@ -21,6 +21,7 @@ final readonly class PaymentRegistration
         public string $urlStatus,
         public string $buyerCountry = 'PL',
         public string $language = 'pl',
+        public string $buyerIp = '127.0.0.1',
     ) {
     }
 }

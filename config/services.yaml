@@ -63,9 +63,18 @@ services:
     App\Commerce\Domain\Order\OrderRepository:
         alias: App\Commerce\Infrastructure\EventSourcedOrderRepository
 
-    # Payments — Przelewy24 (secrets come from .env.local, see .env P24_* block).
+    # Payments — active provider. Switch by repointing this alias (all of
+    # checkout / confirm / refund follow it). Secrets live in .env.local.
     App\Commerce\Domain\Payment\PaymentGateway:
-        alias: App\Commerce\Infrastructure\Payment\Przelewy24\Przelewy24Gateway
+        alias: App\Commerce\Infrastructure\Payment\PayU\PayUGateway
+
+    App\Commerce\Infrastructure\Payment\PayU\PayUConfig:
+        arguments:
+            $posId: '%env(int:PAYU_POS_ID)%'
+            $clientId: '%env(PAYU_CLIENT_ID)%'
+            $clientSecret: '%env(PAYU_CLIENT_SECRET)%'
+            $secondKey: '%env(PAYU_SECOND_KEY)%'
+            $sandbox: '%env(bool:PAYU_SANDBOX)%'
 
     App\Commerce\Infrastructure\Payment\Przelewy24\P24Signer:
         arguments:

@@ -21,6 +21,7 @@ final readonly class StartCheckoutRequest
         public int $commissionBps,
         public string $buyerEmail,
         public bool $withdrawalConsent,
+        public string $buyerIp = '127.0.0.1',
     ) {
     }
 }
