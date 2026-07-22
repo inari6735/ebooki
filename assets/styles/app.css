@@ -173,6 +173,17 @@
     .hero-float, .hero-float-slow { animation: none; }
 }
 
+/* Fresh, glossy green chip for the hero "eBook published" badge: lighter emerald
+   face, a top gloss highlight and a soft coloured elevation so it feels raised. */
+.chip-green {
+    background-image: linear-gradient(150deg, #34d399 0%, #10b981 100%);
+    box-shadow:
+        0 8px 18px -5px rgb(16 185 129 / 0.45),
+        0 2px 4px -1px rgb(16 185 129 / 0.30),
+        inset 0 2px 2px rgb(255 255 255 / 0.55),
+        inset 0 -3px 5px rgb(4 108 78 / 0.22);
+}
+
 /* Light 3D tilt for the floating hero badges — self-perspective + a slight turn
    toward the viewer, with a directional shadow so they read as physical tiles. */
 .badge-3d {
@@ -180,6 +191,65 @@
     box-shadow:
         -16px 20px 34px -14px rgb(6 20 47 / 0.32),
         0 2px 6px rgb(6 20 47 / 0.12);
+    position: relative;
+    overflow: hidden;
+}
+/* Static angled glass highlight — light resting on the top-left corner. */
+.badge-3d::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgb(255 255 255 / 0.5) 0%, rgb(255 255 255 / 0.12) 24%, transparent 48%);
+    pointer-events: none;
+}
+/* Periodic diagonal glint sweeping across, as if a light passed over at an angle. */
+.badge-3d::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg,
+        transparent 38%,
+        rgb(255 255 255 / 0.55) 47%,
+        rgb(255 255 255 / 0.85) 50%,
+        rgb(255 255 255 / 0.55) 53%,
+        transparent 62%);
+    translate: -160% 0;
+    animation: badge-sheen 5s ease-in-out infinite;
+    pointer-events: none;
+}
+/* Stagger the glint on a second badge so they don't flash in unison. */
+.sheen-delayed::after { animation-delay: -2.6s; }
+
+@keyframes badge-sheen {
+    0%   { translate: -160% 0; }
+    22%  { translate: 160% 0; }
+    100% { translate: 160% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .badge-3d::after { animation: none; opacity: 0; }
+}
+
+/* Scroll-down cue at the bottom of the hero — a "mouse" with a falling dot and a
+   gentle bob, inviting the visitor to explore below. Animations use the `translate`
+   property so they never fight the anchor's -translate-x-1/2 centring. */
+html { scroll-behavior: smooth; }
+
+@keyframes scroll-cue-bob {
+    0%, 100% { translate: 0 0; }
+    50%      { translate: 0 6px; }
+}
+@keyframes scroll-cue-dot {
+    0%   { translate: 0 0;   opacity: 0; }
+    25%  { opacity: 1; }
+    70%  { translate: 0 9px; opacity: 0; }
+    100% { translate: 0 9px; opacity: 0; }
+}
+.scroll-cue-bob { animation: scroll-cue-bob 2.2s ease-in-out infinite; }
+.scroll-cue-dot { animation: scroll-cue-dot 1.9s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .scroll-cue-bob, .scroll-cue-dot { animation: none; }
 }
 
 /* Subtle dot grid for decorative corners (color via currentColor). */
