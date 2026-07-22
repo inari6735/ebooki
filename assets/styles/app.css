@@ -229,6 +229,12 @@
     .badge-3d::after { animation: none; opacity: 0; }
 }
 
+/* Lucide icons carry ~2px viewBox padding, so at a given box they read smaller
+   than edge-to-edge glyphs. Scale the glyph up to fill the box (layout/spacing
+   unchanged). Uses the `scale` property so it composes with call-site rotations
+   (rotate-180 / -rotate-45) instead of overriding their transform. */
+.icon-scale { scale: 1.2; }
+
 /* Scroll-down cue at the bottom of the hero — a "mouse" with a falling dot and a
    gentle bob, inviting the visitor to explore below. Animations use the `translate`
    property so they never fight the anchor's -translate-x-1/2 centring. */
