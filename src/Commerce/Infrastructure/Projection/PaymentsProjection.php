@@ -2,6 +2,7 @@
 
 namespace App\Commerce\Infrastructure\Projection;
 
+use App\Commerce\Domain\Order\Event\OrderRefunded;
 use App\Commerce\Domain\Order\Event\PaymentConfirmed;
 use App\Commerce\Domain\Order\Event\PaymentFailed;
 use App\Commerce\Domain\Order\Event\PaymentInitiated;
@@ -76,6 +77,16 @@ final readonly class PaymentsProjection
     {
         $this->connection->executeStatement(
             "UPDATE commerce_payments SET status = 'failed' WHERE order_id = :order_id",
+            ['order_id' => $event->orderId->toRfc4122()],
+            ['order_id' => ParameterType::STRING],
+        );
+    }
+
+    #[AsMessageHandler(bus: 'messenger.bus.event')]
+    public function onOrderRefunded(OrderRefunded $event): void
+    {
+        $this->connection->executeStatement(
+            "UPDATE commerce_payments SET status = 'refunded' WHERE order_id = :order_id",
             ['order_id' => $event->orderId->toRfc4122()],
             ['order_id' => ParameterType::STRING],
         );

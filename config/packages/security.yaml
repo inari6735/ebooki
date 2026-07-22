@@ -34,6 +34,8 @@ security:
         - { path: ^/login, roles: PUBLIC_ACCESS }
         # Payment provider webhook + browser return — public (P24 posts with no cookies).
         - { path: ^/platnosc, roles: PUBLIC_ACCESS }
+        # Back-office (payments analysis, refunds, reconciliation).
+        - { path: ^/admin, roles: ROLE_ADMIN }
         # "Buy now" and downloading a purchased eBook require a logged-in buyer.
         - { path: ^/kup, roles: ROLE_USER }
         - { path: ^/pobierz, roles: ROLE_USER }

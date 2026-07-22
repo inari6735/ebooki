@@ -4,6 +4,7 @@ namespace App\Tests\Commerce\Domain\Order;
 
 use App\Commerce\Domain\Order\Event\OrderFulfilled;
 use App\Commerce\Domain\Order\Event\OrderPlaced;
+use App\Commerce\Domain\Order\Event\OrderRefunded;
 use App\Commerce\Domain\Order\Event\PaymentConfirmed;
 use App\Commerce\Domain\Order\Event\PaymentFailed;
 use App\Commerce\Domain\Order\Event\PaymentInitiated;
@@ -226,5 +227,38 @@ final class OrderTest extends TestCase
 
         $this->expectException(\DomainException::class);
         $order->fulfill(new \DateTimeImmutable());
+    }
+
+    public function testRefundFromPaid(): void
+    {
+        $order = $this->paidOrder();
+
+        $order->refund('customer request', new \DateTimeImmutable());
+
+        self::assertSame(OrderStatus::REFUNDED, $order->status());
+        $events = $order->releaseEvents();
+        self::assertCount(1, $events);
+        self::assertInstanceOf(OrderRefunded::class, $events[0]);
+        self::assertSame(2990, $events[0]->amount->amount);
+    }
+
+    public function testRefundIsIdempotent(): void
+    {
+        $order = $this->paidOrder();
+        $order->refund('r', new \DateTimeImmutable());
+        $order->releaseEvents();
+
+        $order->refund('r', new \DateTimeImmutable());
+
+        self::assertSame(OrderStatus::REFUNDED, $order->status());
+        self::assertCount(0, $order->releaseEvents());
+    }
+
+    public function testCannotRefundUnpaidOrder(): void
+    {
+        $order = $this->placedOrder();
+
+        $this->expectException(\DomainException::class);
+        $order->refund('r', new \DateTimeImmutable());
     }
 }

@@ -51,6 +51,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return array_values(array_unique([...$this->roles, 'ROLE_USER']));
     }
 
+    /** Grant back-office access. Idempotent. */
+    public function promoteToAdmin(): void
+    {
+        if (!\in_array('ROLE_ADMIN', $this->roles, true)) {
+            $this->roles[] = 'ROLE_ADMIN';
+        }
+    }
+
+    public function isAdmin(): bool
+    {
+        return \in_array('ROLE_ADMIN', $this->getRoles(), true);
+    }
+
     public function getPassword(): string
     {
         return $this->password;

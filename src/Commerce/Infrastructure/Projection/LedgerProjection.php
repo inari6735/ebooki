@@ -2,6 +2,7 @@
 
 namespace App\Commerce\Infrastructure\Projection;
 
+use App\Commerce\Domain\Order\Event\OrderRefunded;
 use App\Commerce\Domain\Order\Event\PaymentConfirmed;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
@@ -49,6 +50,30 @@ final readonly class LedgerProjection
         $this->post($reference, 'psp_clearing', null, 'DR', (int) $order['total_amount'], $currency, $orderId, $occurredAt);
         $this->post($reference, 'seller_payable', (string) $order['seller_id'], 'CR', (int) $order['author_earnings'], $currency, $orderId, $occurredAt);
         $this->post($reference, 'platform_income', null, 'CR', (int) $order['platform_fee'], $currency, $orderId, $occurredAt);
+    }
+
+    #[AsMessageHandler(bus: 'messenger.bus.event')]
+    public function onOrderRefunded(OrderRefunded $event): void
+    {
+        $orderId = $event->orderId->toRfc4122();
+
+        $order = $this->connection->fetchAssociative(
+            'SELECT seller_id, currency, total_amount, author_earnings, platform_fee FROM commerce_orders WHERE id = ?',
+            [$orderId],
+        );
+        if (false === $order) {
+            throw new \RuntimeException(sprintf('Cannot reverse ledger entries: order %s is not projected.', $orderId));
+        }
+
+        $reference = 'refund:' . $orderId;
+        $currency = (string) $order['currency'];
+        $occurredAt = $event->occurredAt()->format('Y-m-d H:i:s.uP');
+
+        // Mirror image of the confirm posting: money leaves psp_clearing, and both
+        // the author payable and platform income are clawed back.
+        $this->post($reference, 'psp_clearing', null, 'CR', (int) $order['total_amount'], $currency, $orderId, $occurredAt);
+        $this->post($reference, 'seller_payable', (string) $order['seller_id'], 'DR', (int) $order['author_earnings'], $currency, $orderId, $occurredAt);
+        $this->post($reference, 'platform_income', null, 'DR', (int) $order['platform_fee'], $currency, $orderId, $occurredAt);
     }
 
     private function post(string $reference, string $account, ?string $accountRef, string $direction, int $amount, string $currency, string $orderId, string $occurredAt): void

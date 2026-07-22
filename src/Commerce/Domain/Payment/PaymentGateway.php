@@ -2,6 +2,7 @@
 
 namespace App\Commerce\Domain\Payment;
 
+use App\Commerce\Domain\Payment\Exception\PaymentRefundFailed;
 use App\Commerce\Domain\Payment\Exception\PaymentRegistrationFailed;
 use App\Commerce\Domain\Payment\Exception\PaymentVerificationFailed;
 
@@ -34,4 +35,12 @@ interface PaymentGateway
      * @throws PaymentVerificationFailed
      */
     public function verify(PaymentVerification $verification): void;
+
+    /**
+     * Request a refund for a confirmed transaction. Returns normally once the
+     * provider accepts the request; throwing means the order must not be refunded.
+     *
+     * @throws PaymentRefundFailed
+     */
+    public function refund(RefundRequest $refund): void;
 }

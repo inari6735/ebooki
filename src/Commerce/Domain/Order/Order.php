@@ -4,6 +4,7 @@ namespace App\Commerce\Domain\Order;
 
 use App\Commerce\Domain\Order\Event\OrderFulfilled;
 use App\Commerce\Domain\Order\Event\OrderPlaced;
+use App\Commerce\Domain\Order\Event\OrderRefunded;
 use App\Commerce\Domain\Order\Event\PaymentConfirmed;
 use App\Commerce\Domain\Order\Event\PaymentFailed;
 use App\Commerce\Domain\Order\Event\PaymentInitiated;
@@ -32,6 +33,7 @@ final class Order extends AggregateRoot
     private OrderStatus $status;
     private ?string $provider = null;
     private ?string $sessionId = null;
+    private ?string $providerOrderId = null;
 
     /**
      * Place an order for one eBook. The buyer paid nothing yet — this only
@@ -136,6 +138,22 @@ final class Order extends AggregateRoot
         $this->recordThat(new OrderFulfilled($this->id, $this->buyerId, $this->item->ebookId, $now));
     }
 
+    /**
+     * Refund the order (full refund in the MVP). Only a paid/fulfilled order can be
+     * refunded; idempotent once refunded. Reverses the ledger and revokes access.
+     */
+    public function refund(string $reason, \DateTimeImmutable $now): void
+    {
+        if (OrderStatus::REFUNDED === $this->status) {
+            return;
+        }
+        if (!\in_array($this->status, [OrderStatus::PAID, OrderStatus::FULFILLED], true)) {
+            throw new \DomainException(sprintf('Only a paid order can be refunded; this one is %s.', $this->status->value));
+        }
+
+        $this->recordThat(new OrderRefunded($this->id, $this->total(), $reason, $now));
+    }
+
     /** The payment did not go through. No-op if the order already failed; never overrides a paid order. */
     public function failPayment(string $reason, \DateTimeImmutable $now): void
     {
@@ -169,6 +187,11 @@ final class Order extends AggregateRoot
         return $this->sessionId;
     }
 
+    public function providerOrderId(): ?string
+    {
+        return $this->providerOrderId;
+    }
+
     protected function applyOrderPlaced(OrderPlaced $event): void
     {
         $this->id = $event->orderId;
@@ -190,6 +213,7 @@ final class Order extends AggregateRoot
 
     protected function applyPaymentConfirmed(PaymentConfirmed $event): void
     {
+        $this->providerOrderId = $event->providerOrderId;
         $this->status = OrderStatus::PAID;
     }
 
@@ -201,5 +225,10 @@ final class Order extends AggregateRoot
     protected function applyOrderFulfilled(OrderFulfilled $event): void
     {
         $this->status = OrderStatus::FULFILLED;
+    }
+
+    protected function applyOrderRefunded(OrderRefunded $event): void
+    {
+        $this->status = OrderStatus::REFUNDED;
     }
 }

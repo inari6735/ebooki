@@ -2,12 +2,15 @@
 
 namespace App\Commerce\Infrastructure\Payment\Przelewy24;
 
+use App\Commerce\Domain\Payment\Exception\PaymentRefundFailed;
 use App\Commerce\Domain\Payment\Exception\PaymentRegistrationFailed;
 use App\Commerce\Domain\Payment\Exception\PaymentVerificationFailed;
 use App\Commerce\Domain\Payment\PaymentGateway;
 use App\Commerce\Domain\Payment\PaymentRegistration;
 use App\Commerce\Domain\Payment\PaymentVerification;
+use App\Commerce\Domain\Payment\RefundRequest;
 use App\Commerce\Domain\Payment\RegisteredPayment;
+use Symfony\Component\Uid\Uuid;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface as HttpClientException;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -109,6 +112,39 @@ final readonly class Przelewy24Gateway implements PaymentGateway
         if ($status < 200 || $status >= 300 || 'success' !== $verificationStatus) {
             $this->logger->error('P24 verify rejected', ['sessionId' => $verification->sessionId, 'status' => $status, 'response' => $data]);
             throw new PaymentVerificationFailed(sprintf('Przelewy24 did not confirm the payment (HTTP %d).', $status));
+        }
+    }
+
+    public function refund(RefundRequest $refund): void
+    {
+        // NOTE: confirm the exact refund payload/signature against current P24 docs
+        // before going live; refunds are asynchronous on P24's side (the actual
+        // money return is later confirmed via urlStatus).
+        $body = [
+            'requestId' => Uuid::v7()->toRfc4122(),
+            'refunds' => [[
+                'orderId' => (int) $refund->providerOrderId,
+                'sessionId' => $refund->sessionId,
+                'amount' => $refund->amount->amount,
+            ]],
+            'refundsUuid' => Uuid::v7()->toRfc4122(),
+        ];
+
+        try {
+            $response = $this->httpClient->request('POST', $this->config->baseUrl() . '/api/v1/transaction/refund', [
+                'auth_basic' => [(string) $this->config->posId, $this->config->apiKey],
+                'json' => $body,
+            ]);
+            $status = $response->getStatusCode();
+            $data = $response->toArray(false);
+        } catch (HttpClientException $e) {
+            $this->logger->error('P24 refund transport error', ['sessionId' => $refund->sessionId, 'error' => $e->getMessage()]);
+            throw new PaymentRefundFailed('Przelewy24 refund request failed.', 0, $e);
+        }
+
+        if ($status < 200 || $status >= 300) {
+            $this->logger->error('P24 refund rejected', ['sessionId' => $refund->sessionId, 'status' => $status, 'response' => $data]);
+            throw new PaymentRefundFailed(sprintf('Przelewy24 rejected the refund (HTTP %d).', $status));
         }
     }
 }

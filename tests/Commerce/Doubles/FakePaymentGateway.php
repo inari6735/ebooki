@@ -2,11 +2,13 @@
 
 namespace App\Tests\Commerce\Doubles;
 
+use App\Commerce\Domain\Payment\Exception\PaymentRefundFailed;
 use App\Commerce\Domain\Payment\Exception\PaymentRegistrationFailed;
 use App\Commerce\Domain\Payment\Exception\PaymentVerificationFailed;
 use App\Commerce\Domain\Payment\PaymentGateway;
 use App\Commerce\Domain\Payment\PaymentRegistration;
 use App\Commerce\Domain\Payment\PaymentVerification;
+use App\Commerce\Domain\Payment\RefundRequest;
 use App\Commerce\Domain\Payment\RegisteredPayment;
 
 /**
@@ -19,8 +21,11 @@ final class FakePaymentGateway implements PaymentGateway
     public array $registered = [];
     /** @var list<PaymentVerification> */
     public array $verified = [];
+    /** @var list<RefundRequest> */
+    public array $refunded = [];
     public bool $registerShouldFail = false;
     public bool $verifyShouldFail = false;
+    public bool $refundShouldFail = false;
 
     public function provider(): string
     {
@@ -46,5 +51,14 @@ final class FakePaymentGateway implements PaymentGateway
         if ($this->verifyShouldFail) {
             throw new PaymentVerificationFailed('fake verify failure');
         }
+    }
+
+    public function refund(RefundRequest $refund): void
+    {
+        if ($this->refundShouldFail) {
+            throw new PaymentRefundFailed('fake refund failure');
+        }
+
+        $this->refunded[] = $refund;
     }
 }

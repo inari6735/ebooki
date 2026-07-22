@@ -1,0 +1,136 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Zamówienie {{ order.id }} · Panel admina{% endblock %}
+
+{% block body %}
+    <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+        <a href="{{ path('app_admin_payments') }}" class="text-sm font-semibold text-accent-600 hover:text-accent-700">← Wszystkie płatności</a>
+
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="mt-4 rounded-xl px-4 py-3 text-sm {{ label == 'success' ? 'bg-success-50 text-success-700' : 'bg-error-50 text-error-700' }}">{{ message }}</div>
+            {% endfor %}
+        {% endfor %}
+
+        <div class="mt-4 flex flex-wrap items-start justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-extrabold text-zinc-900">{{ order.title }}</h1>
+                <p class="mt-1 font-mono text-xs text-zinc-400">{{ order.id }}</p>
+            </div>
+            <twig:Commerce:Admin:StatusBadge status="{{ order.status }}" />
+        </div>
+
+        {# Summary #}
+        <dl class="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 rounded-2xl bg-white p-6 ring-1 ring-zinc-100 sm:grid-cols-4">
+            {% set cells = {
+                'Kwota': (order.total_amount / 100)|number_format(2, ',', ' ') ~ ' ' ~ order.currency,
+                'Autor (90%)': (order.author_earnings / 100)|number_format(2, ',', ' ') ~ ' ' ~ order.currency,
+                'Platforma': (order.platform_fee / 100)|number_format(2, ',', ' ') ~ ' ' ~ order.currency,
+                'Kupujący': order.buyer_email ?? order.buyer_id,
+                'Provider': order.provider ?? '—',
+                'ID transakcji': order.provider_order_id ?? '—',
+                'Metoda': order.method ?? '—',
+                'Złożono': order.placed_at|date('Y-m-d H:i'),
+            } %}
+            {% for label, value in cells %}
+                <div>
+                    <dt class="text-xs font-semibold uppercase tracking-wide text-zinc-400">{{ label }}</dt>
+                    <dd class="mt-1 text-sm font-medium text-zinc-800">{{ value }}</dd>
+                </div>
+            {% endfor %}
+        </dl>
+
+        {# Event timeline — the audit trail #}
+        <h2 class="mt-10 text-lg font-bold text-zinc-900">Historia zdarzeń</h2>
+        <ol class="mt-4 space-y-3">
+            {% for e in timeline %}
+                <li class="rounded-2xl bg-white p-5 ring-1 ring-zinc-100">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="inline-flex items-center gap-2 font-semibold text-zinc-800">
+                            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-accent-100 text-xs font-bold text-accent-700">{{ e.version }}</span>
+                            {{ e.event }}
+                        </span>
+                        <span class="text-xs text-zinc-400">{{ e.occurred_at|date('Y-m-d H:i:s') }}</span>
+                    </div>
+                    <pre class="mt-3 overflow-x-auto rounded-lg bg-zinc-50 p-3 text-xs text-zinc-600">{{ e.payload|json_encode(constant('JSON_PRETTY_PRINT') b-or constant('JSON_UNESCAPED_UNICODE') b-or constant('JSON_UNESCAPED_SLASHES')) }}</pre>
+                    {% if e.metadata is not empty %}
+                        <p class="mt-2 text-xs text-zinc-400">
+                            {% if e.metadata.actorId is defined %}aktor: {{ e.metadata.actorId }} · {% endif %}
+                            {% if e.metadata.ip is defined %}ip: {{ e.metadata.ip }} · {% endif %}
+                            {% if e.metadata.correlationId is defined %}korelacja: {{ e.metadata.correlationId }}{% endif %}
+                        </p>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ol>
+
+        {# Provider notifications #}
+        <h2 class="mt-10 text-lg font-bold text-zinc-900">Notyfikacje Przelewy24</h2>
+        {% if notifications is empty %}
+            <p class="mt-3 text-sm text-zinc-400">Brak notyfikacji.</p>
+        {% else %}
+            <div class="mt-4 overflow-x-auto rounded-2xl bg-white ring-1 ring-zinc-100">
+                <table class="min-w-full divide-y divide-zinc-100 text-sm">
+                    <thead class="bg-zinc-50 text-left text-xs font-semibold uppercase text-zinc-500">
+                        <tr><th class="px-4 py-2">Odebrano</th><th class="px-4 py-2">ID P24</th><th class="px-4 py-2 text-right">Kwota</th><th class="px-4 py-2">Podpis</th><th class="px-4 py-2">Status</th></tr>
+                    </thead>
+                    <tbody class="divide-y divide-zinc-50">
+                        {% for n in notifications %}
+                            <tr>
+                                <td class="px-4 py-2 text-zinc-500">{{ n.received_at|date('Y-m-d H:i:s') }}</td>
+                                <td class="px-4 py-2 font-mono text-xs text-zinc-600">{{ n.provider_order_id }}</td>
+                                <td class="px-4 py-2 text-right">{{ n.amount ? (n.amount / 100)|number_format(2, ',', ' ') ~ ' ' ~ n.currency : '—' }}</td>
+                                <td class="px-4 py-2">{{ n.signature_valid ? '✓ ważny' : '✗ nieważny' }}</td>
+                                <td class="px-4 py-2 text-zinc-500">{{ n.status }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        {# Ledger #}
+        <h2 class="mt-10 flex items-center gap-3 text-lg font-bold text-zinc-900">
+            Księga
+            {% if ledger is not empty %}
+                <span class="rounded-full px-2.5 py-0.5 text-xs font-semibold {{ ledgerBalanced ? 'bg-success-50 text-success-600' : 'bg-error-50 text-error-600' }}">
+                    {{ ledgerBalanced ? 'zbilansowana' : 'NIEZBILANSOWANA' }}
+                </span>
+            {% endif %}
+        </h2>
+        {% if ledger is empty %}
+            <p class="mt-3 text-sm text-zinc-400">Brak wpisów księgowych.</p>
+        {% else %}
+            <div class="mt-4 overflow-x-auto rounded-2xl bg-white ring-1 ring-zinc-100">
+                <table class="min-w-full divide-y divide-zinc-100 text-sm">
+                    <thead class="bg-zinc-50 text-left text-xs font-semibold uppercase text-zinc-500">
+                        <tr><th class="px-4 py-2">Referencja</th><th class="px-4 py-2">Konto</th><th class="px-4 py-2">Winien</th><th class="px-4 py-2">Ma</th></tr>
+                    </thead>
+                    <tbody class="divide-y divide-zinc-50">
+                        {% for l in ledger %}
+                            <tr>
+                                <td class="px-4 py-2 font-mono text-xs text-zinc-500">{{ l.reference }}</td>
+                                <td class="px-4 py-2 text-zinc-700">{{ l.account }}{% if l.account_ref %} <span class="text-xs text-zinc-400">({{ l.account_ref }})</span>{% endif %}</td>
+                                <td class="px-4 py-2 text-zinc-800">{{ l.direction == 'DR' ? (l.amount / 100)|number_format(2, ',', ' ') : '' }}</td>
+                                <td class="px-4 py-2 text-zinc-800">{{ l.direction == 'CR' ? (l.amount / 100)|number_format(2, ',', ' ') : '' }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        {# Refund #}
+        {% if refundable %}
+            <div class="mt-10 rounded-2xl border border-error-100 bg-error-50/40 p-6">
+                <h2 class="text-lg font-bold text-zinc-900">Zwrot środków</h2>
+                <p class="mt-1 text-sm text-zinc-500">Pełny zwrot kwoty {{ (order.total_amount / 100)|number_format(2, ',', ' ') }} {{ order.currency }}. Odbiera kupującemu dostęp i odwraca księgę.</p>
+                <form method="post" action="{{ path('app_admin_payment_refund', { orderId: order.id }) }}" class="mt-4" onsubmit="return confirm('Na pewno wykonać zwrot?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('admin_refund') }}">
+                    <input type="text" name="reason" placeholder="Powód zwrotu (opcjonalnie)" class="w-full rounded-xl border border-zinc-200 px-4 py-2.5 text-sm focus:border-accent-500 focus:ring-accent-500">
+                    <twig:Button type="submit" variant="danger" size="md" class="mt-3">Wykonaj zwrot</twig:Button>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

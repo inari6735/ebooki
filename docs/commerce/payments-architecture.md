@@ -396,7 +396,16 @@ tak, że dołączenie wypłat nie rusza modelu zakupu.
    nieujawniana). Link „Pobierz eBook" na stronie powrotu po fulfillmencie. Testy: fulfill (domena),
    confirm→entitlement→zbilansowana księga, download (entitled/obcy/anonim). (Podpisany-wygasający link —
    ewentualne wzmocnienie później; auth+entitlement już wystarcza.)
-5. **Adminka/wgląd**: timeline eventów, lista płatności, reconciliation; zwroty.
+5. ✅ **Adminka/wgląd + zwroty** — ZROBIONE: back-office pod `ROLE_ADMIN` (nadawany komendą
+   `user:promote-admin`, `User::promoteToAdmin()`): lista płatności z filtrem statusu
+   (`/admin/platnosci`), pełny **audyt zamówienia** (`/admin/platnosci/{orderId}` — timeline z
+   `event_store`, notyfikacje P24, księga + wskaźnik zbilansowania), **reconciliation**
+   (`/admin/reconciliation` — niezbilansowana księga, złe podpisy, opłacone-niezrealizowane,
+   utknięte w płatności). **Zwroty**: `Order::refund()`+`OrderRefunded`, serwis `RefundOrder`
+   (P24 `gateway.refund` poza transakcją → `MarkOrderRefunded`), odwrócenie księgi (lustrzane
+   wpisy `refund:{orderId}`) + odebranie entitlementu + status refunded. Read-modele
+   `PaymentsReadModel`/`ReconciliationReadModel`. Testy: refund (domena + integracja: netto 0,
+   entitlement odebrany, provider wywołany, idempotencja), adminka (dostęp/audyt/refund).
 6. **Prawo/VAT**: checkbox zgody + snapshot VAT (dane), potem faktury/OSS.
 7. **Wypłaty autorom** (KYC + transfery).
 

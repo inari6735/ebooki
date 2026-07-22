@@ -3,6 +3,7 @@
 namespace App\Commerce\Infrastructure\Projection;
 
 use App\Commerce\Domain\Order\Event\OrderFulfilled;
+use App\Commerce\Domain\Order\Event\OrderRefunded;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -45,4 +46,16 @@ final readonly class EntitlementProjection
             ],
         );
     }
+
+    #[AsMessageHandler(bus: 'messenger.bus.event')]
+    public function onOrderRefunded(OrderRefunded $event): void
+    {
+        // Refund revokes access — the buyer no longer owns the eBook.
+        $this->connection->executeStatement(
+            'DELETE FROM commerce_entitlements WHERE order_id = :order_id',
+            ['order_id' => $event->orderId->toRfc4122()],
+            ['order_id' => ParameterType::STRING],
+        );
+    }
 }
+
