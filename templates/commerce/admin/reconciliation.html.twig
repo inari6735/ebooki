@@ -1,9 +1,9 @@
-{% extends 'base.html.twig' %}
+{% extends 'dashboard/layout.html.twig' %}
 
-{% block title %}Reconciliation · Panel admina{% endblock %}
+{% block title %}Reconciliation — Panel admina · Bookly{% endblock %}
 
 {% macro bucket(title, description, rows, tone) %}
-    <section class="rounded-2xl bg-white p-6 ring-1 ring-zinc-100">
+    <section class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-zinc-100">
         <div class="flex items-center justify-between gap-3">
             <h2 class="text-base font-bold text-zinc-900">{{ title }}</h2>
             <span class="rounded-full px-2.5 py-0.5 text-xs font-bold {{ rows is empty ? 'bg-success-50 text-success-600' : (tone == 'critical' ? 'bg-error-50 text-error-600' : 'bg-amber-100 text-amber-700') }}">{{ rows|length }}</span>
@@ -14,7 +14,7 @@
                 {% for r in rows %}
                     <li class="flex flex-wrap items-center gap-2 font-mono text-xs text-zinc-600">
                         {% set oid = r.id ?? r.order_id ?? r.session_id %}
-                        <a href="{{ path('app_admin_payment_detail', { orderId: oid }) }}" class="text-accent-600 hover:underline">{{ oid }}</a>
+                        <a href="{{ path('app_admin_order_detail', { orderId: oid }) }}" class="text-accent-600 hover:underline">{{ oid }}</a>
                         {% if r.title is defined %}<span class="font-sans text-zinc-500">{{ r.title }}</span>{% endif %}
                         {% if r.debits is defined %}<span class="font-sans text-error-600">DR {{ (r.debits / 100)|number_format(2, ',', ' ') }} / CR {{ (r.credits / 100)|number_format(2, ',', ' ') }}</span>{% endif %}
                     </li>
@@ -24,19 +24,16 @@
     </section>
 {% endmacro %}
 
-{% block body %}
-    <div class="mx-auto max-w-[1400px] px-4 py-8 sm:px-6 lg:px-8">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-            <h1 class="text-2xl font-extrabold text-zinc-900">Reconciliation</h1>
-            <a href="{{ path('app_admin_payments') }}" class="text-sm font-semibold text-accent-600 hover:text-accent-700">← Płatności</a>
-        </div>
-        <p class="mt-2 text-sm text-zinc-500">Lokalne anomalie do sprawdzenia. Wszystkie liczniki na zielono = brak problemów.</p>
+{% block panel_content %}
+    <div>
+        <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Reconciliation</h1>
+        <p class="mt-1 text-sm text-zinc-500">Lokalne anomalie do sprawdzenia. Wszystkie liczniki na zielono = brak problemów.</p>
+    </div>
 
-        <div class="mt-6 grid gap-5 lg:grid-cols-2">
-            {{ _self.bucket('Niezbilansowana księga', 'Zamówienia, gdzie Σ Winien ≠ Σ Ma. To nie powinno się nigdy zdarzyć.', unbalanced, 'critical') }}
-            {{ _self.bucket('Nieprawidłowe podpisy', 'Notyfikacje P24, które nie przeszły weryfikacji podpisu.', invalidSignatures, 'critical') }}
-            {{ _self.bucket('Opłacone, niezrealizowane', 'Płatność potwierdzona, ale dostęp nie został przyznany.', paidNotFulfilled, 'warning') }}
-            {{ _self.bucket('Utknięte w płatności', 'Zamówienia oczekujące na płatność dłużej niż godzinę (prawdopodobnie porzucone).', stuck, 'warning') }}
-        </div>
+    <div class="mt-6 grid gap-5 lg:grid-cols-2">
+        {{ _self.bucket('Niezbilansowana księga', 'Zamówienia, gdzie Σ Winien ≠ Σ Ma. To nie powinno się nigdy zdarzyć.', unbalanced, 'critical') }}
+        {{ _self.bucket('Nieprawidłowe podpisy', 'Notyfikacje płatności, które nie przeszły weryfikacji podpisu.', invalidSignatures, 'critical') }}
+        {{ _self.bucket('Opłacone, niezrealizowane', 'Płatność potwierdzona, ale dostęp nie został przyznany.', paidNotFulfilled, 'warning') }}
+        {{ _self.bucket('Utknięte w płatności', 'Zamówienia oczekujące na płatność dłużej niż godzinę (prawdopodobnie porzucone).', stuck, 'warning') }}
     </div>
 {% endblock %}

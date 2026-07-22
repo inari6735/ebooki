@@ -8,6 +8,13 @@
     { key: 'zakupione',  label: 'Zakupione',  icon: 'cart',     href: path('app_dashboard_purchased') },
     { key: 'ustawienia', label: 'Ustawienia', icon: 'settings', href: '#' },
 ] %}
+{# Admin-only back-office, rendered inside the same panel shell. #}
+{% if is_granted('ROLE_ADMIN') %}
+    {% set panelMenu = panelMenu|merge([
+        { key: 'zamowienia',     label: 'Zamówienia',     icon: 'tag',    href: path('app_admin_orders') },
+        { key: 'reconciliation', label: 'Reconciliation', icon: 'shield', href: path('app_admin_reconciliation') },
+    ]) %}
+{% endif %}
 
 {% block body %}
     <section class="bg-canvas py-8 lg:py-10">

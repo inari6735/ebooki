@@ -18,10 +18,11 @@ final class AdminReconciliationController extends AbstractController
     {
     }
 
-    #[Route('/admin/reconciliation', name: 'app_admin_reconciliation', methods: ['GET'])]
+    #[Route('/panel/reconciliation', name: 'app_admin_reconciliation', methods: ['GET'])]
     public function __invoke(): Response
     {
         return $this->render('commerce/admin/reconciliation.html.twig', [
+            'active' => 'reconciliation',
             'stuck' => $this->reconciliation->stuckAwaitingPayment(new \DateTimeImmutable('-1 hour')),
             'paidNotFulfilled' => $this->reconciliation->paidNotFulfilled(),
             'unbalanced' => $this->reconciliation->unbalancedLedger(),

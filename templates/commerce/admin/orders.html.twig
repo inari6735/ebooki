@@ -1,0 +1,62 @@
+{% extends 'dashboard/layout.html.twig' %}
+
+{% block title %}Zamówienia — Panel admina · Bookly{% endblock %}
+
+{% set statuses = {
+    '': 'Wszystkie',
+    pending: 'Oczekujące',
+    awaiting_payment: 'W trakcie płatności',
+    paid: 'Opłacone',
+    fulfilled: 'Zrealizowane',
+    failed: 'Nieudane',
+    refunded: 'Zwrócone',
+} %}
+
+{% block panel_content %}
+    <div>
+        <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Zamówienia</h1>
+        <p class="mt-1 text-sm text-zinc-500">Wszystkie zamówienia w systemie — jeden wiersz na zamówienie. Wejdź w szczegóły, aby prześledzić eventy i przebieg płatności.</p>
+    </div>
+
+    <div class="mt-6 flex flex-wrap gap-2">
+        {% for value, label in statuses %}
+            <a href="{{ path('app_admin_orders', value ? { status: value } : {}) }}"
+               class="rounded-full px-3.5 py-1.5 text-sm font-medium {{ (status ?? '') == value ? 'bg-accent-600 text-white' : 'bg-white text-zinc-600 ring-1 ring-zinc-200 hover:bg-zinc-50' }}">
+                {{ label }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <div class="mt-6 overflow-x-auto rounded-2xl bg-white shadow-sm ring-1 ring-zinc-100">
+        <table class="min-w-full divide-y divide-zinc-100 text-sm">
+            <thead class="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                <tr>
+                    <th class="px-4 py-3">Data</th>
+                    <th class="px-4 py-3">eBook</th>
+                    <th class="px-4 py-3">Kupujący</th>
+                    <th class="px-4 py-3 text-right">Kwota</th>
+                    <th class="px-4 py-3">Status</th>
+                    <th class="px-4 py-3">Provider</th>
+                    <th class="px-4 py-3"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-zinc-50">
+                {% for o in orders %}
+                    <tr class="hover:bg-zinc-50/60">
+                        <td class="whitespace-nowrap px-4 py-3 text-zinc-500">{{ o.placed_at|date('Y-m-d H:i') }}</td>
+                        <td class="px-4 py-3 font-medium text-zinc-800">{{ o.title }}</td>
+                        <td class="px-4 py-3 text-zinc-500">{{ o.buyer_email ?? o.buyer_id }}</td>
+                        <td class="whitespace-nowrap px-4 py-3 text-right font-semibold text-zinc-800">{{ (o.total_amount / 100)|number_format(2, ',', ' ') }} {{ o.currency }}</td>
+                        <td class="px-4 py-3"><twig:Commerce:Admin:StatusBadge status="{{ o.status }}" /></td>
+                        <td class="px-4 py-3 text-zinc-500">{{ o.provider ?? '—' }}</td>
+                        <td class="px-4 py-3 text-right">
+                            <a href="{{ path('app_admin_order_detail', { orderId: o.id }) }}" class="font-semibold text-accent-600 hover:text-accent-700">Szczegóły</a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="7" class="px-4 py-10 text-center text-zinc-400">Brak zamówień do wyświetlenia.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

@@ -27,7 +27,7 @@ final class AdminPaymentsTest extends WebTestCase
         $this->register('user@example.com');
         $this->login($client, 'user@example.com');
 
-        $client->request('GET', 'https://localhost/admin/platnosci');
+        $client->request('GET', 'https://localhost/panel/zamowienia');
 
         self::assertResponseStatusCodeSame(403);
     }
@@ -40,11 +40,11 @@ final class AdminPaymentsTest extends WebTestCase
         $orderId = $this->fulfilledOrder();
         $this->login($client, 'admin@example.com');
 
-        $client->request('GET', 'https://localhost/admin/platnosci');
+        $client->request('GET', 'https://localhost/panel/zamowienia');
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('body', 'Zen PHP');
 
-        $client->request('GET', 'https://localhost/admin/platnosci/' . $orderId);
+        $client->request('GET', 'https://localhost/panel/zamowienia/' . $orderId);
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('body', 'OrderPlaced');
         self::assertSelectorTextContains('body', 'OrderFulfilled');
@@ -59,7 +59,7 @@ final class AdminPaymentsTest extends WebTestCase
         $orderId = $this->fulfilledOrder();
         $this->login($client, 'admin@example.com');
 
-        $crawler = $client->request('GET', 'https://localhost/admin/platnosci/' . $orderId);
+        $crawler = $client->request('GET', 'https://localhost/panel/zamowienia/' . $orderId);
         $form = $crawler->selectButton('Wykonaj zwrot')->form(['reason' => 'test refund']);
         $client->submit($form);
 
