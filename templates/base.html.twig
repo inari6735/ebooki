@@ -24,7 +24,7 @@
     </head>
     <body class="flex min-h-screen flex-col bg-canvas text-zinc-900 antialiased">
         {% block shell %}
-            <twig:Layout:Header />
+            <twig:Layout:Header :transparent="header_transparent|default(false)" />
             <main class="flex-1">{% block body %}{% endblock %}</main>
             <twig:Layout:Footer />
         {% endblock %}

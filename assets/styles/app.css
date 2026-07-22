@@ -160,15 +160,26 @@
 }
 
 /* ── Homepage hero decorations ──────────────────────────────────────────────── */
+/* Uses the individual `translate` property (not `transform`) so a static 3D
+   `transform` (see .badge-3d) can be layered on the same element without conflict. */
 @keyframes hero-float {
-    0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(-12px); }
+    0%, 100% { translate: 0 0; }
+    50%      { translate: 0 -12px; }
 }
 .hero-float      { animation: hero-float 6s ease-in-out infinite; }
 .hero-float-slow { animation: hero-float 8s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
     .hero-float, .hero-float-slow { animation: none; }
+}
+
+/* Light 3D tilt for the floating hero badges — self-perspective + a slight turn
+   toward the viewer, with a directional shadow so they read as physical tiles. */
+.badge-3d {
+    transform: perspective(1000px) rotateX(6deg) rotateY(-16deg);
+    box-shadow:
+        -16px 20px 34px -14px rgb(6 20 47 / 0.32),
+        0 2px 6px rgb(6 20 47 / 0.12);
 }
 
 /* Subtle dot grid for decorative corners (color via currentColor). */
