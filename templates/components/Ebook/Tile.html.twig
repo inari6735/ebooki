@@ -39,7 +39,8 @@
 {% set discountPct = discounted ? ((base - promo) / base * 100)|round : 0 %}
 
 <article class="group relative">
-    <div class="relative aspect-[2/3] overflow-hidden rounded-2xl bg-gradient-to-br {{ covers[variant] }} shadow-lg shadow-zinc-900/10 ring-1 ring-black/5 transition duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl group-hover:shadow-zinc-900/15"
+    {# Sharp corners — a book cover has straight edges, not rounded ones. #}
+    <div class="relative aspect-[2/3] overflow-hidden bg-gradient-to-br {{ covers[variant] }} shadow-lg shadow-zinc-900/10 ring-1 ring-black/5 transition duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl group-hover:shadow-zinc-900/15"
          {% if link %}style="view-transition-name: ebook-cover-{{ ebook.slug }}"{% endif %}>
         {% set thumbs = ebook.thumbnails|default([]) %}
         {% if thumbs is not empty %}
@@ -49,11 +50,14 @@
             {% for w in thumbs %}
                 {% set srcset = srcset|merge([path('app_ebook_cover', { id: ebook.id, w: w }) ~ ' ' ~ w ~ 'w']) %}
             {% endfor %}
+            {# Shimmer skeleton shown until the cover fades in (see image-reveal). #}
+            <span aria-hidden="true" class="absolute inset-0 animate-pulse bg-zinc-200"></span>
             <img src="{{ path('app_ebook_cover', { id: ebook.id, w: thumbs|first }) }}"
                  srcset="{{ srcset|join(', ') }}"
-                 sizes="(min-width: 1024px) 220px, (min-width: 640px) 30vw, 45vw"
+                 sizes="(min-width: 1024px) 300px, (min-width: 640px) 33vw, 50vw"
                  alt="Okładka: {{ ebook.title }}" loading="lazy"
-                 class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105">
+                 data-controller="image-reveal"
+                 class="absolute inset-0 h-full w-full object-cover transition duration-700 ease-out group-hover:scale-105">
         {% else %}
             <span aria-hidden="true" class="absolute inset-y-0 left-0 w-2 bg-black/15"></span>
             <span aria-hidden="true" class="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/15 blur-2xl"></span>
