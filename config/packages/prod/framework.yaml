@@ -1,0 +1,12 @@
+# The app runs behind Upsun's router (TLS terminated at the edge, forwarded over
+# HTTP with X-Forwarded-* headers). Only that router can reach the container, so
+# we trust it. Without this, Symfony would see plain HTTP and the wrong host —
+# breaking Secure cookies (AUTH_TOKEN/REFRESH_TOKEN are Secure), absolute URLs
+# (Przelewy24 urlReturn/urlStatus) and CSRF same-origin checks.
+framework:
+    trusted_proxies: '127.0.0.1,REMOTE_ADDR'
+    trusted_headers:
+        - 'x-forwarded-for'
+        - 'x-forwarded-host'
+        - 'x-forwarded-proto'
+        - 'x-forwarded-port'

@@ -1,0 +1,21 @@
+# Doctrine production caching (Symfony performance checklist): keep ORM metadata,
+# parsed queries and (opt-in) result sets in fast cache pools instead of parsing
+# on every request. `cache.system` is backed by APCu (enabled in the runtime),
+# `cache.app` by the filesystem.
+doctrine:
+    orm:
+        # (auto_generate_proxy_classes is already false in prod by default.)
+        query_cache_driver:
+            type: pool
+            pool: doctrine.system_cache_pool
+        result_cache_driver:
+            type: pool
+            pool: doctrine.result_cache_pool
+
+framework:
+    cache:
+        pools:
+            doctrine.result_cache_pool:
+                adapter: cache.app
+            doctrine.system_cache_pool:
+                adapter: cache.system
