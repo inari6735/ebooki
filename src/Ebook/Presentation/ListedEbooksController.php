@@ -8,6 +8,7 @@ use App\Ebook\Application\UpdateEbook;
 use App\Ebook\Domain\Ebook;
 use App\Ebook\Domain\EbookRepository;
 use App\Ebook\Domain\EbookStatus;
+use App\Ebook\Infrastructure\MediaThumbnailRepository;
 use App\Ebook\Presentation\Form\DetailFields;
 use App\Ebook\Presentation\Form\EditEbookType;
 use App\Ebook\Presentation\PublishEbook\EbookUploadRules;
@@ -31,8 +32,10 @@ final class ListedEbooksController extends AbstractController
 
     private const string CSRF_ID = 'ebook_manage';
 
-    public function __construct(private readonly EbookRepository $ebooks)
-    {
+    public function __construct(
+        private readonly EbookRepository $ebooks,
+        private readonly MediaThumbnailRepository $thumbnails,
+    ) {
     }
 
     #[Route('/panel/wystawione', name: 'app_dashboard_listed', methods: ['GET'])]
@@ -58,6 +61,7 @@ final class ListedEbooksController extends AbstractController
         return $this->render('dashboard/listed.html.twig', [
             'active' => 'wystawione',
             'ebooks' => array_values($ebooks),
+            'coverThumbs' => $this->coverThumbnails($ebooks),
             'counts' => $counts,
             'filter' => \array_key_exists($filter, $counts) ? $filter : 'all',
             'highlight' => $request->query->getString('new'),
@@ -158,6 +162,27 @@ final class ListedEbooksController extends AbstractController
     private function only(array $ebooks, EbookStatus $status): array
     {
         return array_values(array_filter($ebooks, static fn (Ebook $e): bool => $status === $e->getStatus()));
+    }
+
+    /**
+     * Available thumbnail widths keyed by cover media id (rfc4122), for the tiles'
+     * srcset — one batched query for the whole page.
+     *
+     * @param list<Ebook> $ebooks
+     *
+     * @return array<string, list<int>>
+     */
+    private function coverThumbnails(array $ebooks): array
+    {
+        $coverIds = [];
+        foreach ($ebooks as $e) {
+            $cover = $e->getCover();
+            if (null !== $cover) {
+                $coverIds[] = $cover->getId();
+            }
+        }
+
+        return $this->thumbnails->widthsForMediaIds($coverIds);
     }
 
     private function toData(Ebook $e): PublishEbookData

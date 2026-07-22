@@ -92,6 +92,7 @@
                     <twig:Ebook:Tile size="sm" :ebook="{
                         id: e.id, slug: e.slug, title: e.title, author: e.authorName,
                         hasCover: e.cover is not null, shortDescription: e.shortDescription,
+                        thumbnails: e.cover ? (coverThumbs[e.cover.id.toRfc4122] ?? []) : [],
                         isFree: e.pricing.isFree, payWhatYouWant: e.pricing.isPayWhatYouWant,
                         price: e.pricing.baseAmountMinor is not null ? e.pricing.baseAmountMinor / 100 : null,
                         promoPrice: e.pricing.promoAmountMinor is not null ? e.pricing.promoAmountMinor / 100 : null,

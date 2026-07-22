@@ -1,12 +1,17 @@
 package grpcserver_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"image"
+	"image/color"
+	"image/png"
 	"io"
 	"net"
 	"testing"
 
+	_ "golang.org/x/image/webp" // register WebP decoder to verify generated thumbnails
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -17,6 +22,7 @@ import (
 	"github.com/bookly/media/internal/blob"
 	"github.com/bookly/media/internal/grpcserver"
 	"github.com/bookly/media/internal/media"
+	"github.com/bookly/media/internal/thumbnail"
 )
 
 // newClient spins up the real gRPC server backed by srv over an in-memory
@@ -53,7 +59,7 @@ func realServer(t *testing.T) *grpcserver.Server {
 	if err != nil {
 		t.Fatalf("NewFSStore: %v", err)
 	}
-	return grpcserver.New(media.NewService(store))
+	return grpcserver.New(media.NewService(store, thumbnail.New()))
 }
 
 func TestStoreStreamThenStatAndDelete(t *testing.T) {
@@ -131,6 +137,60 @@ func TestReadStreamsBytesBack(t *testing.T) {
 	}
 }
 
+// TestGenerateThumbnailsEndToEnd runs the full stack: upload a real PNG, ask the
+// service (real thumbnail renderer) to make a 2:3 / 200px WebP variant, then read
+// it back and decode it to confirm it is a valid 200x300 image at the derived key.
+func TestGenerateThumbnailsEndToEnd(t *testing.T) {
+	client := newClient(t, realServer(t))
+	ctx := context.Background()
+
+	// A 300x300 source; crop-to-fill 2:3 then resize to 200 wide → 200x300.
+	src := image.NewRGBA(image.Rect(0, 0, 300, 300))
+	for y := 0; y < 300; y++ {
+		for x := 0; x < 300; x++ {
+			src.Set(x, y, color.RGBA{R: uint8(x), G: uint8(y), B: 128, A: 255})
+		}
+	}
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, src); err != nil {
+		t.Fatalf("encode png: %v", err)
+	}
+	store(t, client, "covers/xyz/original.png", buf.String())
+
+	resp, err := client.GenerateThumbnails(ctx, &mediav1.GenerateThumbnailsRequest{
+		SourceKey: "covers/xyz/original.png",
+		Format:    "webp",
+		Quality:   80,
+		Specs:     []*mediav1.ThumbnailSpec{{AspectW: 2, AspectH: 3, Width: 200}},
+	})
+	if err != nil {
+		t.Fatalf("GenerateThumbnails: %v", err)
+	}
+	if len(resp.GetThumbnails()) != 1 {
+		t.Fatalf("got %d thumbnails, want 1", len(resp.GetThumbnails()))
+	}
+	th := resp.GetThumbnails()[0]
+	if th.GetWidth() != 200 || th.GetHeight() != 300 {
+		t.Fatalf("dims %dx%d, want 200x300", th.GetWidth(), th.GetHeight())
+	}
+	if th.GetKey() != "covers/xyz/original_w200.webp" {
+		t.Fatalf("key = %q, want covers/xyz/original_w200.webp", th.GetKey())
+	}
+
+	// Read the variant back and decode it — proves it is a real, valid WebP.
+	got := readKey(t, client, th.GetKey())
+	img, format, err := image.Decode(bytes.NewReader(got))
+	if err != nil {
+		t.Fatalf("decode thumbnail: %v", err)
+	}
+	if format != "webp" {
+		t.Fatalf("decoded format = %q, want webp", format)
+	}
+	if img.Bounds().Dx() != 200 || img.Bounds().Dy() != 300 {
+		t.Fatalf("decoded bounds = %v, want 200x300", img.Bounds())
+	}
+}
+
 func TestMoveAndDirectories(t *testing.T) {
 	client := newClient(t, realServer(t))
 	ctx := context.Background()
@@ -181,6 +241,26 @@ func code(err error) codes.Code {
 	return st.Code()
 }
 
+func readKey(t *testing.T, client mediav1.MediaServiceClient, key string) []byte {
+	t.Helper()
+	stream, err := client.Read(context.Background(), &mediav1.ReadRequest{Key: key})
+	if err != nil {
+		t.Fatalf("Read %q: %v", key, err)
+	}
+	var out []byte
+	for {
+		resp, err := stream.Recv()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			t.Fatalf("Recv %q: %v", key, err)
+		}
+		out = append(out, resp.GetChunk()...)
+	}
+	return out
+}
+
 func store(t *testing.T, client mediav1.MediaServiceClient, key, body string) {
 	t.Helper()
 	stream, err := client.Store(context.Background())
@@ -210,5 +290,8 @@ func (boomService) Delete(context.Context, string) error                { return
 func (boomService) Move(context.Context, string, string) error          { return errBoom }
 func (boomService) DeleteDirectory(context.Context, string) error       { return errBoom }
 func (boomService) Directories(context.Context, string) ([]string, error) {
+	return nil, errBoom
+}
+func (boomService) GenerateThumbnails(context.Context, string, string, uint32, []media.ThumbnailSpec) ([]media.Variant, error) {
 	return nil, errBoom
 }

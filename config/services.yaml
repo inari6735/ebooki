@@ -62,6 +62,11 @@ services:
         arguments:
             $endpoint: '%env(MEDIA_GRPC_ENDPOINT)%'
 
+    # Cover thumbnail generation is delegated to the Go media service over gRPC.
+    App\Ebook\Infrastructure\Thumbnail\GrpcThumbnailGenerator:
+        arguments:
+            $endpoint: '%env(MEDIA_GRPC_ENDPOINT)%'
+
     App\Ebook\Domain\MediaRepository:
         alias: App\Ebook\Infrastructure\DoctrineMediaRepository
 

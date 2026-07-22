@@ -4,10 +4,12 @@ namespace App\Ebook\Presentation;
 
 use App\Ebook\Domain\CategoryRepository;
 use App\Ebook\Infrastructure\EbookCatalog;
+use App\Ebook\Infrastructure\MediaThumbnailRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * Public eBook catalogue — browse all published eBooks, filter by category and
@@ -27,6 +29,7 @@ final class CatalogController extends AbstractController
     public function __construct(
         private readonly EbookCatalog $catalog,
         private readonly CategoryRepository $categories,
+        private readonly MediaThumbnailRepository $thumbnails,
     ) {
     }
 
@@ -46,7 +49,7 @@ final class CatalogController extends AbstractController
         $items = $this->catalog->page($category, $sort, self::PER_PAGE, ($page - 1) * self::PER_PAGE);
 
         return $this->render('ebook/catalog.html.twig', [
-            'ebooks' => array_map($this->toCard(...), $items),
+            'ebooks' => $this->withThumbnails(array_map($this->toCard(...), $items)),
             'categories' => array_map(
                 static fn ($c): array => ['name' => $c->getName(), 'slug' => $c->getSlug()],
                 $this->categories->all(),
@@ -73,6 +76,7 @@ final class CatalogController extends AbstractController
             'slug' => $r['slug'],
             'title' => $r['title'],
             'author' => $r['author_name'],
+            'coverMediaId' => $r['cover_media_id'],
             'hasCover' => null !== $r['cover_media_id'],
             'category' => $r['category_name'],
             'categorySlug' => $r['category_slug'],
@@ -83,5 +87,31 @@ final class CatalogController extends AbstractController
             'promoPrice' => null !== $r['promo_price_amount'] ? (int) $r['promo_price_amount'] / 100 : null,
             'currency' => $r['currency'],
         ];
+    }
+
+    /**
+     * Attaches the list of available thumbnail widths to each card (one batched
+     * query for the whole page). The tile builds its srcset from these — cards
+     * whose cover has no generated thumbnails get an empty list (→ placeholder).
+     *
+     * @param list<array<string, mixed>> $cards
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function withThumbnails(array $cards): array
+    {
+        $coverIds = [];
+        foreach ($cards as $card) {
+            if (null !== $card['coverMediaId']) {
+                $coverIds[] = Uuid::fromString($card['coverMediaId']);
+            }
+        }
+        $widths = $this->thumbnails->widthsForMediaIds($coverIds);
+
+        foreach ($cards as &$card) {
+            $card['thumbnails'] = null !== $card['coverMediaId'] ? ($widths[$card['coverMediaId']] ?? []) : [];
+        }
+
+        return $cards;
     }
 }

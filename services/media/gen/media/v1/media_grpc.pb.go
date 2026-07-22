@@ -19,13 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	MediaService_Store_FullMethodName           = "/media.v1.MediaService/Store"
-	MediaService_Read_FullMethodName            = "/media.v1.MediaService/Read"
-	MediaService_Stat_FullMethodName            = "/media.v1.MediaService/Stat"
-	MediaService_Delete_FullMethodName          = "/media.v1.MediaService/Delete"
-	MediaService_Move_FullMethodName            = "/media.v1.MediaService/Move"
-	MediaService_DeleteDirectory_FullMethodName = "/media.v1.MediaService/DeleteDirectory"
-	MediaService_Directories_FullMethodName     = "/media.v1.MediaService/Directories"
+	MediaService_Store_FullMethodName              = "/media.v1.MediaService/Store"
+	MediaService_Read_FullMethodName               = "/media.v1.MediaService/Read"
+	MediaService_Stat_FullMethodName               = "/media.v1.MediaService/Stat"
+	MediaService_Delete_FullMethodName             = "/media.v1.MediaService/Delete"
+	MediaService_Move_FullMethodName               = "/media.v1.MediaService/Move"
+	MediaService_DeleteDirectory_FullMethodName    = "/media.v1.MediaService/DeleteDirectory"
+	MediaService_Directories_FullMethodName        = "/media.v1.MediaService/Directories"
+	MediaService_GenerateThumbnails_FullMethodName = "/media.v1.MediaService/GenerateThumbnails"
 )
 
 // MediaServiceClient is the client API for MediaService service.
@@ -55,6 +56,11 @@ type MediaServiceClient interface {
 	DeleteDirectory(ctx context.Context, in *DeleteDirectoryRequest, opts ...grpc.CallOption) (*DeleteDirectoryResponse, error)
 	// Directories lists immediate child directory names under a prefix.
 	Directories(ctx context.Context, in *DirectoriesRequest, opts ...grpc.CallOption) (*DirectoriesResponse, error)
+	// GenerateThumbnails reads the source blob and writes resized WebP (or other
+	// format) variants next to it. The service has NO domain knowledge ("cover",
+	// "avatar", …): each spec carries the target aspect ratio and one side length,
+	// and the service derives the rest. Deterministic keys, so re-running overwrites.
+	GenerateThumbnails(ctx context.Context, in *GenerateThumbnailsRequest, opts ...grpc.CallOption) (*GenerateThumbnailsResponse, error)
 }
 
 type mediaServiceClient struct {
@@ -147,6 +153,16 @@ func (c *mediaServiceClient) Directories(ctx context.Context, in *DirectoriesReq
 	return out, nil
 }
 
+func (c *mediaServiceClient) GenerateThumbnails(ctx context.Context, in *GenerateThumbnailsRequest, opts ...grpc.CallOption) (*GenerateThumbnailsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GenerateThumbnailsResponse)
+	err := c.cc.Invoke(ctx, MediaService_GenerateThumbnails_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MediaServiceServer is the server API for MediaService service.
 // All implementations must embed UnimplementedMediaServiceServer
 // for forward compatibility.
@@ -174,6 +190,11 @@ type MediaServiceServer interface {
 	DeleteDirectory(context.Context, *DeleteDirectoryRequest) (*DeleteDirectoryResponse, error)
 	// Directories lists immediate child directory names under a prefix.
 	Directories(context.Context, *DirectoriesRequest) (*DirectoriesResponse, error)
+	// GenerateThumbnails reads the source blob and writes resized WebP (or other
+	// format) variants next to it. The service has NO domain knowledge ("cover",
+	// "avatar", …): each spec carries the target aspect ratio and one side length,
+	// and the service derives the rest. Deterministic keys, so re-running overwrites.
+	GenerateThumbnails(context.Context, *GenerateThumbnailsRequest) (*GenerateThumbnailsResponse, error)
 	mustEmbedUnimplementedMediaServiceServer()
 }
 
@@ -204,6 +225,9 @@ func (UnimplementedMediaServiceServer) DeleteDirectory(context.Context, *DeleteD
 }
 func (UnimplementedMediaServiceServer) Directories(context.Context, *DirectoriesRequest) (*DirectoriesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Directories not implemented")
+}
+func (UnimplementedMediaServiceServer) GenerateThumbnails(context.Context, *GenerateThumbnailsRequest) (*GenerateThumbnailsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GenerateThumbnails not implemented")
 }
 func (UnimplementedMediaServiceServer) mustEmbedUnimplementedMediaServiceServer() {}
 func (UnimplementedMediaServiceServer) testEmbeddedByValue()                      {}
@@ -334,6 +358,24 @@ func _MediaService_Directories_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MediaService_GenerateThumbnails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GenerateThumbnailsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MediaServiceServer).GenerateThumbnails(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MediaService_GenerateThumbnails_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MediaServiceServer).GenerateThumbnails(ctx, req.(*GenerateThumbnailsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MediaService_ServiceDesc is the grpc.ServiceDesc for MediaService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -360,6 +402,10 @@ var MediaService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Directories",
 			Handler:    _MediaService_Directories_Handler,
+		},
+		{
+			MethodName: "GenerateThumbnails",
+			Handler:    _MediaService_GenerateThumbnails_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

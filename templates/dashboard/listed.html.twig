@@ -65,6 +65,7 @@
                         id: e.id, slug: e.slug, title: e.title, author: e.authorName,
                         category: e.category ? e.category.name : null,
                         hasCover: e.cover is not null, shortDescription: e.shortDescription,
+                        thumbnails: e.cover ? (coverThumbs[e.cover.id.toRfc4122] ?? []) : [],
                     }">
                         <twig:block name="badge">
                             <div class="absolute left-3 top-3 z-10 flex flex-col items-start gap-1.5">

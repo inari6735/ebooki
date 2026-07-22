@@ -11,6 +11,7 @@ use App\Ebook\Domain\EbookFileRole;
 use App\Ebook\Domain\EbookRepository;
 use App\Ebook\Domain\MediaRepository;
 use App\Ebook\Presentation\PublishEbook\PublishEbookData;
+use App\Shared\Application\Bus\CommandBus;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\Uid\Uuid;
 
@@ -29,6 +30,7 @@ final readonly class PublishEbookFromWizard
         private EbookUploadStaging $staging,
         private EbookPricingFactory $pricing,
         private SluggerInterface $slugger,
+        private CommandBus $commandBus,
     ) {
     }
 
@@ -57,9 +59,11 @@ final readonly class PublishEbookFromWizard
 
         $destination = 'ebooks/'.$id->toRfc4122();
 
+        $coverMediaId = null;
         if (null !== $data->coverMediaId && null !== ($cover = $this->media->get(Uuid::fromString($data->coverMediaId)))) {
             $this->staging->commit($cover, $destination);
             $ebook->assignCover($cover);
+            $coverMediaId = $cover->getId();
         }
 
         $isPrimary = true;
@@ -85,6 +89,13 @@ final readonly class PublishEbookFromWizard
         }
 
         $this->ebooks->save($ebook);
+
+        // Cover is now committed to its permanent key — kick off async thumbnail
+        // generation. Routed to the async transport, so it never blocks this call;
+        // failures/retries live entirely in the worker and never touch the ebook.
+        if (null !== $coverMediaId) {
+            $this->commandBus->dispatch(new GenerateCoverThumbnails($coverMediaId->toRfc4122()));
+        }
 
         return $ebook;
     }

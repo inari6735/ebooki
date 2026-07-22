@@ -645,6 +645,251 @@ func (x *DirectoriesResponse) GetNames() []string {
 	return nil
 }
 
+// ThumbnailSpec describes ONE variant to generate: the target aspect ratio
+// (aspect_w:aspect_h) and the width of the output. Height is derived as
+// width * aspect_h / aspect_w. The source is crop-to-filled (centered) to that
+// ratio before resizing.
+type ThumbnailSpec struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AspectW       uint32                 `protobuf:"varint,1,opt,name=aspect_w,json=aspectW,proto3" json:"aspect_w,omitempty"`
+	AspectH       uint32                 `protobuf:"varint,2,opt,name=aspect_h,json=aspectH,proto3" json:"aspect_h,omitempty"`
+	Width         uint32                 `protobuf:"varint,3,opt,name=width,proto3" json:"width,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ThumbnailSpec) Reset() {
+	*x = ThumbnailSpec{}
+	mi := &file_media_v1_media_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ThumbnailSpec) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ThumbnailSpec) ProtoMessage() {}
+
+func (x *ThumbnailSpec) ProtoReflect() protoreflect.Message {
+	mi := &file_media_v1_media_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ThumbnailSpec.ProtoReflect.Descriptor instead.
+func (*ThumbnailSpec) Descriptor() ([]byte, []int) {
+	return file_media_v1_media_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *ThumbnailSpec) GetAspectW() uint32 {
+	if x != nil {
+		return x.AspectW
+	}
+	return 0
+}
+
+func (x *ThumbnailSpec) GetAspectH() uint32 {
+	if x != nil {
+		return x.AspectH
+	}
+	return 0
+}
+
+func (x *ThumbnailSpec) GetWidth() uint32 {
+	if x != nil {
+		return x.Width
+	}
+	return 0
+}
+
+type GenerateThumbnailsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SourceKey     string                 `protobuf:"bytes,1,opt,name=source_key,json=sourceKey,proto3" json:"source_key,omitempty"`
+	Format        string                 `protobuf:"bytes,2,opt,name=format,proto3" json:"format,omitempty"`    // e.g. "webp"
+	Quality       uint32                 `protobuf:"varint,3,opt,name=quality,proto3" json:"quality,omitempty"` // encoder quality, e.g. 80
+	Specs         []*ThumbnailSpec       `protobuf:"bytes,4,rep,name=specs,proto3" json:"specs,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GenerateThumbnailsRequest) Reset() {
+	*x = GenerateThumbnailsRequest{}
+	mi := &file_media_v1_media_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GenerateThumbnailsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GenerateThumbnailsRequest) ProtoMessage() {}
+
+func (x *GenerateThumbnailsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_media_v1_media_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GenerateThumbnailsRequest.ProtoReflect.Descriptor instead.
+func (*GenerateThumbnailsRequest) Descriptor() ([]byte, []int) {
+	return file_media_v1_media_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *GenerateThumbnailsRequest) GetSourceKey() string {
+	if x != nil {
+		return x.SourceKey
+	}
+	return ""
+}
+
+func (x *GenerateThumbnailsRequest) GetFormat() string {
+	if x != nil {
+		return x.Format
+	}
+	return ""
+}
+
+func (x *GenerateThumbnailsRequest) GetQuality() uint32 {
+	if x != nil {
+		return x.Quality
+	}
+	return 0
+}
+
+func (x *GenerateThumbnailsRequest) GetSpecs() []*ThumbnailSpec {
+	if x != nil {
+		return x.Specs
+	}
+	return nil
+}
+
+// Thumbnail is one generated variant: where it was written and its dimensions.
+type Thumbnail struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Width         uint32                 `protobuf:"varint,2,opt,name=width,proto3" json:"width,omitempty"`
+	Height        uint32                 `protobuf:"varint,3,opt,name=height,proto3" json:"height,omitempty"`
+	SizeBytes     int64                  `protobuf:"varint,4,opt,name=size_bytes,json=sizeBytes,proto3" json:"size_bytes,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Thumbnail) Reset() {
+	*x = Thumbnail{}
+	mi := &file_media_v1_media_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Thumbnail) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Thumbnail) ProtoMessage() {}
+
+func (x *Thumbnail) ProtoReflect() protoreflect.Message {
+	mi := &file_media_v1_media_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Thumbnail.ProtoReflect.Descriptor instead.
+func (*Thumbnail) Descriptor() ([]byte, []int) {
+	return file_media_v1_media_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *Thumbnail) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+func (x *Thumbnail) GetWidth() uint32 {
+	if x != nil {
+		return x.Width
+	}
+	return 0
+}
+
+func (x *Thumbnail) GetHeight() uint32 {
+	if x != nil {
+		return x.Height
+	}
+	return 0
+}
+
+func (x *Thumbnail) GetSizeBytes() int64 {
+	if x != nil {
+		return x.SizeBytes
+	}
+	return 0
+}
+
+type GenerateThumbnailsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Thumbnails    []*Thumbnail           `protobuf:"bytes,1,rep,name=thumbnails,proto3" json:"thumbnails,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GenerateThumbnailsResponse) Reset() {
+	*x = GenerateThumbnailsResponse{}
+	mi := &file_media_v1_media_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GenerateThumbnailsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GenerateThumbnailsResponse) ProtoMessage() {}
+
+func (x *GenerateThumbnailsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_media_v1_media_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GenerateThumbnailsResponse.ProtoReflect.Descriptor instead.
+func (*GenerateThumbnailsResponse) Descriptor() ([]byte, []int) {
+	return file_media_v1_media_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *GenerateThumbnailsResponse) GetThumbnails() []*Thumbnail {
+	if x != nil {
+		return x.Thumbnails
+	}
+	return nil
+}
+
 var File_media_v1_media_proto protoreflect.FileDescriptor
 
 const file_media_v1_media_proto_rawDesc = "" +
@@ -678,7 +923,27 @@ const file_media_v1_media_proto_rawDesc = "" +
 	"\x12DirectoriesRequest\x12\x16\n" +
 	"\x06prefix\x18\x01 \x01(\tR\x06prefix\"+\n" +
 	"\x13DirectoriesResponse\x12\x14\n" +
-	"\x05names\x18\x01 \x03(\tR\x05names2\xd2\x03\n" +
+	"\x05names\x18\x01 \x03(\tR\x05names\"[\n" +
+	"\rThumbnailSpec\x12\x19\n" +
+	"\baspect_w\x18\x01 \x01(\rR\aaspectW\x12\x19\n" +
+	"\baspect_h\x18\x02 \x01(\rR\aaspectH\x12\x14\n" +
+	"\x05width\x18\x03 \x01(\rR\x05width\"\x9b\x01\n" +
+	"\x19GenerateThumbnailsRequest\x12\x1d\n" +
+	"\n" +
+	"source_key\x18\x01 \x01(\tR\tsourceKey\x12\x16\n" +
+	"\x06format\x18\x02 \x01(\tR\x06format\x12\x18\n" +
+	"\aquality\x18\x03 \x01(\rR\aquality\x12-\n" +
+	"\x05specs\x18\x04 \x03(\v2\x17.media.v1.ThumbnailSpecR\x05specs\"j\n" +
+	"\tThumbnail\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05width\x18\x02 \x01(\rR\x05width\x12\x16\n" +
+	"\x06height\x18\x03 \x01(\rR\x06height\x12\x1d\n" +
+	"\n" +
+	"size_bytes\x18\x04 \x01(\x03R\tsizeBytes\"Q\n" +
+	"\x1aGenerateThumbnailsResponse\x123\n" +
+	"\n" +
+	"thumbnails\x18\x01 \x03(\v2\x13.media.v1.ThumbnailR\n" +
+	"thumbnails2\xb3\x04\n" +
 	"\fMediaService\x12:\n" +
 	"\x05Store\x12\x16.media.v1.StoreRequest\x1a\x17.media.v1.StoreResponse(\x01\x127\n" +
 	"\x04Read\x12\x15.media.v1.ReadRequest\x1a\x16.media.v1.ReadResponse0\x01\x125\n" +
@@ -686,7 +951,8 @@ const file_media_v1_media_proto_rawDesc = "" +
 	"\x06Delete\x12\x17.media.v1.DeleteRequest\x1a\x18.media.v1.DeleteResponse\x125\n" +
 	"\x04Move\x12\x15.media.v1.MoveRequest\x1a\x16.media.v1.MoveResponse\x12V\n" +
 	"\x0fDeleteDirectory\x12 .media.v1.DeleteDirectoryRequest\x1a!.media.v1.DeleteDirectoryResponse\x12J\n" +
-	"\vDirectories\x12\x1c.media.v1.DirectoriesRequest\x1a\x1d.media.v1.DirectoriesResponseB\\Z,github.com/bookly/media/gen/media/v1;mediav1\xca\x02\x0eApp\\Media\\Grpc\xe2\x02\x1aApp\\Media\\Grpc\\GPBMetadatab\x06proto3"
+	"\vDirectories\x12\x1c.media.v1.DirectoriesRequest\x1a\x1d.media.v1.DirectoriesResponse\x12_\n" +
+	"\x12GenerateThumbnails\x12#.media.v1.GenerateThumbnailsRequest\x1a$.media.v1.GenerateThumbnailsResponseB\\Z,github.com/bookly/media/gen/media/v1;mediav1\xca\x02\x0eApp\\Media\\Grpc\xe2\x02\x1aApp\\Media\\Grpc\\GPBMetadatab\x06proto3"
 
 var (
 	file_media_v1_media_proto_rawDescOnce sync.Once
@@ -700,43 +966,51 @@ func file_media_v1_media_proto_rawDescGZIP() []byte {
 	return file_media_v1_media_proto_rawDescData
 }
 
-var file_media_v1_media_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_media_v1_media_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_media_v1_media_proto_goTypes = []any{
-	(*StoreRequest)(nil),            // 0: media.v1.StoreRequest
-	(*StoreResponse)(nil),           // 1: media.v1.StoreResponse
-	(*ReadRequest)(nil),             // 2: media.v1.ReadRequest
-	(*ReadResponse)(nil),            // 3: media.v1.ReadResponse
-	(*StatRequest)(nil),             // 4: media.v1.StatRequest
-	(*StatResponse)(nil),            // 5: media.v1.StatResponse
-	(*DeleteRequest)(nil),           // 6: media.v1.DeleteRequest
-	(*DeleteResponse)(nil),          // 7: media.v1.DeleteResponse
-	(*MoveRequest)(nil),             // 8: media.v1.MoveRequest
-	(*MoveResponse)(nil),            // 9: media.v1.MoveResponse
-	(*DeleteDirectoryRequest)(nil),  // 10: media.v1.DeleteDirectoryRequest
-	(*DeleteDirectoryResponse)(nil), // 11: media.v1.DeleteDirectoryResponse
-	(*DirectoriesRequest)(nil),      // 12: media.v1.DirectoriesRequest
-	(*DirectoriesResponse)(nil),     // 13: media.v1.DirectoriesResponse
+	(*StoreRequest)(nil),               // 0: media.v1.StoreRequest
+	(*StoreResponse)(nil),              // 1: media.v1.StoreResponse
+	(*ReadRequest)(nil),                // 2: media.v1.ReadRequest
+	(*ReadResponse)(nil),               // 3: media.v1.ReadResponse
+	(*StatRequest)(nil),                // 4: media.v1.StatRequest
+	(*StatResponse)(nil),               // 5: media.v1.StatResponse
+	(*DeleteRequest)(nil),              // 6: media.v1.DeleteRequest
+	(*DeleteResponse)(nil),             // 7: media.v1.DeleteResponse
+	(*MoveRequest)(nil),                // 8: media.v1.MoveRequest
+	(*MoveResponse)(nil),               // 9: media.v1.MoveResponse
+	(*DeleteDirectoryRequest)(nil),     // 10: media.v1.DeleteDirectoryRequest
+	(*DeleteDirectoryResponse)(nil),    // 11: media.v1.DeleteDirectoryResponse
+	(*DirectoriesRequest)(nil),         // 12: media.v1.DirectoriesRequest
+	(*DirectoriesResponse)(nil),        // 13: media.v1.DirectoriesResponse
+	(*ThumbnailSpec)(nil),              // 14: media.v1.ThumbnailSpec
+	(*GenerateThumbnailsRequest)(nil),  // 15: media.v1.GenerateThumbnailsRequest
+	(*Thumbnail)(nil),                  // 16: media.v1.Thumbnail
+	(*GenerateThumbnailsResponse)(nil), // 17: media.v1.GenerateThumbnailsResponse
 }
 var file_media_v1_media_proto_depIdxs = []int32{
-	0,  // 0: media.v1.MediaService.Store:input_type -> media.v1.StoreRequest
-	2,  // 1: media.v1.MediaService.Read:input_type -> media.v1.ReadRequest
-	4,  // 2: media.v1.MediaService.Stat:input_type -> media.v1.StatRequest
-	6,  // 3: media.v1.MediaService.Delete:input_type -> media.v1.DeleteRequest
-	8,  // 4: media.v1.MediaService.Move:input_type -> media.v1.MoveRequest
-	10, // 5: media.v1.MediaService.DeleteDirectory:input_type -> media.v1.DeleteDirectoryRequest
-	12, // 6: media.v1.MediaService.Directories:input_type -> media.v1.DirectoriesRequest
-	1,  // 7: media.v1.MediaService.Store:output_type -> media.v1.StoreResponse
-	3,  // 8: media.v1.MediaService.Read:output_type -> media.v1.ReadResponse
-	5,  // 9: media.v1.MediaService.Stat:output_type -> media.v1.StatResponse
-	7,  // 10: media.v1.MediaService.Delete:output_type -> media.v1.DeleteResponse
-	9,  // 11: media.v1.MediaService.Move:output_type -> media.v1.MoveResponse
-	11, // 12: media.v1.MediaService.DeleteDirectory:output_type -> media.v1.DeleteDirectoryResponse
-	13, // 13: media.v1.MediaService.Directories:output_type -> media.v1.DirectoriesResponse
-	7,  // [7:14] is the sub-list for method output_type
-	0,  // [0:7] is the sub-list for method input_type
-	0,  // [0:0] is the sub-list for extension type_name
-	0,  // [0:0] is the sub-list for extension extendee
-	0,  // [0:0] is the sub-list for field type_name
+	14, // 0: media.v1.GenerateThumbnailsRequest.specs:type_name -> media.v1.ThumbnailSpec
+	16, // 1: media.v1.GenerateThumbnailsResponse.thumbnails:type_name -> media.v1.Thumbnail
+	0,  // 2: media.v1.MediaService.Store:input_type -> media.v1.StoreRequest
+	2,  // 3: media.v1.MediaService.Read:input_type -> media.v1.ReadRequest
+	4,  // 4: media.v1.MediaService.Stat:input_type -> media.v1.StatRequest
+	6,  // 5: media.v1.MediaService.Delete:input_type -> media.v1.DeleteRequest
+	8,  // 6: media.v1.MediaService.Move:input_type -> media.v1.MoveRequest
+	10, // 7: media.v1.MediaService.DeleteDirectory:input_type -> media.v1.DeleteDirectoryRequest
+	12, // 8: media.v1.MediaService.Directories:input_type -> media.v1.DirectoriesRequest
+	15, // 9: media.v1.MediaService.GenerateThumbnails:input_type -> media.v1.GenerateThumbnailsRequest
+	1,  // 10: media.v1.MediaService.Store:output_type -> media.v1.StoreResponse
+	3,  // 11: media.v1.MediaService.Read:output_type -> media.v1.ReadResponse
+	5,  // 12: media.v1.MediaService.Stat:output_type -> media.v1.StatResponse
+	7,  // 13: media.v1.MediaService.Delete:output_type -> media.v1.DeleteResponse
+	9,  // 14: media.v1.MediaService.Move:output_type -> media.v1.MoveResponse
+	11, // 15: media.v1.MediaService.DeleteDirectory:output_type -> media.v1.DeleteDirectoryResponse
+	13, // 16: media.v1.MediaService.Directories:output_type -> media.v1.DirectoriesResponse
+	17, // 17: media.v1.MediaService.GenerateThumbnails:output_type -> media.v1.GenerateThumbnailsResponse
+	10, // [10:18] is the sub-list for method output_type
+	2,  // [2:10] is the sub-list for method input_type
+	2,  // [2:2] is the sub-list for extension type_name
+	2,  // [2:2] is the sub-list for extension extendee
+	0,  // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_media_v1_media_proto_init() }
@@ -750,7 +1024,7 @@ func file_media_v1_media_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_media_v1_media_proto_rawDesc), len(file_media_v1_media_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

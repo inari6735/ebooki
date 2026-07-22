@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"log/slog"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -29,6 +30,7 @@ type service interface {
 	Move(ctx context.Context, src, dst string) error
 	DeleteDirectory(ctx context.Context, prefix string) error
 	Directories(ctx context.Context, prefix string) ([]string, error)
+	GenerateThumbnails(ctx context.Context, sourceKey, format string, quality uint32, specs []media.ThumbnailSpec) ([]media.Variant, error)
 }
 
 // Server implements the generated MediaServiceServer by delegating to the core.
@@ -157,6 +159,33 @@ func (r *streamReader) Read(p []byte) (int, error) {
 	return n, nil
 }
 
+func (s *Server) GenerateThumbnails(ctx context.Context, req *mediav1.GenerateThumbnailsRequest) (*mediav1.GenerateThumbnailsResponse, error) {
+	specs := make([]media.ThumbnailSpec, 0, len(req.GetSpecs()))
+	for _, sp := range req.GetSpecs() {
+		specs = append(specs, media.ThumbnailSpec{
+			AspectW: sp.GetAspectW(),
+			AspectH: sp.GetAspectH(),
+			Width:   sp.GetWidth(),
+		})
+	}
+
+	variants, err := s.svc.GenerateThumbnails(ctx, req.GetSourceKey(), req.GetFormat(), req.GetQuality(), specs)
+	if err != nil {
+		return nil, toStatus(err)
+	}
+
+	out := make([]*mediav1.Thumbnail, 0, len(variants))
+	for _, v := range variants {
+		out = append(out, &mediav1.Thumbnail{
+			Key:       v.Key,
+			Width:     v.Width,
+			Height:    v.Height,
+			SizeBytes: v.Size,
+		})
+	}
+	return &mediav1.GenerateThumbnailsResponse{Thumbnails: out}, nil
+}
+
 // toStatus is the SINGLE place that translates the core's error vocabulary into
 // gRPC status codes. Known domain errors map to precise codes; anything else
 // becomes Internal with a GENERIC message, so storage paths and internals never
@@ -170,6 +199,9 @@ func toStatus(err error) error {
 	case errors.Is(err, media.ErrInvalidKey):
 		return status.Error(codes.InvalidArgument, "media: invalid key")
 	default:
+		// Scrub the client-facing message (never leak paths/internals), but LOG
+		// the real cause server-side so failures are actually diagnosable.
+		slog.Error("media: internal error", "err", err)
 		return status.Error(codes.Internal, "media: internal error")
 	}
 }

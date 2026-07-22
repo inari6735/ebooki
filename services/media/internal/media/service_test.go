@@ -83,6 +83,24 @@ func (f *fakeBlobstore) Directories(_ context.Context, _ string) ([]string, erro
 	return nil, nil // not exercised by the core tests
 }
 
+// newService builds a Service with a no-op thumbnailer — most tests don't touch
+// thumbnails, and the ones that do construct their own stub.
+func newService(blobs media.Blobstore) *media.Service {
+	return media.NewService(blobs, stubThumbnailer{})
+}
+
+// stubThumbnailer returns a fixed set of rendered variants, ignoring the source —
+// the core's job is orchestration (open → render → store), not image processing,
+// so the test fakes the image work entirely.
+type stubThumbnailer struct {
+	out []media.RenderedThumbnail
+	err error
+}
+
+func (s stubThumbnailer) Render([]byte, string, uint32, []media.ThumbnailSpec) ([]media.RenderedThumbnail, error) {
+	return s.out, s.err
+}
+
 // TestStoreRejectsUnsafeKeys is the canonical table-driven test: one slice of
 // cases, one loop, a subtest per case (t.Run) so failures name themselves. It
 // checks the domain invariant BEFORE any storage call — so we pass a fake that
@@ -97,7 +115,7 @@ func TestStoreRejectsUnsafeKeys(t *testing.T) {
 		{"traversal", "covers/../../secret"},
 	}
 
-	svc := media.NewService(newFakeBlobstore())
+	svc := newService(newFakeBlobstore())
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -112,7 +130,7 @@ func TestStoreRejectsUnsafeKeys(t *testing.T) {
 // TestStoreThenReadRoundTrip checks the happy path end to end through the public
 // API: store bytes, get correct size back, read them out again.
 func TestStoreThenReadRoundTrip(t *testing.T) {
-	svc := media.NewService(newFakeBlobstore())
+	svc := newService(newFakeBlobstore())
 	ctx := context.Background()
 	const key, body = "covers/abc.jpg", "hello cover"
 
@@ -140,7 +158,7 @@ func TestStoreThenReadRoundTrip(t *testing.T) {
 // layer: the fake returns media.ErrNotFound, Service wraps it with context, and
 // errors.Is still recognises it. This is why we wrap with %w, not %v.
 func TestOpenMissingKeyIsNotFound(t *testing.T) {
-	svc := media.NewService(newFakeBlobstore())
+	svc := newService(newFakeBlobstore())
 
 	_, err := svc.Open(context.Background(), "does/not/exist")
 	if !errors.Is(err, media.ErrNotFound) {
@@ -155,7 +173,7 @@ func TestStoreWrapsStorageError(t *testing.T) {
 	fake := newFakeBlobstore()
 	fake.putErr = boom
 
-	svc := media.NewService(fake)
+	svc := newService(fake)
 
 	_, err := svc.Store(context.Background(), "covers/x.jpg", strings.NewReader("x"))
 	if !errors.Is(err, boom) {
@@ -173,7 +191,7 @@ func TestMoveValidatesBothEnds(t *testing.T) {
 		{"bad source", "../evil", "covers/ok.jpg"},
 		{"bad destination", "covers/ok.jpg", ""},
 	}
-	svc := media.NewService(newFakeBlobstore())
+	svc := newService(newFakeBlobstore())
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -186,7 +204,7 @@ func TestMoveValidatesBothEnds(t *testing.T) {
 
 // TestMoveRelocatesBlob checks the happy path: a staged key becomes the final key.
 func TestMoveRelocatesBlob(t *testing.T) {
-	svc := media.NewService(newFakeBlobstore())
+	svc := newService(newFakeBlobstore())
 	ctx := context.Background()
 	_, _ = svc.Store(ctx, "staging/tmp", strings.NewReader("payload"))
 
@@ -204,7 +222,7 @@ func TestMoveRelocatesBlob(t *testing.T) {
 // TestDeleteDirectoryRefusesRoot is the safety net: an empty prefix must never
 // reach storage, because it would wipe everything.
 func TestDeleteDirectoryRefusesRoot(t *testing.T) {
-	svc := media.NewService(newFakeBlobstore())
+	svc := newService(newFakeBlobstore())
 
 	if err := svc.DeleteDirectory(context.Background(), ""); !errors.Is(err, media.ErrInvalidKey) {
 		t.Fatalf("got %v, want ErrInvalidKey for empty prefix", err)
@@ -214,9 +232,63 @@ func TestDeleteDirectoryRefusesRoot(t *testing.T) {
 // TestDirectoriesAllowsRoot proves the asymmetry is intentional: listing (unlike
 // deleting) accepts the empty/root prefix, which reconciliation relies on.
 func TestDirectoriesAllowsRoot(t *testing.T) {
-	svc := media.NewService(newFakeBlobstore())
+	svc := newService(newFakeBlobstore())
 
 	if _, err := svc.Directories(context.Background(), ""); err != nil {
 		t.Fatalf("Directories(\"\"): unexpected error %v", err)
+	}
+}
+
+// TestGenerateThumbnailsStoresVariantsWithDerivedKeys checks the orchestration:
+// the source is read, the (stubbed) renderer output is stored under deterministic
+// keys next to the source, and the returned variants match what was written.
+func TestGenerateThumbnailsStoresVariantsWithDerivedKeys(t *testing.T) {
+	fake := newFakeBlobstore()
+	fake.data["covers/abc/original.jpg"] = []byte("original-image-bytes")
+
+	stub := stubThumbnailer{out: []media.RenderedThumbnail{
+		{Width: 200, Height: 300, Data: []byte("w200")},
+		{Width: 320, Height: 480, Data: []byte("w320")},
+	}}
+	svc := media.NewService(fake, stub)
+
+	specs := []media.ThumbnailSpec{{AspectW: 2, AspectH: 3, Width: 200}, {AspectW: 2, AspectH: 3, Width: 320}}
+	variants, err := svc.GenerateThumbnails(context.Background(), "covers/abc/original.jpg", "webp", 80, specs)
+	if err != nil {
+		t.Fatalf("GenerateThumbnails: %v", err)
+	}
+
+	wantKeys := map[string]int{
+		"covers/abc/original_w200.webp": 300,
+		"covers/abc/original_w320.webp": 480,
+	}
+	if len(variants) != len(wantKeys) {
+		t.Fatalf("got %d variants, want %d", len(variants), len(wantKeys))
+	}
+	for _, v := range variants {
+		h, ok := wantKeys[v.Key]
+		if !ok {
+			t.Fatalf("unexpected variant key %q", v.Key)
+		}
+		if int(v.Height) != h {
+			t.Fatalf("variant %q height = %d, want %d", v.Key, v.Height, h)
+		}
+		if _, stored := fake.data[v.Key]; !stored {
+			t.Fatalf("variant %q was not written to storage", v.Key)
+		}
+	}
+	// The source must be untouched.
+	if _, ok := fake.data["covers/abc/original.jpg"]; !ok {
+		t.Fatal("source blob was modified/removed")
+	}
+}
+
+// TestGenerateThumbnailsMissingSourceIsNotFound: no source → domain sentinel.
+func TestGenerateThumbnailsMissingSource(t *testing.T) {
+	svc := newService(newFakeBlobstore())
+	_, err := svc.GenerateThumbnails(context.Background(), "covers/nope.jpg", "webp", 80,
+		[]media.ThumbnailSpec{{AspectW: 2, AspectH: 3, Width: 200}})
+	if !errors.Is(err, media.ErrNotFound) {
+		t.Fatalf("got %v, want ErrNotFound", err)
 	}
 }

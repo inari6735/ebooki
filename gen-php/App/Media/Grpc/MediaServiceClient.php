@@ -126,4 +126,22 @@ class MediaServiceClient extends \Grpc\BaseStub {
         $metadata, $options);
     }
 
+    /**
+     * GenerateThumbnails reads the source blob and writes resized WebP (or other
+     * format) variants next to it. The service has NO domain knowledge ("cover",
+     * "avatar", …): each spec carries the target aspect ratio and one side length,
+     * and the service derives the rest. Deterministic keys, so re-running overwrites.
+     * @param \App\Media\Grpc\GenerateThumbnailsRequest $argument input argument
+     * @param array $metadata metadata
+     * @param array $options call options
+     * @return \Grpc\UnaryCall<\App\Media\Grpc\GenerateThumbnailsResponse>
+     */
+    public function GenerateThumbnails(\App\Media\Grpc\GenerateThumbnailsRequest $argument,
+      $metadata = [], $options = []) {
+        return $this->_simpleRequest('/media.v1.MediaService/GenerateThumbnails',
+        $argument,
+        ['\App\Media\Grpc\GenerateThumbnailsResponse', 'decode'],
+        $metadata, $options);
+    }
+
 }

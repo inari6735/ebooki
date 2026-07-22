@@ -38,6 +38,12 @@ service MediaService {
 
   // Directories lists immediate child directory names under a prefix.
   rpc Directories(DirectoriesRequest) returns (DirectoriesResponse);
+
+  // GenerateThumbnails reads the source blob and writes resized WebP (or other
+  // format) variants next to it. The service has NO domain knowledge ("cover",
+  // "avatar", …): each spec carries the target aspect ratio and one side length,
+  // and the service derives the rest. Deterministic keys, so re-running overwrites.
+  rpc GenerateThumbnails(GenerateThumbnailsRequest) returns (GenerateThumbnailsResponse);
 }
 
 message StoreRequest {
@@ -85,4 +91,33 @@ message DirectoriesRequest {
 }
 message DirectoriesResponse {
   repeated string names = 1;
+}
+
+// ThumbnailSpec describes ONE variant to generate: the target aspect ratio
+// (aspect_w:aspect_h) and the width of the output. Height is derived as
+// width * aspect_h / aspect_w. The source is crop-to-filled (centered) to that
+// ratio before resizing.
+message ThumbnailSpec {
+  uint32 aspect_w = 1;
+  uint32 aspect_h = 2;
+  uint32 width = 3;
+}
+
+message GenerateThumbnailsRequest {
+  string source_key = 1;
+  string format = 2;   // e.g. "webp"
+  uint32 quality = 3;  // encoder quality, e.g. 80
+  repeated ThumbnailSpec specs = 4;
+}
+
+// Thumbnail is one generated variant: where it was written and its dimensions.
+message Thumbnail {
+  string key = 1;
+  uint32 width = 2;
+  uint32 height = 3;
+  int64 size_bytes = 4;
+}
+
+message GenerateThumbnailsResponse {
+  repeated Thumbnail thumbnails = 1;
 }

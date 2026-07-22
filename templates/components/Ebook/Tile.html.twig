@@ -41,8 +41,18 @@
 <article class="group relative">
     <div class="relative aspect-[2/3] overflow-hidden rounded-2xl bg-gradient-to-br {{ covers[variant] }} shadow-lg shadow-zinc-900/10 ring-1 ring-black/5 transition duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl group-hover:shadow-zinc-900/15"
          {% if link %}style="view-transition-name: ebook-cover-{{ ebook.slug }}"{% endif %}>
-        {% if ebook.hasCover|default(false) %}
-            <img src="{{ path('app_ebook_cover', { id: ebook.id, w: s.px }) }}" alt="Okładka: {{ ebook.title }}" loading="lazy"
+        {% set thumbs = ebook.thumbnails|default([]) %}
+        {% if thumbs is not empty %}
+            {# srcset is built ONLY from widths that actually exist, so the browser
+               never requests a size we don't have (srcset has no error-fallback). #}
+            {% set srcset = [] %}
+            {% for w in thumbs %}
+                {% set srcset = srcset|merge([path('app_ebook_cover', { id: ebook.id, w: w }) ~ ' ' ~ w ~ 'w']) %}
+            {% endfor %}
+            <img src="{{ path('app_ebook_cover', { id: ebook.id, w: thumbs|first }) }}"
+                 srcset="{{ srcset|join(', ') }}"
+                 sizes="(min-width: 1024px) 220px, (min-width: 640px) 30vw, 45vw"
+                 alt="Okładka: {{ ebook.title }}" loading="lazy"
                  class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105">
         {% else %}
             <span aria-hidden="true" class="absolute inset-y-0 left-0 w-2 bg-black/15"></span>

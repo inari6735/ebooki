@@ -32,6 +32,7 @@
                 <twig:Ebook:Tile size="md" :ebook="{
                     id: p.ebook_id, slug: p.ebook_slug, title: p.title, author: p.author_name,
                     category: p.category_name, hasCover: p.cover_media_id is not null, shortDescription: p.short_description,
+                    thumbnails: coverThumbs[p.cover_media_id] ?? [],
                 }">
                     <twig:block name="badge">
                         <span class="absolute left-3 top-3 z-10 rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-sm {{ meta.class }}">{{ meta.label }}</span>

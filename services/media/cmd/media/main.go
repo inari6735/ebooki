@@ -23,6 +23,7 @@ import (
 	"github.com/bookly/media/internal/blob"
 	"github.com/bookly/media/internal/grpcserver"
 	"github.com/bookly/media/internal/media"
+	"github.com/bookly/media/internal/thumbnail"
 )
 
 func main() {
@@ -48,7 +49,7 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("init storage at %q: %w", cfg.StorageRoot, err)
 	}
-	svc := media.NewService(store)
+	svc := media.NewService(store, thumbnail.New())
 	srv := grpcserver.New(svc)
 
 	gs := grpc.NewServer()

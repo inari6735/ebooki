@@ -4,6 +4,7 @@ namespace App\Ebook\Presentation;
 
 use App\Ebook\Domain\EbookRepository;
 use App\Ebook\Domain\EbookStatus;
+use App\Ebook\Infrastructure\MediaThumbnailRepository;
 use App\User\Domain\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,8 +17,10 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 final class DashboardController extends AbstractController
 {
-    public function __construct(private readonly EbookRepository $ebooks)
-    {
+    public function __construct(
+        private readonly EbookRepository $ebooks,
+        private readonly MediaThumbnailRepository $thumbnails,
+    ) {
     }
 
     #[Route('/panel', name: 'app_dashboard', methods: ['GET'])]
@@ -30,9 +33,18 @@ final class DashboardController extends AbstractController
         $published = array_filter($ebooks, static fn ($e): bool => EbookStatus::PUBLISHED === $e->getStatus());
         $drafts = array_filter($ebooks, static fn ($e): bool => EbookStatus::DRAFT === $e->getStatus());
 
+        $coverIds = [];
+        foreach ($ebooks as $e) {
+            $cover = $e->getCover();
+            if (null !== $cover) {
+                $coverIds[] = $cover->getId();
+            }
+        }
+
         return $this->render('dashboard/index.html.twig', [
             'active' => 'pulpit',
             'ebooks' => $ebooks,
+            'coverThumbs' => $this->thumbnails->widthsForMediaIds($coverIds),
             'totalCount' => \count($ebooks),
             'publishedCount' => \count($published),
             'draftCount' => \count($drafts),

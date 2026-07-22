@@ -6,10 +6,12 @@
 package media
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
+	"path"
 	"strings"
 )
 
@@ -24,14 +26,15 @@ var ErrInvalidKey = errors.New("media: invalid key")
 // abstraction it needs) and the constructor RETURNS a concrete *Service. That is
 // "accept interfaces, return structs".
 type Service struct {
-	blobs Blobstore
+	blobs  Blobstore
+	thumbs Thumbnailer
 }
 
 // NewService wires the Service with its dependencies. In Go this "constructor" is
 // just a function named NewXxx — there is no framework, no DI container. The real
 // wiring happens once, in main().
-func NewService(blobs Blobstore) *Service {
-	return &Service{blobs: blobs}
+func NewService(blobs Blobstore, thumbs Thumbnailer) *Service {
+	return &Service{blobs: blobs, thumbs: thumbs}
 }
 
 // Store validates the key, then streams r into the blob store. It returns the
@@ -128,6 +131,56 @@ func (s *Service) Directories(ctx context.Context, prefix string) ([]string, err
 		return nil, fmt.Errorf("media: list directories %q: %w", prefix, err)
 	}
 	return dirs, nil
+}
+
+// GenerateThumbnails reads the source blob once, renders every requested variant
+// via the Thumbnailer, and writes each under a deterministic key next to the
+// source. It returns exactly what was written so the caller can persist it. It
+// does NOT touch the source. Re-running overwrites variants in place (idempotent).
+func (s *Service) GenerateThumbnails(ctx context.Context, sourceKey, format string, quality uint32, specs []ThumbnailSpec) ([]Variant, error) {
+	if err := validateKey(sourceKey); err != nil {
+		return nil, err
+	}
+	if len(specs) == 0 {
+		return nil, nil
+	}
+
+	rc, err := s.blobs.Open(ctx, sourceKey)
+	if err != nil {
+		return nil, fmt.Errorf("media: thumbnails open %q: %w", sourceKey, err)
+	}
+	// Covers are small, so reading the whole source into memory is fine and lets
+	// the Thumbnailer decode it once for all specs.
+	source, err := io.ReadAll(rc)
+	_ = rc.Close()
+	if err != nil {
+		return nil, fmt.Errorf("media: thumbnails read %q: %w", sourceKey, err)
+	}
+
+	rendered, err := s.thumbs.Render(source, format, quality, specs)
+	if err != nil {
+		return nil, fmt.Errorf("media: thumbnails render %q: %w", sourceKey, err)
+	}
+
+	variants := make([]Variant, 0, len(rendered))
+	for _, r := range rendered {
+		key := thumbKey(sourceKey, r.Width, format)
+		size, err := s.blobs.Put(ctx, key, bytes.NewReader(r.Data))
+		if err != nil {
+			return nil, fmt.Errorf("media: thumbnails put %q: %w", key, err)
+		}
+		variants = append(variants, Variant{Key: key, Width: r.Width, Height: r.Height, Size: size})
+	}
+	return variants, nil
+}
+
+// thumbKey derives a deterministic variant key from the source key, so
+// regeneration overwrites in place, e.g.
+// covers/{id}/original.jpg + (320, webp) -> covers/{id}/original_w320.webp.
+func thumbKey(sourceKey string, width uint32, format string) string {
+	ext := path.Ext(sourceKey)
+	base := strings.TrimSuffix(sourceKey, ext)
+	return fmt.Sprintf("%s_w%d.%s", base, width, format)
 }
 
 // validateKey enforces the one genuine invariant of this domain: a key is a safe,
