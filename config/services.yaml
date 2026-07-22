@@ -51,8 +51,16 @@ services:
         alias: App\User\Infrastructure\DoctrineUserRepository
         public: true
 
+    # Active file-storage implementation. To offload files to the Go media
+    # service, point this alias at GrpcFileStorage instead (needs ext-grpc + the
+    # service reachable at MEDIA_GRPC_ENDPOINT).
     App\Ebook\Domain\Storage\FileStorage:
         alias: App\Ebook\Infrastructure\Storage\FlysystemFileStorage
+
+    # Registered and ready, but NOT the active FileStorage yet (see alias above).
+    App\Ebook\Infrastructure\Storage\GrpcFileStorage:
+        arguments:
+            $endpoint: '%env(MEDIA_GRPC_ENDPOINT)%'
 
     App\Ebook\Domain\MediaRepository:
         alias: App\Ebook\Infrastructure\DoctrineMediaRepository

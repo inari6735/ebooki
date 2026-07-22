@@ -1,0 +1,19 @@
+version: v2
+# Generated Go lands under the Go module (services/media/gen); generated PHP under
+# gen-php/ at the repo root. paths=source_relative keeps the proto layout for Go.
+#
+# PHP has no local protoc here, so we use buf's REMOTE plugins (executed on the
+# Buf Schema Registry): protocolbuffers/php produces the message classes, grpc/php
+# the MediaServiceClient. The php_namespace option in the .proto makes them land
+# under App\Media\Grpc (see composer PSR-4 mapping to gen-php/App/Media/Grpc).
+plugins:
+  - local: protoc-gen-go
+    out: services/media/gen
+    opt: paths=source_relative
+  - local: protoc-gen-go-grpc
+    out: services/media/gen
+    opt: paths=source_relative
+  - remote: buf.build/protocolbuffers/php
+    out: gen-php
+  - remote: buf.build/grpc/php
+    out: gen-php

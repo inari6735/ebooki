@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package media.v1;
+
+// go_package: where generated Go lands + its package alias (after the ';').
+option go_package = "github.com/bookly/media/gen/media/v1;mediav1";
+// php_namespace: makes the generated PHP client fall under App\Media\Grpc, so
+// Symfony's existing PSR-4 (App\ -> src/) autoloads it with no extra config.
+option php_namespace = "App\\Media\\Grpc";
+option php_metadata_namespace = "App\\Media\\Grpc\\GPBMetadata";
+
+// MediaService is the CONTROL-PLANE API that Symfony uses to manage blobs
+// (upload, move, delete, inspect). Byte downloads to the browser do NOT go
+// through here — those use short-lived signed HTTP URLs served directly by the
+// Go service, so PHP never streams file bytes.
+service MediaService {
+  // Store uploads a blob as a stream of chunks (client streaming). The FIRST
+  // message MUST carry `key`; every message (including the first) may carry a
+  // `chunk`. Streaming keeps arbitrarily large files off the heap.
+  rpc Store(stream StoreRequest) returns (StoreResponse);
+
+  // Read streams a blob's bytes back (server streaming), for the server-side
+  // FileStorage.readStream. Browser-facing downloads use signed HTTP URLs
+  // instead, so this path is for internal use (reconcile, re-processing).
+  rpc Read(ReadRequest) returns (stream ReadResponse);
+
+  // Stat returns metadata without reading the bytes.
+  rpc Stat(StatRequest) returns (StatResponse);
+
+  // Delete removes one blob (idempotent).
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+
+  // Move relocates a blob, e.g. staging key -> final key.
+  rpc Move(MoveRequest) returns (MoveResponse);
+
+  // DeleteDirectory removes every blob under a prefix (idempotent).
+  rpc DeleteDirectory(DeleteDirectoryRequest) returns (DeleteDirectoryResponse);
+
+  // Directories lists immediate child directory names under a prefix.
+  rpc Directories(DirectoriesRequest) returns (DirectoriesResponse);
+}
+
+message StoreRequest {
+  string key = 1;
+  bytes chunk = 2;
+}
+message StoreResponse {
+  string key = 1;
+  int64 size = 2;
+}
+
+message ReadRequest {
+  string key = 1;
+}
+message ReadResponse {
+  bytes chunk = 1;
+}
+
+message StatRequest {
+  string key = 1;
+}
+message StatResponse {
+  string key = 1;
+  int64 size = 2;
+}
+
+message DeleteRequest {
+  string key = 1;
+}
+message DeleteResponse {}
+
+message MoveRequest {
+  string source = 1;
+  string destination = 2;
+}
+message MoveResponse {}
+
+message DeleteDirectoryRequest {
+  string prefix = 1;
+}
+message DeleteDirectoryResponse {}
+
+message DirectoriesRequest {
+  string prefix = 1;
+}
+message DirectoriesResponse {
+  repeated string names = 1;
+}

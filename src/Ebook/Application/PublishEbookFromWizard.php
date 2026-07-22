@@ -16,10 +16,10 @@ use Symfony\Component\Uid\Uuid;
 
 /**
  * Turns the wizard's session data into a persisted {@see Ebook}: builds the
- * aggregate, commits every staged file (cover + content files) from staging to
- * its permanent home, links them as {@see EbookFile}s, and saves. Called once,
- * at step 4, for both "Zapisz szkic" (draft) and "Opublikuj" (published).
- */
+// * aggregate, commits every staged file (cover + content files) from staging to
+// * its permanent home, links them as {@see EbookFile}s, and saves. Called once,
+// * at step 4, for both "Zapisz szkic" (draft) and "Opublikuj" (published).
+// */
 final readonly class PublishEbookFromWizard
 {
     public function __construct(
