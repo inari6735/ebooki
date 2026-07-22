@@ -1,0 +1,110 @@
+# Upsun configuration — single PHP app (web + Messenger worker) + PostgreSQL.
+# Tuned for a low-traffic, single-user (behind HTTP Basic Auth) test instance:
+# minimal footprint, production-grade Symfony/PHP settings.
+applications:
+  app:
+    type: php:8.5
+
+    # We drive the build with Symfony's official Cloud configurator, which already
+    # applies the Symfony deploy best-practices (prod env, optimized autoloader,
+    # cache warmup, asset compile, OPcache preload wiring).
+    build:
+      flavor: none
+
+    hooks:
+      build: |
+        set -ex
+        curl -sfS https://get.symfony.com/cloud/configurator | bash
+        symfony-build
+        # JWT keypair is gitignored, so generate it at build time (regenerated on
+        # each deploy — acceptable for a test instance; you just re-log in).
+        php bin/console lexik:jwt:generate-keypair --skip-if-exists --no-interaction
+
+      deploy: |
+        set -ex
+        symfony-deploy
+        # Apply DB schema and create the Messenger (Doctrine) transport table
+        # (our DSN uses auto_setup=0, so it is not created lazily).
+        php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
+        php bin/console messenger:setup-transports
+
+    web:
+      locations:
+        /:
+          root: public
+          passthru: /index.php
+          # Dynamic responses set their own headers via Symfony; this only affects
+          # static files. Digested AssetMapper files are immutable → cache 1 year.
+          expires: 1h
+          rules:
+            \.(?:css|js|mjs|woff2?|ttf|otf|eot|png|jpe?g|gif|svg|webp|avif|ico)$:
+              expires: 1y
+
+    # Background worker: consumes the async Messenger transport (payment
+    # confirmation, e-mails, notifications). time-limit makes it recycle so it
+    # picks up new code on deploy and never leaks memory; Upsun restarts it.
+    workers:
+      messenger:
+        commands:
+          start: |
+            php bin/console messenger:consume async --time-limit=3600 --memory-limit=96M -v
+
+    runtime:
+      extensions:
+        - pdo_pgsql   # PostgreSQL
+        - apcu        # in-process cache (Symfony system cache, Doctrine caches)
+        - mbstring
+        - intl        # locale-aware helpers (Intl\Languages, formatting)
+        - sodium
+
+    relationships:
+      database: {}    # exposes DATABASE_URL (mapped by the Symfony configurator)
+
+    mounts:
+      # Cache is regenerable → cheap, instance-local, ephemeral storage.
+      var/cache:
+        source: tmp
+      # Logs persist.
+      var/log:
+        source: storage
+      # Uploaded eBook files & covers MUST persist across deploys.
+      var/storage:
+        source: storage
+
+    variables:
+      env:
+        APP_ENV: prod
+        APP_DEBUG: '0'
+      php:
+        # Production PHP tuning (Symfony performance checklist).
+        memory_limit: 256M
+        max_execution_time: 60
+        # Chunked upload keeps request bodies small; no need for huge limits.
+        upload_max_filesize: 12M
+        post_max_size: 13M
+        # OPcache: preload the app, never re-stat files (code only changes on
+        # deploy = new container), roomy file/interned-string budgets.
+        opcache.preload: config/preload.php
+        opcache.memory_consumption: 96
+        opcache.max_accelerated_files: 16000
+        opcache.validate_timestamps: 0
+        opcache.interned_strings_buffer: 16
+        # Faster path resolution for the many Symfony includes.
+        realpath_cache_size: 4096K
+        realpath_cache_ttl: 600
+
+services:
+  database:
+    type: postgresql:18
+
+routes:
+  https://{default}/:
+    type: upstream
+    upstream: app:http
+    # App is fully dynamic and auth-gated → no edge caching.
+    cache:
+      enabled: false
+  # Send the www host to the canonical one.
+  https://www.{default}/:
+    type: redirect
+    to: https://{default}/
