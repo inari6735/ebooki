@@ -55,7 +55,7 @@ final class DetailAttributeLengthTest extends WebTestCase
         $client->request('GET', 'https://localhost/wystaw-ebook/1');
         $client->request('POST', 'https://localhost/wystaw-ebook/2', [
             'ebook_details' => [
-                'title' => 'Test', 'author' => 'Jan', 'category' => 'rozwoj-osobisty', 'language' => 'pl',
+                'title' => 'Test', 'author' => 'Jan', 'category' => 'kategoria-testowa', 'language' => 'pl',
                 'shortDescription' => 'Krótki', 'description' => 'Opis.', '_token' => 'csrf-token',
             ],
             'detailKeys' => [$key],
@@ -66,7 +66,7 @@ final class DetailAttributeLengthTest extends WebTestCase
     private function seedCategory(): void
     {
         $em = self::getContainer()->get(EntityManagerInterface::class);
-        $em->persist(new Category(Uuid::v7(), 'Rozwój osobisty', 'rozwoj-osobisty'));
+        $em->persist(new Category(Uuid::v7(), 'Kategoria testowa', 'kategoria-testowa'));
         $em->flush();
     }
 }

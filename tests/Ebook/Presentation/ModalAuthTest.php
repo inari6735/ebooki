@@ -81,14 +81,14 @@ final class ModalAuthTest extends WebTestCase
 
     private function prepareWizard(KernelBrowser $client): void
     {
-        self::getContainer()->get('doctrine.orm.entity_manager')->persist(new Category(Uuid::v7(), 'Rozwój osobisty', 'rozwoj-osobisty'));
+        self::getContainer()->get('doctrine.orm.entity_manager')->persist(new Category(Uuid::v7(), 'Kategoria testowa', 'kategoria-testowa'));
         self::getContainer()->get('doctrine.orm.entity_manager')->flush();
         $crawler = $client->request('GET', 'https://localhost/wystaw-ebook/1');
         $token = $crawler->filter('[data-staged-upload-token-value]')->first()->attr('data-staged-upload-token-value');
 
         $this->stageEbookFile($client, $token, 'book.pdf', "%PDF-1.4 test\n");
         $client->request('POST', 'https://localhost/wystaw-ebook/2', ['ebook_details' => [
-            'title' => 'Test', 'author' => 'Jan', 'category' => 'rozwoj-osobisty', 'language' => 'pl',
+            'title' => 'Test', 'author' => 'Jan', 'category' => 'kategoria-testowa', 'language' => 'pl',
             'shortDescription' => 'Krótki', 'description' => 'Opis.', '_token' => 'csrf-token',
         ]]);
         $client->request('POST', 'https://localhost/wystaw-ebook/3', ['ebook_pricing' => ['price' => '40', '_token' => 'x']]);

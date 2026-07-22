@@ -68,14 +68,14 @@ final class AnonymousPublishFlowTest extends WebTestCase
 
     private function fillSession(): void
     {
-        self::getContainer()->get('doctrine.orm.entity_manager')->persist(new Category(Uuid::v7(), 'Rozwój osobisty', 'rozwoj-osobisty'));
+        self::getContainer()->get('doctrine.orm.entity_manager')->persist(new Category(Uuid::v7(), 'Kategoria testowa', 'kategoria-testowa'));
         self::getContainer()->get('doctrine.orm.entity_manager')->flush();
         $client = self::getClient();
         $client->request('POST', 'https://localhost/wystaw-ebook/2', [
             'ebook_details' => [
                 'title' => 'Skuteczna produktywność',
                 'author' => 'Jan Testowy',
-                'category' => 'rozwoj-osobisty',
+                'category' => 'kategoria-testowa',
                 'language' => 'pl',
                 'shortDescription' => 'Krótki opis',
                 'description' => 'Dłuższy opis eBooka.',

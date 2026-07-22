@@ -43,7 +43,7 @@ final class EditEbookTest extends WebTestCase
         // Change the title + price → persisted.
         $client->request('POST', 'https://localhost/panel/ebook/'.$id.'/edytuj', [
             'ebook_edit' => [
-                'title' => 'Nowy tytuł', 'author' => 'Autor', 'category' => 'rozwoj-osobisty', 'language' => 'pl',
+                'title' => 'Nowy tytuł', 'author' => 'Autor', 'category' => 'kategoria-testowa', 'language' => 'pl',
                 'shortDescription' => 'Krótki opis', 'description' => 'Dłuższy opis.', 'price' => '55',
                 '_token' => $this->token($crawler),
             ],
@@ -66,7 +66,7 @@ final class EditEbookTest extends WebTestCase
         // Empty title violates the same rule as on the add form.
         $client->request('POST', 'https://localhost/panel/ebook/'.$id.'/edytuj', [
             'ebook_edit' => [
-                'title' => '', 'author' => 'Autor', 'category' => 'rozwoj-osobisty', 'language' => 'pl',
+                'title' => '', 'author' => 'Autor', 'category' => 'kategoria-testowa', 'language' => 'pl',
                 'shortDescription' => 'Krótki opis', 'description' => 'Dłuższy opis.', 'price' => '55',
                 '_token' => $this->token($crawler),
             ],
@@ -84,7 +84,7 @@ final class EditEbookTest extends WebTestCase
         $client->submitForm('Zaloguj się', ['email' => 'author@example.com', 'password' => 'password123']);
 
         $em = self::getContainer()->get(EntityManagerInterface::class);
-        $em->persist(new Category(Uuid::v7(), 'Rozwój osobisty', 'rozwoj-osobisty'));
+        $em->persist(new Category(Uuid::v7(), 'Kategoria testowa', 'kategoria-testowa'));
         $em->flush();
 
         $ebook = new Ebook(Uuid::v7(), $userId, 'Stary tytuł', 'stary-tytul', 'Autor', 'pl', Pricing::fixed(Money::of(4000, Currency::PLN)));

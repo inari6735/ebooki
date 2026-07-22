@@ -81,7 +81,7 @@ final class EbookMediaEditTest extends WebTestCase
 
         $client->request('POST', 'https://localhost/panel/ebook/'.$id.'/edytuj', [
             'ebook_edit' => [
-                'title' => 'Poradnik', 'author' => 'Autor', 'category' => 'rozwoj-osobisty', 'language' => 'pl',
+                'title' => 'Poradnik', 'author' => 'Autor', 'category' => 'kategoria-testowa', 'language' => 'pl',
                 'shortDescription' => 'Krótki opis', 'description' => 'Dłuższy opis.', 'price' => '40', '_token' => $this->editToken($crawler),
             ],
         ]);
@@ -101,7 +101,7 @@ final class EbookMediaEditTest extends WebTestCase
         $client->request('GET', 'https://localhost/login');
         $client->submitForm('Zaloguj się', ['email' => 'author@example.com', 'password' => 'password123']);
 
-        self::getContainer()->get(EntityManagerInterface::class)->persist(new \App\Ebook\Domain\Category(Uuid::v7(), 'Rozwój osobisty', 'rozwoj-osobisty'));
+        self::getContainer()->get(EntityManagerInterface::class)->persist(new \App\Ebook\Domain\Category(Uuid::v7(), 'Kategoria testowa', 'kategoria-testowa'));
         self::getContainer()->get(EntityManagerInterface::class)->flush();
 
         $ebook = new Ebook(Uuid::v7(), $userId, 'Poradnik', 'poradnik', 'Autor', 'pl', Pricing::fixed(Money::of(4000, Currency::PLN)));
@@ -136,7 +136,7 @@ final class EbookMediaEditTest extends WebTestCase
     {
         $client->request('POST', 'https://localhost/panel/ebook/'.$id.'/edytuj', [
             'ebook_edit' => [
-                'title' => 'Poradnik', 'author' => 'Autor', 'category' => 'rozwoj-osobisty', 'language' => 'pl',
+                'title' => 'Poradnik', 'author' => 'Autor', 'category' => 'kategoria-testowa', 'language' => 'pl',
                 'shortDescription' => 'Krótki opis', 'description' => 'Dłuższy opis.', 'price' => '40', '_token' => $editToken,
             ],
         ]);
