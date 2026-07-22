@@ -1,0 +1,100 @@
+{# Standardised eBook tile — ONE component used everywhere (catalogue, purchases,
+   listed, dashboard). Listing-page style: portrait 2:3 cover (real cover image or
+   a branded gradient placeholder), title + author ALWAYS below the cover, and on
+   hover a short description fades/slides in over the cover.
+
+   `size` picks the display scale AND the cover thumbnail width requested from the
+   cover route (`w` param) — the future thumbnail module should generate these:
+     sm → 200px   md → 320px (default)   lg → 480px      (all at 2:3 ratio)
+
+   Slots: `badge` (overlay on the cover, e.g. a status), `footer` (below the tile,
+   e.g. price / download / management actions). The footer sits above the stretched
+   link so its buttons/forms stay clickable. #}
+{% props ebook, size = 'md' %}
+
+{# Display width comes from the grid the view lays the tiles out in; `size` sets the
+   typography scale and the cover THUMBNAIL width requested (`w`) — the future
+   thumbnail module should render 2:3 covers at exactly these widths. #}
+{% set sizes = {
+    sm: { title: 'text-sm',  px: 200 },
+    md: { title: 'text-base', px: 320 },
+    lg: { title: 'text-lg',  px: 480 },
+} %}
+{% set s = sizes[size] ?? sizes.md %}
+
+{% set covers = [
+    'from-accent-500 to-accent-700', 'from-indigo-500 to-violet-700',
+    'from-sky-500 to-blue-700',      'from-blue-600 to-indigo-800',
+    'from-violet-500 to-fuchsia-700', 'from-cyan-500 to-blue-700',
+] %}
+{% set variant = (ebook.title|length + (ebook.author|default('')|length)) % (covers|length) %}
+{% set link = ebook.slug is defined and ebook.slug %}
+
+{% set isFree = ebook.isFree|default(false) %}
+{% set pwyw = ebook.payWhatYouWant|default(false) %}
+{% set base = ebook.price|default(null) %}
+{% set promo = ebook.promoPrice|default(null) %}
+{% set hasPricing = ebook.price is defined or ebook.isFree is defined %}
+{% set discounted = not isFree and not pwyw and promo and base and promo < base %}
+{% set discountPct = discounted ? ((base - promo) / base * 100)|round : 0 %}
+
+<article class="group relative">
+    <div class="relative aspect-[2/3] overflow-hidden rounded-2xl bg-gradient-to-br {{ covers[variant] }} shadow-lg shadow-zinc-900/10 ring-1 ring-black/5 transition duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl group-hover:shadow-zinc-900/15"
+         {% if link %}style="view-transition-name: ebook-cover-{{ ebook.slug }}"{% endif %}>
+        {% if ebook.hasCover|default(false) %}
+            <img src="{{ path('app_ebook_cover', { id: ebook.id, w: s.px }) }}" alt="Okładka: {{ ebook.title }}" loading="lazy"
+                 class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105">
+        {% else %}
+            <span aria-hidden="true" class="absolute inset-y-0 left-0 w-2 bg-black/15"></span>
+            <span aria-hidden="true" class="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/15 blur-2xl"></span>
+            <div class="flex h-full items-center justify-center">
+                <twig:Icon name="book" class="h-12 w-12 text-white/55" />
+            </div>
+        {% endif %}
+
+        {% block badge %}{% endblock %}
+
+        {% if discounted %}
+            <span class="absolute right-3 top-3 z-10 rounded-full bg-rating px-2 py-0.5 text-[11px] font-bold text-zinc-900 shadow-sm">-{{ discountPct }}%</span>
+        {% endif %}
+
+        {% if ebook.shortDescription|default(false) %}
+            <div class="pointer-events-none absolute inset-0 flex items-end bg-gradient-to-t from-zinc-950/90 via-zinc-950/45 to-transparent p-4 opacity-0 translate-y-3 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 motion-reduce:transition-none">
+                <p class="line-clamp-6 text-[13px] leading-relaxed text-white/95">{{ ebook.shortDescription }}</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="mt-3 px-0.5">
+        {% if ebook.category is defined and ebook.category %}
+            <p class="truncate text-[11px] font-semibold uppercase tracking-wide text-accent-600">{{ ebook.category }}</p>
+        {% endif %}
+        <h3 class="line-clamp-2 {{ s.title }} font-bold leading-snug text-zinc-900"
+            {% if link %}style="view-transition-name: ebook-title-{{ ebook.slug }}"{% endif %}>{{ ebook.title }}</h3>
+        {% if ebook.author is defined and ebook.author %}
+            <p class="mt-0.5 truncate text-sm text-zinc-500">{{ ebook.author }}</p>
+        {% endif %}
+    </div>
+
+    {# Stretched link over the whole tile — footer stays above it (z-10). #}
+    {% if link %}
+        <a href="{{ path('app_ebook_show', { slug: ebook.slug }) }}" class="absolute inset-0 z-0" aria-label="{{ ebook.title }}"></a>
+    {% endif %}
+
+    <div class="relative z-10">
+        {% block footer %}
+            {% if hasPricing %}
+                <div class="mt-2 px-0.5">
+                    {% if isFree %}
+                        <span class="text-base font-bold text-success-600">Za darmo</span>
+                    {% elseif pwyw %}
+                        <span class="text-sm font-semibold text-accent-600">Zapłać ile chcesz</span>
+                    {% else %}
+                        <span class="text-base font-extrabold text-zinc-900">{{ (discounted ? promo : base)|number_format(2, ',', ' ') }} zł</span>
+                        {% if discounted %}<span class="ml-1.5 text-xs text-zinc-400 line-through">{{ base|number_format(2, ',', ' ') }} zł</span>{% endif %}
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% endblock %}
+    </div>
+</article>

@@ -235,6 +235,26 @@
    (rotate-180 / -rotate-45) instead of overriding their transform. */
 .icon-scale { scale: 1.2; }
 
+/* Sticky, scroll-aware site header. Light/transparent at the top (blends with the
+   hero on the homepage; an airy accent tint elsewhere so it reads the same), then a
+   darker frosted accent + shadow once scrolled, so it stays readable over whatever
+   it overlaps. `data-scrolled` is flipped by the scroll-header Stimulus controller. */
+.site-header {
+    transition: background-color 250ms ease, box-shadow 250ms ease, backdrop-filter 250ms ease;
+}
+.site-header[data-variant="hero"] { background-color: transparent; }
+.site-header[data-variant="panel"] {
+    background-color: color-mix(in srgb, var(--color-accent-100) 60%, transparent);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+}
+.site-header[data-scrolled="true"] {
+    background-color: color-mix(in srgb, var(--color-accent-200) 90%, transparent);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 10px 30px -12px rgb(6 20 47 / 0.28);
+}
+
 /* Scroll-down cue at the bottom of the hero — a "mouse" with a falling dot and a
    gentle bob, inviting the visitor to explore below. Animations use the `translate`
    property so they never fight the anchor's -translate-x-1/2 centring. */

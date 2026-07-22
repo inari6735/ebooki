@@ -1,42 +1,35 @@
-{# `transparent`: on the homepage the header sits over the hero (which slides up
-   under it via -mt-[76px]); a transparent header lets the hero's single, continuous
-   gradient fill the whole top → no seam. Other pages keep the solid header. #}
+{# Sticky, scroll-aware header. At the very top it is light/transparent — on the
+   homepage (transparent=true) it blends into the hero; elsewhere an airy accent
+   tint that reads the same. Once scrolled it turns into a darker frosted accent
+   with a shadow so it stays readable over the content it overlaps. Colours live in
+   `.site-header` (app.css); the `scroll-header` Stimulus controller flips
+   `data-scrolled`. #}
 {% props transparent = false %}
 
 {% set categories = nav_categories() %}
 {% set nav = [
-    { label: 'Odkrywaj',       icon: 'globe', href: '#', active: true },
+    { label: 'Odkrywaj',       icon: 'globe', href: path('app_ebooks'), active: true },
     { label: 'Jak to działa?', icon: 'help',  href: '#' },
 ] %}
 
-<header class="sticky top-0 z-40 {{ transparent ? '' : 'bg-gradient-to-tl from-accent-200 via-accent-100 to-white' }}" style="view-transition-name: site-header" data-controller="disclosure">
-    {# Curved shapes flowing in from the top-left / top-right corners. Own clipped
-       layer so the corners round off without cutting the dropdowns below. #}
-    {% if not transparent %}
-    <div aria-hidden="true" class="pointer-events-none absolute inset-0 overflow-hidden">
-        <span class="absolute -left-16 -top-12 h-36 w-56 rotate-[16deg] rounded-[46%] bg-accent-200/50"></span>
-        <span class="absolute -left-2 top-8 h-16 w-36 -rotate-6 rounded-[48%] bg-accent-100/70"></span>
-        <span class="absolute -right-16 -top-14 h-40 w-64 -rotate-[16deg] rounded-[46%] bg-accent-200/45"></span>
-        <span class="absolute right-10 top-5 h-14 w-28 rotate-6 rounded-[48%] bg-accent-100/70"></span>
-        <span class="dot-grid absolute right-44 top-3 hidden h-10 w-24 text-accent-200 lg:block"></span>
-    </div>
-    {% endif %}
+<header class="site-header sticky top-0 z-40" style="view-transition-name: site-header"
+        data-controller="disclosure scroll-header" data-variant="{{ transparent ? 'hero' : 'panel' }}">
 
     <div class="relative mx-auto flex h-[76px] max-w-[1600px] items-center gap-4 px-4 sm:px-6 lg:px-8">
         <a href="{{ path('app_home') }}" class="flex shrink-0 items-center">
-            <img src="{{ asset('images/logo.png') }}" width="300" height="104" alt="Bookly" class="mt-2 h-12 w-auto">
+            <img src="{{ asset('images/logo.png') }}" width="255" height="80" alt="Bookly" class="h-10 w-auto">
         </a>
 
         {# Primary nav — centred #}
         <nav class="hidden flex-1 items-center justify-center gap-1 lg:flex">
-            <a href="#" class="relative inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-[15px] font-semibold text-accent-700">
+            <a href="{{ path('app_ebooks') }}" class="relative inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-[15px] font-semibold text-accent-700">
                 <twig:Icon name="globe" class="h-5 w-5" /> Odkrywaj
                 <span class="absolute inset-x-3 -bottom-1 h-1 rounded-full bg-gradient-to-r from-accent-500 to-accent-700"></span>
             </a>
 
             {# Categories — hover/focus dropdown driven by the DB #}
             <div class="group/cat relative">
-                <a href="#" class="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-[15px] font-medium text-zinc-600 transition-colors hover:bg-white/60 hover:text-accent-700 group-hover/cat:bg-white/60 group-hover/cat:text-accent-700 group-focus-within/cat:text-accent-700">
+                <a href="{{ path('app_ebooks') }}" class="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-[15px] font-medium text-zinc-600 transition-colors hover:bg-white/60 hover:text-accent-700 group-hover/cat:bg-white/60 group-hover/cat:text-accent-700 group-focus-within/cat:text-accent-700">
                     <twig:Icon name="book" class="h-5 w-5" /> Kategorie
                     <twig:Icon name="chevron-down" class="h-4 w-4 text-zinc-400 transition-transform duration-200 group-hover/cat:rotate-180 group-hover/cat:text-accent-700 group-focus-within/cat:rotate-180" />
                 </a>
@@ -47,7 +40,7 @@
                         {% else %}
                             <div class="grid grid-cols-2 gap-1">
                                 {% for c in categories %}
-                                    <a href="#" class="block truncate rounded-xl px-3 py-2.5 text-[15px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-accent-600">{{ c.name }}</a>
+                                    <a href="{{ path('app_ebooks', { kategoria: c.slug }) }}" class="block truncate rounded-xl px-3 py-2.5 text-[15px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-accent-600">{{ c.name }}</a>
                                 {% endfor %}
                             </div>
                         {% endif %}

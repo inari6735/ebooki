@@ -14,51 +14,43 @@
         <p class="mt-1 text-sm text-zinc-500">Twoje zakupione eBooki — pobieraj je kiedy chcesz.</p>
     </div>
 
-    <div class="mt-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-zinc-100 sm:p-6">
-        {% if purchases is empty %}
-            <div class="flex flex-col items-center rounded-2xl border border-dashed border-zinc-200 px-6 py-14 text-center">
-                <span class="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-50 text-accent-600">
-                    <twig:Icon name="cart" class="h-7 w-7" />
-                </span>
-                <p class="mt-4 text-base font-semibold text-zinc-900">Nie masz jeszcze żadnych zakupów</p>
-                <p class="mt-1 max-w-sm text-sm text-zinc-500">Znajdź coś dla siebie w naszej ofercie i wróć tu po swoje tytuły.</p>
-                <twig:Button href="{{ path('app_home') }}" variant="primary" size="lg" class="mt-6">
-                    <twig:Icon name="search" class="h-5 w-5" /> Przeglądaj eBooki
-                </twig:Button>
-            </div>
-        {% else %}
-            <ul class="divide-y divide-zinc-100">
-                {% for p in purchases %}
-                    {% set meta = statusMeta[p.status] ?? { label: p.status, class: 'bg-zinc-100 text-zinc-600' } %}
-                    <li class="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
-                        <div class="min-w-0">
-                            <div class="flex items-center gap-2.5">
-                                <p class="truncate font-semibold text-zinc-900">{{ p.title }}</p>
-                                <span class="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold {{ meta.class }}">{{ meta.label }}</span>
-                            </div>
-                            <p class="mt-0.5 text-sm text-zinc-500">
-                                {{ p.placed_at|date('Y-m-d') }} · {{ (p.total_amount / 100)|number_format(2, ',', ' ') }} {{ p.currency }}
-                            </p>
-                        </div>
-                        <div class="flex shrink-0 items-center gap-2">
-                            {% if p.ebook_slug %}
-                                <a href="{{ path('app_ebook_show', { slug: p.ebook_slug }) }}"
-                                   class="inline-flex items-center gap-1.5 rounded-ui border border-zinc-200 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50">
-                                    <twig:Icon name="book" class="h-4 w-4" /> Zobacz
-                                </a>
-                            {% endif %}
+    {% if purchases is empty %}
+        <div class="mt-6 flex flex-col items-center rounded-3xl border border-dashed border-zinc-200 bg-white px-6 py-16 text-center">
+            <span class="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-50 text-accent-600">
+                <twig:Icon name="cart" class="h-7 w-7" />
+            </span>
+            <p class="mt-4 text-base font-semibold text-zinc-900">Nie masz jeszcze żadnych zakupów</p>
+            <p class="mt-1 max-w-sm text-sm text-zinc-500">Znajdź coś dla siebie w naszej ofercie i wróć tu po swoje tytuły.</p>
+            <twig:Button href="{{ path('app_ebooks') }}" variant="primary" size="lg" class="mt-6">
+                <twig:Icon name="search" class="h-5 w-5" /> Przeglądaj eBooki
+            </twig:Button>
+        </div>
+    {% else %}
+        <div class="mt-6 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+            {% for p in purchases %}
+                {% set meta = statusMeta[p.status] ?? { label: p.status, class: 'bg-zinc-100 text-zinc-600' } %}
+                <twig:Ebook:Tile size="md" :ebook="{
+                    id: p.ebook_id, slug: p.ebook_slug, title: p.title, author: p.author_name,
+                    category: p.category_name, hasCover: p.cover_media_id is not null, shortDescription: p.short_description,
+                }">
+                    <twig:block name="badge">
+                        <span class="absolute left-3 top-3 z-10 rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-sm {{ meta.class }}">{{ meta.label }}</span>
+                    </twig:block>
+                    <twig:block name="footer">
+                        <div class="mt-2.5">
                             {% if p.status == 'fulfilled' %}
-                                <a href="{{ path('app_download', { ebookId: p.ebook_id }) }}"
-                                   class="inline-flex items-center gap-1.5 rounded-ui bg-accent-600 px-3.5 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-accent-700">
+                                <twig:Button href="{{ path('app_download', { ebookId: p.ebook_id }) }}" variant="primary" size="md" wide>
                                     <twig:Icon name="cloud-upload" class="h-4 w-4 rotate-180" /> Pobierz
-                                </a>
+                                </twig:Button>
                             {% elseif p.status == 'refunded' %}
-                                <span class="text-sm text-zinc-400">Dostęp odebrany</span>
+                                <p class="py-1.5 text-center text-sm text-zinc-400">Dostęp odebrany</p>
+                            {% else %}
+                                <p class="py-1.5 text-center text-sm text-blue-600">Przetwarzanie…</p>
                             {% endif %}
                         </div>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-    </div>
+                    </twig:block>
+                </twig:Ebook:Tile>
+            {% endfor %}
+        </div>
+    {% endif %}
 {% endblock %}

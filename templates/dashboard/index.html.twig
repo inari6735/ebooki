@@ -21,7 +21,7 @@
     { icon: 'cloud-upload', title: 'Wystaw eBook',     text: 'Dodaj nową publikację w kilka minut.',  href: path('app_publish_ebook') },
     { icon: 'book',         title: 'Wystawione eBooki', text: 'Zarządzaj swoimi publikacjami.',        href: path('app_dashboard_listed') },
     { icon: 'cart',         title: 'Zakupione',         text: 'Wróć do kupionych tytułów.',            href: path('app_dashboard_purchased') },
-    { icon: 'search',       title: 'Odkrywaj ofertę',   text: 'Przeglądaj eBooki innych twórców.',     href: '#' },
+    { icon: 'search',       title: 'Odkrywaj ofertę',   text: 'Przeglądaj eBooki innych twórców.',     href: path('app_ebooks') },
     { icon: 'settings',     title: 'Ustawienia konta',  text: 'Dane, hasło i preferencje.',            href: '#' },
 ] %}
 
@@ -86,41 +86,20 @@
                 </twig:Button>
             </div>
         {% else %}
-            <div class="mt-2 divide-y divide-zinc-100">
+            <div class="mt-4 grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {% for e in ebooks %}
                     {% set st = statusMeta[e.status.value] ?? { label: e.status.value, class: 'bg-zinc-100 text-zinc-600' } %}
-                    <div class="flex flex-col gap-4 py-4 sm:flex-row sm:items-center">
-                        <twig:Ebook:Cover title="{{ e.title }}" width="w-14"
-                                          style="view-transition-name: ebook-cover-{{ e.slug }}" />
-
-                        <div class="min-w-0 flex-1">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <p class="truncate font-semibold text-zinc-900" style="view-transition-name: ebook-title-{{ e.slug }}">{{ e.title }}</p>
-                                <span class="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold {{ st.class }}">{{ st.label }}</span>
-                            </div>
-                            <p class="mt-0.5 truncate text-sm text-zinc-500">{{ e.authorName }}{% if e.category %} · {{ e.category.name }}{% endif %}</p>
-                            <p class="mt-0.5 text-xs text-zinc-400">Dodano {{ e.createdAt|date('d.m.Y') }}</p>
-                        </div>
-
-                        <div class="text-sm font-bold text-zinc-900 sm:w-32 sm:text-right">
-                            {% if e.pricing.isFree %}
-                                <span class="text-success-600">Za darmo</span>
-                            {% elseif e.pricing.isPayWhatYouWant %}
-                                <span class="text-accent-600">Zapłać ile chcesz</span>
-                            {% else %}
-                                {{ e.pricing.currentPrice.format }}
-                            {% endif %}
-                        </div>
-
-                        <div class="flex items-center gap-2 sm:justify-end">
-                            <a href="{{ path('app_ebook_show', { slug: e.slug }) }}" class="inline-flex items-center gap-1.5 rounded-ui border border-zinc-200 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50">
-                                <twig:Icon name="eye" class="h-4 w-4" /> Podgląd
-                            </a>
-                            <a href="{{ path('app_ebook_edit', { id: e.id }) }}" class="inline-flex items-center gap-1.5 rounded-ui border border-zinc-200 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50">
-                                <twig:Icon name="edit" class="h-4 w-4" /> Edytuj
-                            </a>
-                        </div>
-                    </div>
+                    <twig:Ebook:Tile size="sm" :ebook="{
+                        id: e.id, slug: e.slug, title: e.title, author: e.authorName,
+                        hasCover: e.cover is not null, shortDescription: e.shortDescription,
+                        isFree: e.pricing.isFree, payWhatYouWant: e.pricing.isPayWhatYouWant,
+                        price: e.pricing.baseAmountMinor is not null ? e.pricing.baseAmountMinor / 100 : null,
+                        promoPrice: e.pricing.promoAmountMinor is not null ? e.pricing.promoAmountMinor / 100 : null,
+                    }">
+                        <twig:block name="badge">
+                            <span class="absolute left-2.5 top-2.5 z-10 rounded-full px-2 py-0.5 text-[11px] font-semibold shadow-sm {{ st.class }}">{{ st.label }}</span>
+                        </twig:block>
+                    </twig:Ebook:Tile>
                 {% endfor %}
             </div>
         {% endif %}

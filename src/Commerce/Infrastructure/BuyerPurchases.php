@@ -24,9 +24,11 @@ final readonly class BuyerPurchases
         return $this->connection->fetchAllAssociative(
             <<<'SQL'
                 SELECT o.id, o.title, o.total_amount, o.currency, o.status, o.placed_at,
-                       o.ebook_id, e.slug AS ebook_slug
+                       o.ebook_id, e.slug AS ebook_slug, e.author_name, e.short_description,
+                       e.cover_media_id, cat.name AS category_name
                 FROM commerce_orders o
                 LEFT JOIN ebooks e ON e.id = o.ebook_id
+                LEFT JOIN categories cat ON cat.id = e.category_id
                 WHERE o.buyer_id = :buyer
                   AND o.status IN ('paid', 'fulfilled', 'refunded')
                 ORDER BY o.placed_at DESC

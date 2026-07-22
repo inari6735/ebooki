@@ -1,0 +1,111 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Odkrywaj eBooki{% if activeCategoryName %} — {{ activeCategoryName }}{% endif %} · Bookly{% endblock %}
+
+{# Query params to preserve across chips / sort / pagination. #}
+{% set qp = { sort: sort } %}
+{% if activeCategory %}{% set qp = qp|merge({ kategoria: activeCategory }) %}{% endif %}
+
+{# Correct-ish Polish plural for the result count. #}
+{% set countLabel = (total == 1) ? 'eBook'
+    : ((total % 10 >= 2 and total % 10 <= 4 and (total % 100 < 12 or total % 100 > 14)) ? 'eBooki' : 'eBooków') %}
+
+{% block body %}
+    {# Heading strip #}
+    <section class="border-b border-zinc-100 bg-gradient-to-b from-accent-50 to-white">
+        <div class="mx-auto max-w-[1600px] px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+            <span class="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-sm font-semibold text-accent-700 shadow-sm ring-1 ring-accent-100">
+                <twig:Icon name="globe" class="h-4 w-4" /> Katalog
+            </span>
+            <h1 class="mt-4 text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl">
+                Odkrywaj <span class="text-accent-600">eBooki</span>{% if activeCategoryName %} <span class="text-zinc-400">·</span> {{ activeCategoryName }}{% endif %}
+            </h1>
+            <p class="mt-2 text-lg text-zinc-500">Tysiące tytułów od niezależnych twórców — {{ total }} {{ countLabel }} do odkrycia.</p>
+        </div>
+    </section>
+
+    <div class="mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
+        {# Toolbar: category chips + sort #}
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ path('app_ebooks', { sort: sort }) }}"
+                   class="shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-colors {{ activeCategory is null ? 'bg-accent-600 text-white shadow-sm shadow-accent-600/25' : 'bg-white text-zinc-600 ring-1 ring-zinc-200 hover:bg-zinc-50' }}">
+                    Wszystkie
+                </a>
+                {% for c in categories %}
+                    <a href="{{ path('app_ebooks', { kategoria: c.slug, sort: sort }) }}"
+                       class="shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-colors {{ activeCategory == c.slug ? 'bg-accent-600 text-white shadow-sm shadow-accent-600/25' : 'bg-white text-zinc-600 ring-1 ring-zinc-200 hover:bg-zinc-50' }}">
+                        {{ c.name }}
+                    </a>
+                {% endfor %}
+            </div>
+
+            <form method="get" action="{{ path('app_ebooks') }}" class="flex shrink-0 items-center gap-2">
+                {% if activeCategory %}<input type="hidden" name="kategoria" value="{{ activeCategory }}">{% endif %}
+                <label for="sort" class="text-sm font-medium text-zinc-500">Sortuj:</label>
+                <select id="sort" name="sort" onchange="this.form.submit()"
+                        class="rounded-xl border border-zinc-200 bg-white py-2 pl-3 pr-8 text-sm font-semibold text-zinc-700 shadow-sm focus:border-accent-500 focus:ring-accent-500">
+                    {% for key, label in sortLabels %}
+                        <option value="{{ key }}" {{ sort == key ? 'selected' }}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+
+        {# Grid #}
+        {% if ebooks is empty %}
+            <div class="mt-10 flex flex-col items-center rounded-3xl border border-dashed border-zinc-200 bg-white px-6 py-20 text-center">
+                <span class="flex h-16 w-16 items-center justify-center rounded-2xl bg-accent-50 text-accent-600">
+                    <twig:Icon name="book" class="h-8 w-8" />
+                </span>
+                <p class="mt-5 text-lg font-semibold text-zinc-900">Brak eBooków w tym widoku</p>
+                <p class="mt-1 max-w-sm text-sm text-zinc-500">
+                    {% if activeCategory %}W tej kategorii nic jeszcze nie ma. Zobacz pozostałe tytuły.{% else %}Wkrótce pojawią się tu nowe publikacje.{% endif %}
+                </p>
+                {% if activeCategory %}
+                    <twig:Button href="{{ path('app_ebooks') }}" variant="primary" size="lg" class="mt-6">Pokaż wszystkie</twig:Button>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="mt-7 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                {% for e in ebooks %}
+                    <twig:Ebook:Tile :ebook="e" size="md" />
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {# Pagination #}
+        {% if pages > 1 %}
+            {% set from = max(1, page - 2) %}
+            {% set to = min(pages, page + 2) %}
+            <nav class="mt-12 flex items-center justify-center gap-1.5" aria-label="Paginacja">
+                {% if page > 1 %}
+                    <a href="{{ path('app_ebooks', qp|merge({ strona: page - 1 })) }}" class="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-zinc-600 ring-1 ring-zinc-200 transition-colors hover:bg-zinc-50" aria-label="Poprzednia">
+                        <twig:Icon name="arrow-left" class="h-4 w-4" />
+                    </a>
+                {% endif %}
+
+                {% if from > 1 %}
+                    <a href="{{ path('app_ebooks', qp|merge({ strona: 1 })) }}" class="flex h-10 min-w-10 items-center justify-center rounded-xl bg-white px-3 text-sm font-semibold text-zinc-600 ring-1 ring-zinc-200 hover:bg-zinc-50">1</a>
+                    {% if from > 2 %}<span class="px-1 text-zinc-400">…</span>{% endif %}
+                {% endif %}
+
+                {% for p in from..to %}
+                    <a href="{{ path('app_ebooks', qp|merge({ strona: p })) }}"
+                       class="flex h-10 min-w-10 items-center justify-center rounded-xl px-3 text-sm font-semibold transition-colors {{ p == page ? 'bg-accent-600 text-white shadow-sm shadow-accent-600/25' : 'bg-white text-zinc-600 ring-1 ring-zinc-200 hover:bg-zinc-50' }}">{{ p }}</a>
+                {% endfor %}
+
+                {% if to < pages %}
+                    {% if to < pages - 1 %}<span class="px-1 text-zinc-400">…</span>{% endif %}
+                    <a href="{{ path('app_ebooks', qp|merge({ strona: pages })) }}" class="flex h-10 min-w-10 items-center justify-center rounded-xl bg-white px-3 text-sm font-semibold text-zinc-600 ring-1 ring-zinc-200 hover:bg-zinc-50">{{ pages }}</a>
+                {% endif %}
+
+                {% if page < pages %}
+                    <a href="{{ path('app_ebooks', qp|merge({ strona: page + 1 })) }}" class="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-zinc-600 ring-1 ring-zinc-200 transition-colors hover:bg-zinc-50" aria-label="Następna">
+                        <twig:Icon name="arrow-right" class="h-4 w-4" />
+                    </a>
+                {% endif %}
+            </nav>
+        {% endif %}
+    </div>
+{% endblock %}

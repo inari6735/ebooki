@@ -59,7 +59,9 @@ final class EbookDetailController extends AbstractController
             'categorySlug' => $ebook->getCategory()?->getSlug() ?? '',
             'language' => Languages::exists($language) ? Languages::getName($language, 'pl') : $language,
             'format' => implode(', ', array_map(static fn ($f): string => strtoupper($f->value), $ebook->formats())),
-            'cover' => null, // no committed-cover serving route yet → gradient placeholder
+            'cover' => null !== $ebook->getCover()
+                ? $this->generateUrl('app_ebook_cover', ['id' => $ebook->getId()->toRfc4122()])
+                : null,
             'shortDescription' => $ebook->getShortDescription() ?? '',
             'rating' => null, // reviews are Phase 2 — the rating block hides itself when null
             'ratingCount' => 0,

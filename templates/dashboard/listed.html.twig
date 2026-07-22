@@ -39,78 +39,67 @@
         {% endfor %}
     </div>
 
-    {# List #}
-    <div class="mt-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-zinc-100 sm:p-6">
-        {% if ebooks is empty %}
-            <div class="flex flex-col items-center rounded-2xl border border-dashed border-zinc-200 px-6 py-14 text-center">
-                <span class="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-50 text-accent-600">
-                    <twig:Icon name="book" class="h-7 w-7" />
-                </span>
-                {% if counts.all == 0 %}
-                    <p class="mt-4 text-base font-semibold text-zinc-900">Nie masz jeszcze żadnych eBooków</p>
-                    <p class="mt-1 max-w-sm text-sm text-zinc-500">Wystaw swój pierwszy eBook — trafi do tysięcy czytelników.</p>
-                    <twig:Button href="{{ path('app_publish_ebook') }}" variant="primary" size="lg" class="mt-6">
-                        <twig:Icon name="cloud-upload" class="h-5 w-5" /> Wystaw pierwszego eBooka
-                    </twig:Button>
-                {% else %}
-                    <p class="mt-4 text-base font-semibold text-zinc-900">Brak eBooków w tej kategorii</p>
-                    <p class="mt-1 text-sm text-zinc-500">Zmień filtr, aby zobaczyć pozostałe publikacje.</p>
-                {% endif %}
-            </div>
-        {% else %}
-            <div class="divide-y divide-zinc-100">
-                {% for e in ebooks %}
-                    {% set st = statusMeta[e.status.value] ?? { label: e.status.value, class: 'bg-zinc-100 text-zinc-600' } %}
-                    {% set isNew = highlight is defined and highlight and e.id == highlight %}
-                    <div class="flex flex-col gap-4 py-4 lg:flex-row lg:items-center {{ isNew ? 'just-added -mx-3 rounded-xl px-3 ring-1 ring-accent-200' }}">
-                        <twig:Ebook:Cover title="{{ e.title }}" width="w-14"
-                                          style="view-transition-name: ebook-cover-{{ e.slug }}" />
-
-                        <div class="min-w-0 flex-1">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <p class="truncate font-semibold text-zinc-900" style="view-transition-name: ebook-title-{{ e.slug }}">{{ e.title }}</p>
-                                <span class="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold {{ st.class }}">{{ st.label }}</span>
-                                {% if isNew %}<span class="shrink-0 rounded-full bg-accent-600 px-2.5 py-0.5 text-xs font-semibold text-white">Nowo dodany</span>{% endif %}
+    {% if ebooks is empty %}
+        <div class="mt-6 flex flex-col items-center rounded-3xl border border-dashed border-zinc-200 bg-white px-6 py-16 text-center">
+            <span class="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-50 text-accent-600">
+                <twig:Icon name="book" class="h-7 w-7" />
+            </span>
+            {% if counts.all == 0 %}
+                <p class="mt-4 text-base font-semibold text-zinc-900">Nie masz jeszcze żadnych eBooków</p>
+                <p class="mt-1 max-w-sm text-sm text-zinc-500">Wystaw swój pierwszy eBook — trafi do tysięcy czytelników.</p>
+                <twig:Button href="{{ path('app_publish_ebook') }}" variant="primary" size="lg" class="mt-6">
+                    <twig:Icon name="cloud-upload" class="h-5 w-5" /> Wystaw pierwszego eBooka
+                </twig:Button>
+            {% else %}
+                <p class="mt-4 text-base font-semibold text-zinc-900">Brak eBooków w tej kategorii</p>
+                <p class="mt-1 text-sm text-zinc-500">Zmień filtr, aby zobaczyć pozostałe publikacje.</p>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="mt-6 grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+            {% for e in ebooks %}
+                {% set st = statusMeta[e.status.value] ?? { label: e.status.value, class: 'bg-zinc-100 text-zinc-600' } %}
+                {% set isNew = highlight is defined and highlight and e.id == highlight %}
+                <div class="{{ isNew ? 'just-added rounded-2xl ring-2 ring-accent-400 ring-offset-4 ring-offset-canvas' }}">
+                    <twig:Ebook:Tile size="md" :ebook="{
+                        id: e.id, slug: e.slug, title: e.title, author: e.authorName,
+                        category: e.category ? e.category.name : null,
+                        hasCover: e.cover is not null, shortDescription: e.shortDescription,
+                    }">
+                        <twig:block name="badge">
+                            <div class="absolute left-3 top-3 z-10 flex flex-col items-start gap-1.5">
+                                <span class="rounded-full px-2.5 py-0.5 text-xs font-semibold shadow-sm {{ st.class }}">{{ st.label }}</span>
+                                {% if isNew %}<span class="rounded-full bg-accent-600 px-2.5 py-0.5 text-xs font-semibold text-white shadow-sm">Nowo dodany</span>{% endif %}
                             </div>
-                            <p class="mt-0.5 truncate text-sm text-zinc-500">{{ e.authorName }}{% if e.category %} · {{ e.category.name }}{% endif %}</p>
-                            <p class="mt-0.5 text-xs text-zinc-400">
-                                Dodano {{ e.createdAt|date('d.m.Y') }} ·
-                                {% if e.pricing.isFree %}Za darmo{% elseif e.pricing.isPayWhatYouWant %}Zapłać ile chcesz{% else %}{{ e.pricing.currentPrice.format }}{% endif %}
-                            </p>
-                        </div>
-
-                        {# Actions #}
-                        <div class="flex flex-wrap items-center gap-2 lg:justify-end">
-                            <a href="{{ path('app_ebook_show', { slug: e.slug }) }}" class="inline-flex items-center gap-1.5 rounded-ui border border-zinc-200 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50">
-                                <twig:Icon name="eye" class="h-4 w-4" /> Podgląd
-                            </a>
-                            <a href="{{ path('app_ebook_edit', { id: e.id }) }}" class="inline-flex items-center gap-1.5 rounded-ui border border-zinc-200 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50">
-                                <twig:Icon name="edit" class="h-4 w-4" /> Edytuj
-                            </a>
-
-                            <form method="post" action="{{ path('app_ebook_toggle_visibility', { id: e.id }) }}">
-                                <input type="hidden" name="_token" value="{{ csrf_token('ebook_manage') }}">
-                                {% if e.status.value == 'published' %}
-                                    <button type="submit" class="inline-flex items-center gap-1.5 rounded-ui border border-zinc-200 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50">
-                                        <twig:Icon name="eye-off" class="h-4 w-4" /> Ukryj
+                        </twig:block>
+                        <twig:block name="footer">
+                            <div class="mt-2.5 flex items-center gap-1.5">
+                                <a href="{{ path('app_ebook_edit', { id: e.id }) }}" class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-ui border border-zinc-200 bg-white px-2.5 py-1.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50">
+                                    <twig:Icon name="edit" class="h-4 w-4" /> Edytuj
+                                </a>
+                                <form method="post" action="{{ path('app_ebook_toggle_visibility', { id: e.id }) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('ebook_manage') }}">
+                                    {% if e.status.value == 'published' %}
+                                        <button type="submit" class="flex h-[34px] w-[34px] items-center justify-center rounded-ui border border-zinc-200 bg-white text-zinc-700 transition-colors hover:bg-zinc-50" aria-label="Ukryj">
+                                            <twig:Icon name="eye-off" class="h-4 w-4" />
+                                        </button>
+                                    {% else %}
+                                        <button type="submit" class="flex h-[34px] w-[34px] items-center justify-center rounded-ui border border-accent-600 bg-white text-accent-600 transition-colors hover:bg-accent-50" aria-label="Opublikuj">
+                                            <twig:Icon name="cloud-upload" class="h-4 w-4" />
+                                        </button>
+                                    {% endif %}
+                                </form>
+                                <form method="post" action="{{ path('app_ebook_delete', { id: e.id }) }}" data-turbo-confirm="Na pewno usunąć „{{ e.title }}"? Tej operacji nie można cofnąć.">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('ebook_manage') }}">
+                                    <button type="submit" class="flex h-[34px] w-[34px] items-center justify-center rounded-ui border border-zinc-200 bg-white text-error-600 transition-colors hover:border-error-200 hover:bg-error-50" aria-label="Usuń">
+                                        <twig:Icon name="trash" class="h-4 w-4" />
                                     </button>
-                                {% else %}
-                                    <button type="submit" class="inline-flex items-center gap-1.5 rounded-ui border border-accent-600 bg-white px-3 py-1.5 text-sm font-semibold text-accent-600 transition-colors hover:bg-accent-50">
-                                        <twig:Icon name="cloud-upload" class="h-4 w-4" /> Opublikuj
-                                    </button>
-                                {% endif %}
-                            </form>
-
-                            <form method="post" action="{{ path('app_ebook_delete', { id: e.id }) }}" data-turbo-confirm="Na pewno usunąć „{{ e.title }}"? Tej operacji nie można cofnąć.">
-                                <input type="hidden" name="_token" value="{{ csrf_token('ebook_manage') }}">
-                                <button type="submit" class="inline-flex items-center gap-1.5 rounded-ui border border-zinc-200 bg-white px-3 py-1.5 text-sm font-semibold text-error-600 transition-colors hover:border-error-200 hover:bg-error-50" aria-label="Usuń">
-                                    <twig:Icon name="trash" class="h-4 w-4" /> Usuń
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-    </div>
+                                </form>
+                            </div>
+                        </twig:block>
+                    </twig:Ebook:Tile>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 {% endblock %}
