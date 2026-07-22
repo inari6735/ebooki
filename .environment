@@ -1,0 +1,7 @@
+# Sourced by Upsun into the PHP app's runtime environment (ignored off-platform).
+# Turns the `media` relationship into MEDIA_GRPC_ENDPOINT (host:port) that
+# GrpcFileStorage / GrpcThumbnailGenerator dial. Off Upsun, the .env default
+# (localhost:8090) stays in effect.
+if [ -n "${PLATFORM_RELATIONSHIPS:-}" ]; then
+    export MEDIA_GRPC_ENDPOINT="$(echo "$PLATFORM_RELATIONSHIPS" | base64 -d | jq -r '.media[0].host + ":" + (.media[0].port|tostring)')"
+fi

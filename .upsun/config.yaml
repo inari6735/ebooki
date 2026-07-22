@@ -60,9 +60,13 @@ applications:
         - mbstring
         - intl        # locale-aware helpers (Intl\Languages, formatting)
         - sodium
+        - grpc        # gRPC client to the Go media service (all file ops in prod)
 
     relationships:
       database: {}    # exposes DATABASE_URL (mapped by the Symfony configurator)
+      # Internal endpoint of the Go media service. `.environment` turns this into
+      # MEDIA_GRPC_ENDPOINT (host:port) for the app.
+      media: "media:http"
 
     mounts:
       # Cache is regenerable → cheap, instance-local, ephemeral storage.
@@ -99,6 +103,43 @@ applications:
         # Faster path resolution for the many Symfony includes.
         realpath_cache_size: 4096K
         realpath_cache_ttl: 600
+
+  # Go media microservice: owns all file bytes (uploads, covers, thumbnails) and
+  # generates WebP cover thumbnails. It is INTERNAL only — no route points here,
+  # the PHP `app` reaches it over the `media` relationship (gRPC). Because two
+  # Upsun apps cannot share a writable mount, this app holds the storage volume
+  # and PHP does every file operation through it (FileStorage → GrpcFileStorage,
+  # wired in config/services.yaml under when@prod).
+  media:
+    source:
+      root: services/media
+    # Minimum Go for our deps is 1.25 (see services/media/go.mod). Bump if Upsun
+    # offers a newer golang runtime; never set it BELOW the go.mod directive.
+    type: golang:1.25
+
+    hooks:
+      build: |
+        set -ex
+        go build -o media ./cmd/media
+
+    web:
+      # gRPC is HTTP/2 over a raw TCP port. The app binds the port Upsun assigns
+      # via $PORT (services/media/cmd/media reads it). No `locations` block →
+      # never exposed to the internet.
+      upstream:
+        socket_family: tcp
+      commands:
+        start: ./media
+
+    mounts:
+      # The persistent volume the media service owns. Storage keys are relative
+      # to MEDIA_STORAGE_ROOT.
+      data:
+        source: storage
+
+    variables:
+      env:
+        MEDIA_STORAGE_ROOT: /app/data
 
 services:
   database:

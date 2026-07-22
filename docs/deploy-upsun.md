@@ -88,3 +88,37 @@ Messengera (`messenger:setup-transports`). Po pierwszym deployu nadaj sobie admi
 ```bash
 upsun ssh -- php bin/console user:promote-admin twoj@email
 ```
+
+## 5. Serwis Go (media) — thumbnaile i pliki
+
+Druga aplikacja `media` (typ `golang:1.25`) w `.upsun/config.yaml` jest **właścicielem
+wolumenu plików** i generuje miniatury WebP. Jest wyłącznie wewnętrzna (żaden route
+tam nie prowadzi); PHP dociera do niej przez relację `media` (gRPC), a `.environment`
+zamienia relację na `MEDIA_GRPC_ENDPOINT`. Bo **dwie aplikacje Upsun nie współdzielą
+zapisywalnego mountu**, w prod PHP robi WSZYSTKIE operacje na plikach przez Go
+(`when@prod`: `FileStorage` → `GrpcFileStorage` w `config/services.yaml`).
+
+Rzeczy do ustawienia/zweryfikowania (nie da się ich domknąć w repo):
+
+- **Rozszerzenie `grpc` dla PHP 8.5** — dodane w `runtime.extensions`, ale sprawdź, czy
+  Upsun je udostępnia dla `php:8.5` (8.5 jest świeże). Jak nie — zejdź na `php:8.4`
+  albo zbuduj rozszerzenie. Bez `grpc` cały cutover nie ruszy.
+- **Runtime `golang:1.25`** — to minimum z `services/media/go.mod`. Utrzymuj typ aplikacji
+  `media` na wersji ≥ dyrektywy `go` w go.mod.
+- **Zasoby aplikacji `media`** — nadaj CPU/RAM (`upsun resources:set`). Generowanie
+  miniatur dekoduje obraz do pamięci; daj rozsądny RAM (np. 512 MB), inaczej duże
+  okładki wywołają OOM (patrz bezpiecznik MP w backlogu).
+- **`jq` w obrazie PHP** — `.environment` używa `jq` do sparsowania relacji (obrazy
+  Upsun/Platform.sh zwykle je mają; zweryfikuj).
+- **Health-check** — `media` to serwer gRPC bez HTTP; sprawdź, że Upsun uznaje go za
+  zdrowego po nawiązaniu połączenia TCP. Jak wymaga odpowiedzi HTTP — dołóż mały
+  endpoint `/health`.
+- **Build modułów Go** — build hook robi `go build` (pobiera moduły). Dla powtarzalnych
+  buildów rozważ `go mod vendor` + commit (`-mod=vendor`).
+- **Migracja danych** — mount `data` aplikacji `media` startuje pusty; istniejące pliki
+  z mountu `var/storage` aplikacji `app` **nie przenoszą się same**. Dla świeżej
+  instancji bez znaczenia; przy istniejących danych trzeba je skopiować.
+- **Endpoint** — `MEDIA_GRPC_ENDPOINT` liczy się automatycznie z relacji (`.environment`),
+  nic nie ustawiasz ręcznie.
+- Mount `var/storage` na aplikacji `app` staje się po cutoverze nieużywany — można go
+  później usunąć.

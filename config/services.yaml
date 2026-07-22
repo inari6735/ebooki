@@ -139,3 +139,11 @@ when@test:
         App\Commerce\Domain\Payment\PaymentGateway:
             alias: App\Tests\Commerce\Doubles\FakePaymentGateway
             public: true
+
+when@prod:
+    services:
+        # On Upsun the Go media service owns the file volume (two apps can't share
+        # a writable mount), so EVERY file operation goes through it. Locally/dev
+        # the base alias (FlysystemFileStorage) stays in effect.
+        App\Ebook\Domain\Storage\FileStorage:
+            alias: App\Ebook\Infrastructure\Storage\GrpcFileStorage

@@ -15,7 +15,9 @@ type config struct {
 
 func loadConfig() config {
 	return config{
-		Addr:        env("MEDIA_ADDR", ":8090"),
+		// On Upsun the platform assigns the listen port via $PORT; locally we
+		// default to :8090. An explicit MEDIA_ADDR overrides both.
+		Addr:        env("MEDIA_ADDR", ":"+env("PORT", "8090")),
 		StorageRoot: env("MEDIA_STORAGE_ROOT", "./var/media"),
 	}
 }
