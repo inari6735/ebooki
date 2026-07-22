@@ -1,0 +1,8 @@
+# In tests, route the async transport to an in-memory queue so async messages are
+# captured (and assertable) without a running worker, and never hit the database
+# messenger table. Sync transport stays synchronous, so SyncTransport events and
+# their projections still run in-process within the test.
+framework:
+    messenger:
+        transports:
+            async: 'in-memory://'

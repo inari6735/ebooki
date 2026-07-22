@@ -40,14 +40,30 @@
         <p class="mt-1 text-sm text-zinc-400">Cena zawiera VAT</p>
     {% endif %}
 
-    {# Cart / favourites — visual only until the checkout backend exists. #}
-    <twig:Button variant="primary" size="lg" wide class="mt-6">
-        {% if isFree %}
-            <twig:Icon name="cloud-upload" class="h-5 w-5 rotate-180" /> Pobierz za darmo
-        {% else %}
-            <twig:Icon name="cart" class="h-5 w-5" /> Kup teraz
-        {% endif %}
-    </twig:Button>
+    {% if isFree or pwyw %}
+        {# Free / pay-what-you-want are not part of the paid-checkout MVP yet. #}
+        <twig:Button variant="primary" size="lg" wide class="mt-6">
+            {% if isFree %}
+                <twig:Icon name="cloud-upload" class="h-5 w-5 rotate-180" /> Pobierz za darmo
+            {% else %}
+                <twig:Icon name="cart" class="h-5 w-5" /> Zapłać ile chcesz
+            {% endif %}
+        </twig:Button>
+    {% else %}
+        {# Real checkout: full-page navigation (data-turbo=false) so the external
+           Przelewy24 redirect works; session CSRF (id "checkout", no double-submit). #}
+        <form method="post" action="{{ path('app_checkout', { slug: ebook.slug }) }}" data-turbo="false" class="mt-6">
+            <input type="hidden" name="_token" value="{{ csrf_token('checkout') }}">
+            <label class="flex items-start gap-2.5 text-xs leading-relaxed text-zinc-500">
+                <input type="checkbox" name="withdrawal_consent" value="1" required
+                       class="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-300 text-accent-600 focus:ring-accent-500">
+                <span>Wyrażam zgodę na natychmiastowe udostępnienie treści cyfrowej i przyjmuję do wiadomości utratę prawa do odstąpienia od umowy.</span>
+            </label>
+            <twig:Button type="submit" variant="primary" size="lg" wide class="mt-4">
+                <twig:Icon name="cart" class="h-5 w-5" /> Kup teraz
+            </twig:Button>
+        </form>
+    {% endif %}
     <twig:Button variant="outline" size="lg" wide class="mt-3">
         <twig:Icon name="heart" class="h-5 w-5" /> Dodaj do ulubionych
     </twig:Button>

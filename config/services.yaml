@@ -38,6 +38,15 @@ services:
         arguments:
             $queryBus: '@messenger.bus.query'
 
+    # Event sourcing kernel (reusable across contexts).
+    App\Shared\Domain\EventSourcing\EventStore: '@App\Shared\Infrastructure\EventSourcing\DoctrineEventStore'
+    App\Shared\Domain\EventSourcing\EventBus: '@App\Shared\Infrastructure\EventSourcing\MessengerEventBus'
+    App\Shared\Domain\EventSourcing\EventMetadataProvider: '@App\Shared\Infrastructure\EventSourcing\RequestEventMetadataProvider'
+
+    App\Shared\Infrastructure\EventSourcing\MessengerEventBus:
+        arguments:
+            $eventBus: '@messenger.bus.event'
+
     App\User\Domain\UserRepository:
         alias: App\User\Infrastructure\DoctrineUserRepository
         public: true
@@ -50,6 +59,28 @@ services:
 
     App\Ebook\Domain\EbookRepository:
         alias: App\Ebook\Infrastructure\DoctrineEbookRepository
+
+    App\Commerce\Domain\Order\OrderRepository:
+        alias: App\Commerce\Infrastructure\EventSourcedOrderRepository
+
+    # Payments — Przelewy24 (secrets come from .env.local, see .env P24_* block).
+    App\Commerce\Domain\Payment\PaymentGateway:
+        alias: App\Commerce\Infrastructure\Payment\Przelewy24\Przelewy24Gateway
+
+    App\Commerce\Infrastructure\Payment\Przelewy24\P24Signer:
+        arguments:
+            $crc: '%env(P24_CRC)%'
+
+    App\Commerce\Infrastructure\Payment\Przelewy24\P24Config:
+        arguments:
+            $merchantId: '%env(int:P24_MERCHANT_ID)%'
+            $posId: '%env(int:P24_POS_ID)%'
+            $apiKey: '%env(P24_API_KEY)%'
+            $sandbox: '%env(bool:P24_SANDBOX)%'
+
+    App\Commerce\Presentation\CheckoutController:
+        arguments:
+            $commissionBps: '%app.ebook.commission_bps%'
 
     App\Ebook\Domain\CategoryRepository:
         alias: App\Ebook\Infrastructure\DoctrineCategoryRepository
@@ -77,4 +108,12 @@ when@test:
         # this private service. The alias keeps it and exposes it to the test.
         test.ebook.commission_calculator:
             alias: App\Ebook\Domain\Commission\CommissionCalculator
+            public: true
+
+        # Payments: never call the real Przelewy24 API from tests. Swap the gateway
+        # port for an in-memory fake the tests can configure/inspect.
+        App\Tests\Commerce\Doubles\FakePaymentGateway:
+            public: true
+        App\Commerce\Domain\Payment\PaymentGateway:
+            alias: App\Tests\Commerce\Doubles\FakePaymentGateway
             public: true

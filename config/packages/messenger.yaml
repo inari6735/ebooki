@@ -22,6 +22,12 @@ framework:
             messenger.bus.query:
                 middleware:
                     - validation
+            # Domain-event bus (event sourcing). Deliberately carries NO
+            # doctrine_transaction middleware so synchronous projections join the
+            # transaction opened by the command bus and commit atomically with the
+            # appended events. Sync vs. async delivery is chosen per event by the
+            # SyncTransport / AsyncTransport marker (routed below).
+            messenger.bus.event: []
 
         routing:
             Symfony\Component\Mailer\Messenger\SendEmailMessage: async
